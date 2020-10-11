@@ -1,0 +1,2 @@
+# seascape-smartcontracts
+Seascape smartcontracts
