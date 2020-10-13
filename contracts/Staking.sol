@@ -12,11 +12,17 @@ contract Staking is Ownable {
 
     struct Session {
 	uint256 id;
+        uint256 totalReward;
+	uint256 period;
+	uint256 startTime;
+	uint256 generation;
     }
     
     constructor(IERC20 _CWS) public {
 	CWS = _CWS;
     }
+
+    mapping(address => Session) public sessions;
 
     //--------------------------------------------------
     // Only owner
@@ -78,7 +84,8 @@ contract Staking is Ownable {
 
     /// @notice Returns last session info by a _token for staking
     function sessionFor(IERC20 _token) external view returns(uint256) {
-	return id;
+        address _tokenAddress = address(_token);
+	return sessions[_tokenAddress].id;
     }
 
     /// @notice Returns amount of Token staked by _address
