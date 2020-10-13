@@ -23,15 +23,13 @@ contract Staking is Ownable {
     //--------------------------------------------------
 
     /// @notice Withdraws CWS tokens used outside of Crowns
-    /// @param rings The number of rings from dendrochronological sample
-    /// @return age in years, rounded up for partial years
     function withdrawCWS() external onlyOwner {
     }
 
-    /// @notice Starts a staking session for a finit @param _period of
-    /// time, starting from @param _startTime. The @param _totalReward of
+    /// @notice Starts a staking session for a finit _period of
+    /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every block. It allows to claim a
-    /// Seascape NFT of in @param _generation Generation.
+    /// Seascape NFT of in _generation Generation.
     function startSession(IERC20 _stakingToken,
 			  uint256 _totalReward,
 			  uint256 _period,
@@ -50,20 +48,20 @@ contract Staking is Ownable {
     // Only staker
     //--------------------------------------------------
 
-    /// @notice Deposits @param _amount of LP token
-    /// of type @param _token into Staking contract.
+    /// @notice Deposits _amount of LP token
+    /// of type _token into Staking contract.
     function deposit(IERC20 _token, uint256 _amount) external {
 
     }
 
     /// @notice Withdraws Earned CWS tokens from staked LP token
-    /// of type @param _token
+    /// of type _token
     function claim(IERC20 _token) external {
 
     }
 
-    /// @notice Withdraws @param _amount of LP token
-    /// of type @param _token out of Staking contract.
+    /// @notice Withdraws _amount of LP token
+    /// of type _token out of Staking contract.
     function withdraw(IERC20 _token, uint256 _amount) external {
 
     }
@@ -78,28 +76,28 @@ contract Staking is Ownable {
     // Public methods
     //--------------------------------------------------
 
-    /// @notice Returns last session info by a @param _token for staking
+    /// @notice Returns last session info by a _token for staking
     function sessionFor(IERC20 _token) external view returns(uint256) {
 	return id;
     }
 
-    /// @notice Returns amount of Token staked by @param _address
+    /// @notice Returns amount of Token staked by _address
     function stakedBalanceOf(address _address, uint256 _sessionID) external view returns(uint256) {
 	return 0;
     }
 
-    /// @notice Returns amount of CWS Tokens earned by @param _address
-    /// in the @param _sessionID
+    /// @notice Returns amount of CWS Tokens earned by _address
+    /// in the _sessionID
     function earned(address _address, uint256 _sessionID) external view returns(uint256) {
 	return 0;
     }
 
-    /// @notice Returns amount of CWS Tokens that @param _address could claim.
+    /// @notice Returns amount of CWS Tokens that _address could claim.
     function claimable(address _address, uint256 _sessionID) external view returns(uint256) {
 	return 0;
     }
 
-    /// @notice Returns total amount of Staked LP Tokens in a @param _sessionID
+    /// @notice Returns total amount of Staked LP Tokens in a _sessionID
     function stakedBalance(uint256 _sessionID) external view returns(uint256) {
 	return 0;
     }
