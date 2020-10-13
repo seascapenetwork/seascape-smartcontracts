@@ -8,9 +8,12 @@ import "./openzeppelin/contracts/utils/Counters.sol";
 contract Staking is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using Counters for Counters.Counter;
 
     IERC20 public CWS;
 
+    Counters.Counter private sessionID;
+    
     struct Session {
 	uint256 id;
         uint256 totalReward;
@@ -42,9 +45,29 @@ contract Staking is Ownable {
 			  uint256 _period,
 			  uint256 _startTime,
 			  uint256 _generation) external onlyOwner {
+	// event for the staking token should not be started before.
+	address _tokenAddress = address(_stakingToken);
+	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
 
+        Counters.increment(sessionID);
+	uint256 _sessionID = Counters.current(sessionID);
+	sessions[_tokenAddress] = Session(_sessionID, _totalReward, _period, _startTime, _generation);
     }
 
+
+    function isStartedFor(address _stakingToken) internal view returns(bool) {
+	if (sessions[_stakingToken].id == 0) {
+	    return true;
+	}
+
+	if (now > sessions[_stakingToken].startTime + sessions[_stakingToken].period) {
+	    return true;
+	}
+
+	return false;
+    }
+    
+    
     /// @notice Sets a NFT factory that will mint a token for stakers
     function setNFTFactory(address _address) external onlyOwner {
 
