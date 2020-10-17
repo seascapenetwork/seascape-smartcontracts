@@ -53,18 +53,18 @@ contract Staking is Ownable {
 	uint256 _sessionID = Counters.current(sessionID);
 	sessions[_tokenAddress] = Session(_sessionID, _totalReward, _period, _startTime, _generation);
     }
-
+ 
 
     function isStartedFor(address _stakingToken) internal view returns(bool) {
 	if (sessions[_stakingToken].id == 0) {
-	    return true;
+	    return false;
 	}
 
 	if (now > sessions[_stakingToken].startTime + sessions[_stakingToken].period) {
-	    return true;
+	    return false;
 	}
 
-	return false;
+	return true;
     }
     
     
