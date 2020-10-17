@@ -1,13 +1,10 @@
-# Elixir + Phoenix
-# Based on https://github.com/dogweather/phoenix-docker-compose
+# Truffle in docker
 
 FROM node:14.13.1
 
 # Install essential OS packages
 RUN apt-get update
-RUN apt-get install --yes build-essential inotify-tools
-
-RUN apt-get install -y git python g++ make
+RUN apt-get install --yes build-essential inotify-tools git python g++ make
 
 WORKDIR /home/node/app
 
