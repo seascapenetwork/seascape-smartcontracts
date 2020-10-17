@@ -14,5 +14,8 @@
   "license": "GPLv3",
   "devDependencies": {
     "solium": "1.1.3"
+  },
+  "dependencies": {
+    "chai": "^4.0.0-canary.2"
   }
 }
