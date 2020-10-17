@@ -1,6 +1,6 @@
 {
-  "name": "truffle-box-security",
-  "version": "0.0.0",
+  "name": "seascape-smartcontracts",
+  "version": "1.0.0",
   "description": "Security infrastructure for Truffle DApps",
   "main": "truffle.js",
   "directories": {
