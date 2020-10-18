@@ -28,6 +28,10 @@ contract Staking is Ownable {
 
     mapping(address => Session) public sessions;
 
+
+    event SessionStarted(address indexed stakingToken, uint256 sessionID);
+
+    
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
@@ -39,7 +43,7 @@ contract Staking is Ownable {
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every block. It allows to claim a
-    /// Seascape NFT of in _generation Generation.
+    /// a _generation Seascape NFT.
     function startSession(IERC20 _stakingToken,
 			  uint256 _totalReward,
 			  uint256 _period,
@@ -48,10 +52,12 @@ contract Staking is Ownable {
 	// event for the staking token should not be started before.
 	address _tokenAddress = address(_stakingToken);
 	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
-
+	
         Counters.increment(sessionID);
 	uint256 _sessionID = Counters.current(sessionID);
 	sessions[_tokenAddress] = Session(_sessionID, _totalReward, _period, _startTime, _generation);
+
+	emit SessionStarted(_tokenAddress, _sessionID);
     }
  
 
