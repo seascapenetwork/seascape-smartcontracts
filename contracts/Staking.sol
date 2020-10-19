@@ -29,7 +29,7 @@ contract Staking is Ownable {
     mapping(address => Session) public sessions;
 
 
-    event SessionStarted(address indexed stakingToken, uint256 sessionID);
+    event SessionStarted(address indexed stakingToken, uint256 sessionID, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
 
     
     //--------------------------------------------------
@@ -57,7 +57,7 @@ contract Staking is Ownable {
 	uint256 _sessionID = Counters.current(sessionID);
 	sessions[_tokenAddress] = Session(_sessionID, _totalReward, _period, _startTime, _generation);
 
-	emit SessionStarted(_tokenAddress, _sessionID);
+	emit SessionStarted(_tokenAddress, _sessionID, _totalReward, _startTime, _startTime + _period, _generation);
     }
  
 
