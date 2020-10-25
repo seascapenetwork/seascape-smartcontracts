@@ -31,7 +31,7 @@ contract("Staking", async accounts => {
 	assert.fail();
     });
 
-    it("should overwrite a session after time expiration", async() => {
+    /*it("should overwrite a session after time expiration", async() => {
 	let staking = await Staking.deployed();
 
 	let wait = (period + 1) * 1000; // milliseconds
@@ -43,5 +43,61 @@ contract("Staking", async accounts => {
 
 	let sessionID = await staking.sessionFor.call(stakingToken);
 	assert.equal(sessionID, 2, "Session after period expiration should return inserted ID of 2");
+    });*/
+
+    it("should deposit a staking token by a player", async() => {
+	let staking = await Staking.deployed();
+
+	let amount = web3.utils.toWei('50', 'ether');
+
+	await staking.deposit(stakingToken, amount, {from: accounts[1]});
+
+	let balance = await staking.stakedBalanceOf.call(stakingToken, accounts[1]);
+	assert.equal(balance, amount, "Deposited sum of LP tokens should be 50");
+    });
+
+    it("should claim some Crowns", async() => {
+	let staking = await Staking.deployed();
+
+	let claimable = await staking.claimable.call(stakingToken, accounts[1]);
+	console.log("1. Claimable amount is "+web3.utils.fromWei(claimable)+", "+claimable);
+	
+	let wait = 2 * 1000; // milliseconds
+	
+        await new Promise(resolve => setTimeout(resolve, wait));
+
+	let claimable2 = await staking.claimable.call(stakingToken, accounts[1]);
+	console.log("2. Claimable amount is "+web3.utils.fromWei(claimable2)+", "+claimable2);
+	
+	try {
+	    await staking.claim(stakingToken, {from: accounts[1]});
+	} catch(e) {
+	    assert.fail('Seascape Staking: Nothing was generated to claim');
+	    return;
+	}
+
+    });
+
+    it("should withdraw all LP Tokens", async() => {
+	let staking = await Staking.deployed();
+
+	let amount = web3.utils.toWei('50', 'ether');
+	
+	await staking.withdraw(stakingToken, amount, {from: accounts[1]});
+
+	let balance = await staking.stakedBalanceOf.call(stakingToken, accounts[1]);
+	assert.equal(balance, 0, "Withdrawn LP Token amount should be 0");
+    });
+
+    it("should fail to claim any token without LP token", async() => {
+	let staking = await Staking.deployed();
+
+	try {
+	    await staking.claim(stakingToken, {from: accounts[1]});
+	} catch(e) {
+	    return assert.equal(e.reason, "Seascape Staking: No LP Staking tokens to claim");
+	}
+
+	assert.fail();
     });
 });
