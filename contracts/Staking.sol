@@ -147,6 +147,8 @@ contract Staking is Ownable {
 	address _tokenAddress = address(_token);
 	address _owner = msg.sender;
 
+	require(balances[_tokenAddress][_owner].amount >= _amount, "Seascape Staking: Exceeds the balance that player has");
+
 	claim(_token);
 
 	balances[_tokenAddress][_owner].amount = balances[_tokenAddress][_owner].amount.sub(_amount);
