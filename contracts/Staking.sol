@@ -16,6 +16,7 @@ contract Staking is Ownable {
 	uint256 startTime;
 	uint256 generation;
 	uint256 distributed;
+	uint256 amount;
     }
 
     struct Balance {
@@ -96,7 +97,9 @@ contract Staking is Ownable {
 	address _tokenAddress = address(_token);
 	address _owner = msg.sender;
 	uint256 _claimed = 0;
-	
+
+	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
+		
 	if (balances[_tokenAddress][_owner].amount > 0) {
 	    claim(_token);
 	    _claimed = balances[_tokenAddress][_owner].claimed;
@@ -105,7 +108,7 @@ contract Staking is Ownable {
 	
 	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now);
        
-        emit Deposited(_tokenAddress, _owner, _sessionID, _amount, now);
+        emit Deposited(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
     }
 
     /// @notice Withdraws Earned CWS tokens from staked LP token
@@ -147,8 +150,9 @@ contract Staking is Ownable {
 	claim(_token);
 
 	balances[_tokenAddress][_owner].amount = balances[_tokenAddress][_owner].amount.sub(_amount);
+	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.sub(_amount);
 
-	emit Withdrawn(_tokenAddress, _owner, sessions[_tokenAddress].id, _amount, now);
+	emit Withdrawn(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token.
