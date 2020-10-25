@@ -3,19 +3,14 @@ pragma solidity 0.6.7;
 import "./openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./openzeppelin/contracts/access/Ownable.sol";
-import "./openzeppelin/contracts/utils/Counters.sol";
 
 contract Staking is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using Counters for Counters.Counter;
 
     IERC20 public CWS;
 
-    Counters.Counter private sessionID;
-    
     struct Session {
-	uint256 id;
         uint256 totalReward;
 	uint256 period;
 	uint256 startTime;
@@ -27,7 +22,6 @@ contract Staking is Ownable {
 	uint256 amount;
 	uint256 claimed;
 	uint256 startTime;
-	uint256 sessionID;
     }
 
     constructor(IERC20 _CWS) public {
@@ -37,10 +31,10 @@ contract Staking is Ownable {
     mapping(address => Session) public sessions;
     mapping(address => mapping(address => Balance)) public balances;
 
-    event SessionStarted(address indexed stakingToken, uint256 sessionID, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
-    event Deposited(address indexed stakingToken, address indexed owner, uint256 sessionID, uint256 amount, uint256 startTime);
-    event Claimed(address indexed stakingToken, address indexed owner, uint256 sessionID, uint256 amount, uint256 startTime);
-    event Withdrawn(address indexed stakingToken, address indexed owner, uint256 sessionID, uint256 amount, uint256 startTime);
+    event SessionStarted(address indexed stakingToken, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
+    event Deposited(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
+    event Claimed(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
+    event Withdrawn(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
     
     //--------------------------------------------------
     // Only owner
@@ -63,16 +57,14 @@ contract Staking is Ownable {
 	address _tokenAddress = address(_stakingToken);
 	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
 	
-        Counters.increment(sessionID);
-	uint256 _sessionID = Counters.current(sessionID);
-	sessions[_tokenAddress] = Session(_sessionID, _totalReward, _period, _startTime, _generation, 0);
+	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0);
 
-	emit SessionStarted(_tokenAddress, _sessionID, _totalReward, _startTime, _startTime + _period, _generation);
+	emit SessionStarted(_tokenAddress, _totalReward, _startTime, _startTime + _period, _generation);
     }
  
 
     function isStartedFor(address _stakingToken) internal view returns(bool) {
-	if (sessions[_stakingToken].id == 0) {
+	if (sessions[_stakingToken].totalReward == 0) {
 	    return false;
 	}
 
@@ -101,10 +93,8 @@ contract Staking is Ownable {
 
 	// Should calculate the tokens if any exist at update balances.calculated
 	// Should check that session for _token is still active
-	
 	address _tokenAddress = address(_token);
 	address _owner = msg.sender;
-	uint256 _sessionID = sessions[_tokenAddress].id;
 	uint256 _claimed = 0;
 	
 	if (balances[_tokenAddress][_owner].amount > 0) {
@@ -113,7 +103,7 @@ contract Staking is Ownable {
 	    _amount = _amount.add(balances[_tokenAddress][_owner].amount);
 	}
 	
-	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now, _sessionID);
+	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now);
        
         emit Deposited(_tokenAddress, _owner, _sessionID, _amount, now);
     }
@@ -133,7 +123,7 @@ contract Staking is Ownable {
 
 	balances[_tokenAddress][_owner].claimed = balances[_tokenAddress][_owner].claimed.add(_interest);
 
-	emit Claimed(_tokenAddress, _owner, sessions[_tokenAddress].id,  _interest, now);
+	emit Claimed(_tokenAddress, _owner, _interest, now);
     }
 
     function calculateInterest(address _tokenAddress, address _owner) internal view returns(uint256) {
@@ -162,20 +152,14 @@ contract Staking is Ownable {
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token.
-    function claimNFT(IERC20 _token, uint256 _sessionID) external {
-
+    function claimNFT(IERC20 _token) external {
+	
     }
 
 
     //--------------------------------------------------
     // Public methods
     //--------------------------------------------------
-
-    /// @notice Returns last session info by a _token for staking
-    function sessionFor(IERC20 _token) external view returns(uint256) {
-        address _tokenAddress = address(_token);
-	return sessions[_tokenAddress].id;
-    }
 
     /// @notice Returns amount of Token staked by _owner
     function stakedBalanceOf(address _tokenAddress, address _owner) external view returns(uint256) {
