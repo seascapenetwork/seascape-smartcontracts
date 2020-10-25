@@ -10,6 +10,9 @@ contract Staking is Ownable {
 
     IERC20 public CWS;
 
+    /// @dev Total amount of Crowns stored for all sessions
+    uint256 rewardBalance = 0;
+    
     struct Session {
         uint256 totalReward;
 	uint256 period;
@@ -47,18 +50,25 @@ contract Staking is Ownable {
 
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
-    /// CWS tokens will be distributed in every block. It allows to claim a
+    /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
     function startSession(IERC20 _stakingToken,
 			  uint256 _totalReward,
 			  uint256 _period,
 			  uint256 _startTime,
 			  uint256 _generation) external onlyOwner {
-	// event for the staking token should not be started before.
 	address _tokenAddress = address(_stakingToken);
+	require(_tokenAddress != address(0), "Seascape Staking: Staking token should not be equal to 0");
 	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
+	require(_startTime > now, "Seascape Staking: Seassion should start in the future");
+	require(_period > 0, "Seascape Staking: Lasting period of session should be greater than 0");
+	require(_totalReward > 0, "Seascape Staking: Total reward of tokens to share should be greater than 0");
+
+	uint256 newRewardBalance = rewardBalance.add(_totalReward);
+	require(CWS.balanceOf(address(this)) >= newRewardBalance, "Seascape Staking: Not enough balance of Crowns for reward");
 	
 	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0);
+	rewardBalance = newRewardBalance;
 
 	emit SessionStarted(_tokenAddress, _totalReward, _startTime, _startTime + _period, _generation);
     }
