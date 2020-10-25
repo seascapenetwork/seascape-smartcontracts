@@ -3,11 +3,14 @@ pragma solidity 0.6.7;
 import "./openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./openzeppelin/contracts/access/Ownable.sol";
+import "./NFTFactoryI.sol";
 
 contract Staking is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    NFTFactoryI nftFactory;
+    
     IERC20 public CWS;
 
     /// @dev Total amount of Crowns stored for all sessions
@@ -26,6 +29,7 @@ contract Staking is Ownable {
 	uint256 amount;
 	uint256 claimed;
 	uint256 startTime;
+	uint256 minted;
     }
 
     constructor(IERC20 _CWS) public {
@@ -45,29 +49,43 @@ contract Staking is Ownable {
     //--------------------------------------------------
 
     /// @notice Withdraws CWS tokens used outside of Crowns
-    function withdrawCWS() external onlyOwner {
+    function withdrawCWS(address _tokenAddress) external onlyOwner {
+	require(sessions[_tokenAddress].totalReward > 0, "Seascape Staking: No session was registered");
+	require(isStartedFor(_tokenAddress) == false,    "Seascape Staking: Session should end before claiming");
+
+	uint256 remained = sessions[_tokenAddress].totalReward.sub(sessions[_tokenAddress].distributed);
+	require(remained > 0,                            "Seascape Staking: No tokens to withdraw back");
+
+	CWS.safeTransferFrom(this, owner(), remained);
+
+	// Prevent from double distribution
+	sessions[_tokenAddress].distributed = sessions[_tokenAddress].totalReward;
+
+	rewardBalance = rewardBalance.sub(remained);
     }
 
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
-    function startSession(IERC20 _stakingToken,
+    function startSession(address _tokenAddress,
 			  uint256 _totalReward,
 			  uint256 _period,
 			  uint256 _startTime,
 			  uint256 _generation) external onlyOwner {
-	address _tokenAddress = address(_stakingToken);
-	require(_tokenAddress != address(0), "Seascape Staking: Staking token should not be equal to 0");
+
+	require(_tokenAddress != address(0),          "Seascape Staking: Staking token should not be equal to 0");
 	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
-	require(_startTime > now, "Seascape Staking: Seassion should start in the future");
-	require(_period > 0, "Seascape Staking: Lasting period of session should be greater than 0");
-	require(_totalReward > 0, "Seascape Staking: Total reward of tokens to share should be greater than 0");
+	require(_startTime > now,                     "Seascape Staking: Seassion should start in the future");
+	require(_period > 0,                          "Seascape Staking: Lasting period of session should be greater than 0");
+	require(_totalReward > 0,                     "Seascape Staking: Total reward of tokens to share should be greater than 0");
 
 	uint256 newRewardBalance = rewardBalance.add(_totalReward);
+	// Amount of tokens to reward should be in the balance already
 	require(CWS.balanceOf(address(this)) >= newRewardBalance, "Seascape Staking: Not enough balance of Crowns for reward");
 	
 	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0);
+	
 	rewardBalance = newRewardBalance;
 
 	emit SessionStarted(_tokenAddress, _totalReward, _startTime, _startTime + _period, _generation);
@@ -89,7 +107,7 @@ contract Staking is Ownable {
     
     /// @notice Sets a NFT factory that will mint a token for stakers
     function setNFTFactory(address _address) external onlyOwner {
-
+	nftFactory = NFTFactoryI(_address);
     }
 
 
@@ -107,6 +125,7 @@ contract Staking is Ownable {
 	
 	address _owner = msg.sender;
 	uint256 _claimed = 0;
+	false _minted = false;
 
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
 		
@@ -115,8 +134,12 @@ contract Staking is Ownable {
 	    _claimed = balances[_tokenAddress][_owner].claimed;
 	    _amount = _amount.add(balances[_tokenAddress][_owner].amount);
 	}
+
+	if (balances[_tokenAddress][_owner].startTime > 0 && balances[_tokenAddress][_owner].startTime >= sessions[_tokenAddress].startTime) {
+	    _minted = balances[_tokenAddress][_owner].minted;
+	}
 	
-	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now);
+	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now, _minted);
        
         emit Deposited(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
     }
@@ -168,8 +191,13 @@ contract Staking is Ownable {
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token.
-    function claimNFT(IERC20 _token) external {
-	
+    function claimNFT(address _tokenAddress) external {
+	require(isStartedFor(_tokenAddress), "Seascape Staking: No active session");
+	require(balances[_tokenAddress][msg.sender].minted == false, "Seascape Staking: Already minted");
+
+	if (nftFactory.mint(msg.sender, sessions[_tokenAddress].generation)) {
+	    balances[_tokenAddress][msg.sender].minted = true;
+	}
     }
 
 
