@@ -183,7 +183,7 @@ contract Staking is Ownable {
 
     /// @notice Returns total amount of Staked LP Tokens
     function stakedBalance(address _tokenAddress) external view returns(uint256) {
-	return sessions[_tokenAddress].totalReward;
+	return sessions[_tokenAddress].amount;
     }
 }
 
