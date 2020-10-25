@@ -92,9 +92,9 @@ contract Staking is Ownable {
     function deposit(IERC20 _token, uint256 _amount) external {
 	require(_amount > 0, "Seascape Staking: Amount to deposit should be greater than 0");
 
-	// Should calculate the tokens if any exist at update balances.calculated
-	// Should check that session for _token is still active
 	address _tokenAddress = address(_token);
+	require(isStartedFor(_tokenAddress), "Seascape Staking: Session is not active");
+	
 	address _owner = msg.sender;
 	uint256 _claimed = 0;
 
