@@ -22,7 +22,7 @@ contract Staking is Ownable {
 	uint256 period;
 	uint256 startTime;
 	uint256 generation;
-	uint256 distributed;
+	uint256 claimed;
 	uint256 amount;
 	uint256 rewardUnit;     // Reward per second = totalReward/period
     }
@@ -55,13 +55,13 @@ contract Staking is Ownable {
 	require(sessions[_tokenAddress].totalReward > 0, "Seascape Staking: No session was registered");
 	require(isStartedFor(_tokenAddress) == false,    "Seascape Staking: Session should end before claiming");
 
-	uint256 remained = sessions[_tokenAddress].totalReward.sub(sessions[_tokenAddress].distributed);
+	uint256 remained = sessions[_tokenAddress].totalReward.sub(sessions[_tokenAddress].claimed);
 	require(remained > 0,                            "Seascape Staking: No tokens to withdraw back");
 
 	CWS.safeTransferFrom(address(this), owner(), remained);
 
 	// Prevent from double distribution
-	sessions[_tokenAddress].distributed = sessions[_tokenAddress].totalReward;
+	sessions[_tokenAddress].claimed = sessions[_tokenAddress].totalReward;
 
 	rewardBalance = rewardBalance.sub(remained);
     }
@@ -160,7 +160,7 @@ contract Staking is Ownable {
 
 	uint256 _interest = calculateInterest(_tokenAddress, _owner);
 
-	sessions[_tokenAddress].distributed = sessions[_tokenAddress].distributed.add(_interest);
+	sessions[_tokenAddress].claimed = sessions[_tokenAddress].claimed.add(_interest);
 
 	balances[_tokenAddress][_owner].claimed = balances[_tokenAddress][_owner].claimed.add(_interest);
 
