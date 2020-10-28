@@ -130,6 +130,7 @@ contract Staking is Ownable {
 	address _owner = msg.sender;
 	uint256 _claimed = 0;
 	bool _minted = false;
+	uint _startTime = block.timestamp;
 
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
 		
@@ -137,13 +138,14 @@ contract Staking is Ownable {
 	    claim(_token);
 	    _claimed = balances[_tokenAddress][_owner].claimed;
 	    _amount = _amount.add(balances[_tokenAddress][_owner].amount);
+	    _startTime = balances[_tokenAddress][_owner].startTime;
 	}
 
 	if (balances[_tokenAddress][_owner].startTime > 0 && balances[_tokenAddress][_owner].startTime >= sessions[_tokenAddress].startTime) {
 	    _minted = balances[_tokenAddress][_owner].minted;
 	}
 	
-	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, now, _minted);
+	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, _startTime, _minted);
        
         emit Deposited(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
     }
@@ -167,15 +169,19 @@ contract Staking is Ownable {
     }
 
     function calculateInterest(address _tokenAddress, address _owner) internal view returns(uint256) {
-	// total intereset/per second
-	uint256 _interest = sessions[_tokenAddress].totalReward.div(sessions[_tokenAddress].period);
+	Session memory _session = sessions[_tokenAddress];
+	Balance memory _balance = balances[_tokenAddress][_owner];
 
-	uint256 _currentTime = now;
-	uint256 _depositTime = _currentTime.sub(balances[_tokenAddress][_owner].startTime);
-	uint256 _claimed = balances[_tokenAddress][_owner].claimed;
+	// How much of total deposit is belong to player as a floating number
+	uint256 _portion = _balance.amount.div(_session.amount);
 	
-	// (return per second * balances.startTime) - balances.claimed
-	return _interest.mul(_depositTime).sub(_claimed);
+       	uint256 _interest = _session.rewardUnit.mul(_portion);
+
+	// _balance.startTime is misleading.
+	// Because, it's updated in every deposit time or claim time.
+	uint256 _earnPeriod = block.timestamp.sub(_balance.startTime);
+	
+	return _interest.mul(_earnPeriod).sub(_balance.claimed);
     }
     
     /// @notice Withdraws _amount of LP token
