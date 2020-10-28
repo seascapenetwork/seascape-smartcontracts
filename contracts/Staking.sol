@@ -3,13 +3,13 @@ pragma solidity 0.6.7;
 import "./openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./openzeppelin/contracts/access/Ownable.sol";
-import "./NFTFactoryI.sol";
+import "./NFTFactory.sol";
 
 contract Staking is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    NFTFactoryI nftFactory;
+    NFTFactory nftFactory;
     
     IERC20 public CWS;
 
@@ -107,7 +107,7 @@ contract Staking is Ownable {
     
     /// @notice Sets a NFT factory that will mint a token for stakers
     function setNFTFactory(address _address) external onlyOwner {
-	nftFactory = NFTFactoryI(_address);
+	nftFactory = NFTFactory(_address);
     }
 
 
