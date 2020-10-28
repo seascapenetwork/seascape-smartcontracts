@@ -135,7 +135,7 @@ contract Staking is Ownable {
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
 		
 	if (balances[_tokenAddress][_owner].amount > 0) {
-	    claim(_token);
+	    claim(_tokenAddress);
 	    _claimed = balances[_tokenAddress][_owner].claimed;
 	    _amount = _amount.add(balances[_tokenAddress][_owner].amount);
 	    _startTime = balances[_tokenAddress][_owner].startTime;
@@ -152,19 +152,18 @@ contract Staking is Ownable {
 
     /// @notice Withdraws Earned CWS tokens from staked LP token
     /// of type _token
-    function claim(IERC20 _token) public {
-        address _tokenAddress = address(_token);
-	address _owner = msg.sender;
+    function claim(address _tokenAddress) public {
+	Session storage _session = sessions[_tokenAddress];
+	Balance storage _balance = balances[_tokenAddress][msg.sender];
 
-	require(balances[_tokenAddress][_owner].amount > 0, "Seascape Staking: No LP Staking tokens to claim");
+	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
 
-	uint256 _interest = calculateInterest(_tokenAddress, _owner);
+	uint256 _interest = calculateInterest(_tokenAddress, msg.sender);
 
-	sessions[_tokenAddress].claimed = sessions[_tokenAddress].claimed.add(_interest);
+	_session.claimed = _session.claimed.add(_interest);
+	_balance.claimed = _balance.claimed.add(_interest);
 
-	balances[_tokenAddress][_owner].claimed = balances[_tokenAddress][_owner].claimed.add(_interest);
-
-	emit Claimed(_tokenAddress, _owner, _interest, now);
+	emit Claimed(_tokenAddress, msg.sender, _interest, block.timestamp);
     }
 
     function calculateInterest(address _tokenAddress, address _owner) internal view returns(uint256) {
