@@ -167,8 +167,8 @@ contract Staking is Ownable {
     }
 
     function calculateInterest(address _tokenAddress, address _owner) internal view returns(uint256) {
-	Session memory _session = sessions[_tokenAddress];
-	Balance memory _balance = balances[_tokenAddress][_owner];
+	Session storage _session = sessions[_tokenAddress];
+	Balance storage _balance = balances[_tokenAddress][_owner];
 
 	// How much of total deposit is belong to player as a floating number
 	uint256 _portion = _balance.amount.div(_session.amount);
