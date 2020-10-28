@@ -157,7 +157,6 @@ contract Staking is Ownable {
 	address _owner = msg.sender;
 
 	require(balances[_tokenAddress][_owner].amount > 0, "Seascape Staking: No LP Staking tokens to claim");
-	//require(sessions[_tokenAddress].totalReward > sessions[_tokenAddress].distributed, "Seascape Staking: No more tokens left to distribute");
 
 	uint256 _interest = calculateInterest(_tokenAddress, _owner);
 
