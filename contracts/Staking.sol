@@ -24,6 +24,7 @@ contract Staking is Ownable {
 	uint256 generation;
 	uint256 distributed;
 	uint256 amount;
+	uint256 rewardUnit;     // Reward per second = totalReward/period
     }
 
     struct Balance {
@@ -84,8 +85,10 @@ contract Staking is Ownable {
 	uint256 newRewardBalance = rewardBalance.add(_totalReward);
 	// Amount of tokens to reward should be in the balance already
 	require(CWS.balanceOf(address(this)) >= newRewardBalance, "Seascape Staking: Not enough balance of Crowns for reward");
+
+	uint256 _rewardUnit = _totalReward.div(_period);
 	
-	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0);
+	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
 	
 	rewardBalance = newRewardBalance;
 
