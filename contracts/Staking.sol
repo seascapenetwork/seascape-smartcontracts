@@ -41,9 +41,9 @@ contract Staking is Ownable {
     mapping(address => mapping(address => Balance)) public balances;
 
     event SessionStarted(address indexed stakingToken, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
-    event Deposited(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
+    event Deposited(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime, uint256 totalStaked);
     event Claimed(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
-    event Withdrawn(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
+    event Withdrawn(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime, uint256 totalStaked);
     
     //--------------------------------------------------
     // Only owner
