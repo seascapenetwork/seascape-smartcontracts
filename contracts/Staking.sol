@@ -57,7 +57,7 @@ contract Staking is Ownable {
 	uint256 remained = sessions[_tokenAddress].totalReward.sub(sessions[_tokenAddress].distributed);
 	require(remained > 0,                            "Seascape Staking: No tokens to withdraw back");
 
-	CWS.safeTransferFrom(this, owner(), remained);
+	CWS.safeTransferFrom(address(this), owner(), remained);
 
 	// Prevent from double distribution
 	sessions[_tokenAddress].distributed = sessions[_tokenAddress].totalReward;
