@@ -40,6 +40,7 @@ contract Staking is Ownable {
 
     mapping(address => Session) public sessions;
     mapping(address => mapping(address => Balance)) public balances;
+    mapping(address => mapping(address => uint)) public depositTime;
 
     event SessionStarted(address indexed stakingToken, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime, uint256 totalStaked);
@@ -123,31 +124,35 @@ contract Staking is Ownable {
     /// of type _token into Staking contract.
     function deposit(IERC20 _token, uint256 _amount) external {
 	require(_amount > 0, "Seascape Staking: Amount to deposit should be greater than 0");
-
-	address _tokenAddress = address(_token);
+	address _tokenAddress     = address(_token);
 	require(isStartedFor(_tokenAddress), "Seascape Staking: Session is not active");
-	
-	address _owner = msg.sender;
-	uint256 _claimed = 0;
-	bool _minted = false;
-	uint _startTime = block.timestamp;
+	require(_token.balanceOf(msg.sender) >= _amount, "Seascape Staking: Not enough LP tokens to deposit");
+	require(_token.transfer(address(this), _amount) == true, "Seascape Staking: Failed to transfer LP tokens into contract");
 
-	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
+	Session storage _session  = sessions[_tokenAddress];
+	Balance storage _balance  = balances[_tokenAddress][msg.sender];
+	uint _depositTime = depositTime[_tokenAddress][msg.sender];
+
+
+	bool _minted             = false;
+	if (_depositTime > _session.startTime) {
+	    _minted = _balance.minted;
+	}
 		
-	if (balances[_tokenAddress][_owner].amount > 0) {
+	if (_balance.amount > 0) {
 	    claim(_tokenAddress);
-	    _claimed = balances[_tokenAddress][_owner].claimed;
-	    _amount = _amount.add(balances[_tokenAddress][_owner].amount);
-	    _startTime = balances[_tokenAddress][_owner].startTime;
-	}
-
-	if (balances[_tokenAddress][_owner].startTime > 0 && balances[_tokenAddress][_owner].startTime >= sessions[_tokenAddress].startTime) {
-	    _minted = balances[_tokenAddress][_owner].minted;
+	    _balance.amount = _amount.add(_balance.amount);
+	    _balance.minted = _minted;
+	} else {
+	    // If user withdrew all LP tokens, but deposited before for the session
+	    // Means, that player still can't mint more token anymore.
+            balances[_tokenAddress][msg.sender] = Balance(_amount, 0, block.timestamp, _minted);
 	}
 	
-	balances[_tokenAddress][_owner] = Balance(_amount, _claimed, _startTime, _minted);
+	_session.amount                           = _session.amount.add(_amount);
+	depositTime[_tokenAddress][msg.sender]    = block.timestamp;
        
-        emit Deposited(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
+        emit Deposited(_tokenAddress, msg.sender, _amount, block.timestamp, _session.amount);
     }
 
     /// @notice Withdraws Earned CWS tokens from staked LP token
@@ -185,17 +190,19 @@ contract Staking is Ownable {
     /// @notice Withdraws _amount of LP token
     /// of type _token out of Staking contract.
     function withdraw(IERC20 _token, uint256 _amount) external {
-	address _tokenAddress = address(_token);
-	address _owner = msg.sender;
+	address _tokenAddress     = address(_token);
+	Balance storage _balance  = balances[_tokenAddress][msg.sender];
 
-	require(balances[_tokenAddress][_owner].amount >= _amount, "Seascape Staking: Exceeds the balance that player has");
+	require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
 
-	claim(_token);
+	claim(_tokenAddress);
 
-	balances[_tokenAddress][_owner].amount = balances[_tokenAddress][_owner].amount.sub(_amount);
+	require(_token.transferFrom(address(this), msg.sender, _amount) == true, "Seascape Staking: Failed to transfer token from contract to user");
+	
+	_balance.amount = _balance.amount.sub(_amount);
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.sub(_amount);
 
-	emit Withdrawn(_tokenAddress, _owner, _amount, now, sessions[_tokenAddress].amount);
+	emit Withdrawn(_tokenAddress, msg.sender, _amount, block.timestamp, sessions[_tokenAddress].amount);
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token.
