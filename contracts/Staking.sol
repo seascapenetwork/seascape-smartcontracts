@@ -30,7 +30,7 @@ contract Staking is Ownable {
 	uint256 amount;
 	uint256 claimed;
 	uint256 startTime;
-	uint256 minted;
+	bool minted;
     }
 
     constructor(IERC20 _CWS) public {
@@ -126,7 +126,7 @@ contract Staking is Ownable {
 	
 	address _owner = msg.sender;
 	uint256 _claimed = 0;
-	false _minted = false;
+	bool _minted = false;
 
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.add(_amount);
 		
