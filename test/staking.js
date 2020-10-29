@@ -15,8 +15,8 @@ contract("Staking", async accounts => {
         await staking.startSession(stakingToken, totalReward, period, startTime, generation,
 				      {from: accounts[0]})
 
-	let sessionID = await staking.sessionFor.call(stakingToken);
-	assert.equal(sessionID, 1, "First session ID is expected to be equal to 1");
+	let balance = await staking.stakedBalance.call(stakingToken);
+	assert.equal(balance, 0, "Balance expected to be equal to 0");
     });
 
     it("should not overwrite a session before time expiration", async () => {
