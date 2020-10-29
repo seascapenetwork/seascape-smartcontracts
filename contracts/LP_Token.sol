@@ -21,7 +21,7 @@ contract LP_Token is ERC20, Ownable {
     constructor() public ERC20("LP CWS Test", "LPT") {
         uint256 supply        = (10 * _million * (10 ** 18));
    
-	address newOwner      = 0xC6EF8A96F20d50E347eD9a1C84142D02b1EFedc0;
+	address newOwner      = msg.sender;
 
         _mint(newOwner,       supply);
 
