@@ -88,12 +88,10 @@ contract("Staking", async accounts => {
 	let staking = await Staking.deployed();
 	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
 	
-	let amount = web3.utils.toWei('50', 'ether');
-
-	await staking.deposit(stakingToken, amount, {from: accounts[1]});
+	await staking.deposit(stakingToken, depositAmount, {from: accounts[1]});
 
 	let balance = await staking.stakedBalanceOf.call(stakingToken, accounts[1]);
-	assert.equal(balance, amount, "Deposited sum of LP tokens should be 50");
+	assert.equal(balance, depositAmount, "Deposited sum of LP tokens should be "+web3.utils.fromWei(depositAmount));
     });
 
     it("should claim some Crowns", async() => {
