@@ -72,6 +72,18 @@ contract("Staking", async accounts => {
 	let balance = await stakingToken.balanceOf.call(to);
 	assert.equal(balance, depositAmount, "LP Token balance of player is not what expected");
     });
+
+    it("should approve to deposit some token", async() => {
+	let staking = await Staking.deployed();
+	let stakingToken = await LPToken.deployed();
+	let from = accounts[1];
+
+	await stakingToken.approve(staking.address, depositAmount, {from: from});
+
+	let allowance = await stakingToken.allowance.call(from, staking.address);
+	assert.equal(allowance, depositAmount, "Deposit amount of LP Tokens were not allowed to be transferred");
+    });
+    
     it("should deposit a staking token by a player", async() => {
 	let staking = await Staking.deployed();
 	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
