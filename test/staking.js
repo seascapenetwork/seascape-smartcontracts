@@ -1,5 +1,6 @@
 let Staking = artifacts.require("Staking");
 let LPToken = artifacts.require("LP_Token");
+let Crowns = artifacts.require("CrownsToken");
 
 contract("Staking", async accounts => {
     // Samples
@@ -8,6 +9,16 @@ contract("Staking", async accounts => {
     let startTime = Math.floor(Date.now()/1000) + 2;
     let generation = 0;
 
+    it("should transfer the CWS into contract", async () => {
+	let crowns = await Crowns.deployed();
+	let staking = await Staking.deployed();
+
+	await crowns.transfer(staking.address, totalReward, {from: accounts[0]});
+
+	let balance = await crowns.balanceOf.call(staking.address);
+	assert.equal(balance, totalReward, "Balance of Staking Contract should match to total reward");
+    });
+    
     it("should start a session that lasts "+period+" seconds", async () => {
 	let staking = await Staking.deployed();
 	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
