@@ -127,7 +127,7 @@ contract Staking is Ownable {
 	address _tokenAddress     = address(_token);
 	require(isStartedFor(_tokenAddress), "Seascape Staking: Session is not active");
 	require(_token.balanceOf(msg.sender) >= _amount, "Seascape Staking: Not enough LP tokens to deposit");
-	require(_token.transfer(address(this), _amount) == true, "Seascape Staking: Failed to transfer LP tokens into contract");
+	require(_token.transferFrom(msg.sender, address(this), _amount) == true, "Seascape Staking: Failed to transfer LP tokens into contract");
 
 	Session storage _session  = sessions[_tokenAddress];
 	Balance storage _balance  = balances[_tokenAddress][msg.sender];
