@@ -99,14 +99,12 @@ contract("Staking", async accounts => {
 	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
 	
 	let claimable = await staking.claimable.call(stakingToken, accounts[1]);
-	console.log("1. Claimable amount is "+web3.utils.fromWei(claimable)+", "+claimable);
 	
 	let wait = 2 * 1000; // milliseconds
 	
         await new Promise(resolve => setTimeout(resolve, wait));
 
 	let claimable2 = await staking.claimable.call(stakingToken, accounts[1]);
-	console.log("2. Claimable amount is "+web3.utils.fromWei(claimable2)+", "+claimable2);
 	
 	try {
 	    await staking.claim(stakingToken, {from: accounts[1]});
