@@ -1,8 +1,8 @@
 let Staking = artifacts.require("Staking");
+let LPToken = artifacts.require("LP_Token");
 
 contract("Staking", async accounts => {
     // Samples
-    let stakingToken = "0x5beabaebb3146685dd74176f68a0721f91297d37";
     let totalReward = web3.utils.toWei('100', 'ether');
     let period = 5; // blocks
     let startTime = Math.floor(Date.now()/1000);
@@ -10,6 +10,7 @@ contract("Staking", async accounts => {
 
     it("should start a session that lasts "+period+" seconds", async () => {
 	let staking = await Staking.deployed();
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
 
         await staking.startSession(stakingToken, totalReward, period, startTime, generation,
 				      {from: accounts[0]})
@@ -20,6 +21,7 @@ contract("Staking", async accounts => {
 
     it("should not overwrite a session before time expiration", async () => {
 	let staking = await Staking.deployed();
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
 	
 	try {
 	    await staking.startSession(stakingToken, totalReward, period, startTime, generation,
@@ -47,7 +49,8 @@ contract("Staking", async accounts => {
 
     it("should deposit a staking token by a player", async() => {
 	let staking = await Staking.deployed();
-
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
+	
 	let amount = web3.utils.toWei('50', 'ether');
 
 	await staking.deposit(stakingToken, amount, {from: accounts[1]});
@@ -58,7 +61,8 @@ contract("Staking", async accounts => {
 
     it("should claim some Crowns", async() => {
 	let staking = await Staking.deployed();
-
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
+	
 	let claimable = await staking.claimable.call(stakingToken, accounts[1]);
 	console.log("1. Claimable amount is "+web3.utils.fromWei(claimable)+", "+claimable);
 	
@@ -80,7 +84,8 @@ contract("Staking", async accounts => {
 
     it("should withdraw all LP Tokens", async() => {
 	let staking = await Staking.deployed();
-
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
+	
 	let amount = web3.utils.toWei('50', 'ether');
 	
 	await staking.withdraw(stakingToken, amount, {from: accounts[1]});
@@ -91,7 +96,8 @@ contract("Staking", async accounts => {
 
     it("should fail to claim any token without LP token", async() => {
 	let staking = await Staking.deployed();
-
+	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
+	
 	try {
 	    await staking.claim(stakingToken, {from: accounts[1]});
 	} catch(e) {
