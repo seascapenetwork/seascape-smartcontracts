@@ -79,7 +79,7 @@ contract Staking is Ownable {
 
 	require(_tokenAddress != address(0),          "Seascape Staking: Staking token should not be equal to 0");
 	require(isStartedFor(_tokenAddress) == false, "Seascape Staking: Session is started");
-	require(_startTime > now,                     "Seascape Staking: Seassion should start in the future");
+	require(_startTime > block.timestamp,         "Staking: Seassion should start in the future");
 	require(_period > 0,                          "Seascape Staking: Lasting period of session should be greater than 0");
 	require(_totalReward > 0,                     "Seascape Staking: Total reward of tokens to share should be greater than 0");
 
