@@ -6,7 +6,7 @@ contract("Staking", async accounts => {
     // Samples
     let totalReward = web3.utils.toWei('100', 'ether');
     let period = 5; // blocks
-    let startTime = Math.floor(Date.now()/1000) + 2;
+    let startTime = Math.floor(Date.now()/1000) + 3;
     let generation = 0;
 
     it("should transfer the CWS into contract", async () => {
