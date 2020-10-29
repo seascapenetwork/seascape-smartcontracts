@@ -197,7 +197,7 @@ contract Staking is Ownable {
 
 	claim(_tokenAddress);
 
-	require(_token.transferFrom(address(this), msg.sender, _amount) == true, "Seascape Staking: Failed to transfer token from contract to user");
+	require(_token.transfer(msg.sender, _amount) == true, "Seascape Staking: Failed to transfer token from contract to user");
 	
 	_balance.amount = _balance.amount.sub(_amount);
 	sessions[_tokenAddress].amount = sessions[_tokenAddress].amount.sub(_amount);
