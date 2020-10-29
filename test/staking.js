@@ -5,7 +5,7 @@ contract("Staking", async accounts => {
     // Samples
     let totalReward = web3.utils.toWei('100', 'ether');
     let period = 5; // blocks
-    let startTime = Math.floor(Date.now()/1000);
+    let startTime = Math.floor(Date.now()/1000) + 2;
     let generation = 0;
 
     it("should start a session that lasts "+period+" seconds", async () => {
