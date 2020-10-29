@@ -8,6 +8,7 @@ contract("Staking", async accounts => {
     let period = 5; // blocks
     let startTime = Math.floor(Date.now()/1000) + 3;
     let generation = 0;
+    let depositAmount = web3.utils.toWei('50', 'ether');
 
     it("should transfer the CWS into contract", async () => {
 	let crowns = await Crowns.deployed();
@@ -58,6 +59,19 @@ contract("Staking", async accounts => {
 	assert.equal(sessionID, 2, "Session after period expiration should return inserted ID of 2");
     });*/
 
+    it("should transfer some fake LP CWS-ETH token to player", async () => {
+	let stakingToken = await LPToken.deployed();
+
+	let from = accounts[0];
+	let to = accounts[1];
+
+	let fromBalance = await stakingToken.balanceOf.call(from);
+	
+	await stakingToken.transfer(to, depositAmount, {from: from});
+
+	let balance = await stakingToken.balanceOf.call(to);
+	assert.equal(balance, depositAmount, "LP Token balance of player is not what expected");
+    });
     it("should deposit a staking token by a player", async() => {
 	let staking = await Staking.deployed();
 	let stakingToken = await LPToken.deployed(); stakingToken = stakingToken.address;
