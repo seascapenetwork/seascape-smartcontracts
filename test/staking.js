@@ -134,7 +134,7 @@ contract("Staking", async accounts => {
 	try {
 	    await staking.claim(stakingToken, {from: accounts[1]});
 	} catch(e) {
-	    return assert.equal(e.reason, "Seascape Staking: No LP Staking tokens to claim");
+	    return assert.equal(e.reason, "Seascape Staking: No deposit was found");
 	}
 
 	assert.fail();
