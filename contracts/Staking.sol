@@ -10,6 +10,8 @@ contract Staking is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    uint256 scaler = 10**18;
+	
     NFTFactory nftFactory;
     
     IERC20 public CWS;
@@ -179,9 +181,16 @@ contract Staking is Ownable {
 	Balance storage _balance = balances[_tokenAddress][_owner];
 
 	// How much of total deposit is belong to player as a floating number
-	uint256 _portion = _balance.amount.div(_session.amount);
+	if (_balance.amount == 0 || _session.amount == 0) {
+	    return 0;
+	}
+	if (isStartedFor(_tokenAddress) == false) {
+	    return 0;
+	    }
+
+	uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
 	
-       	uint256 _interest = _session.rewardUnit.mul(_portion);
+       	uint256 _interest = _session.rewardUnit.mul(_portion).div(scaler);
 
 	// _balance.startTime is misleading.
 	// Because, it's updated in every deposit time or claim time.
