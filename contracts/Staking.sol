@@ -162,9 +162,12 @@ contract Staking is Ownable {
 	Balance storage _balance = balances[_tokenAddress][msg.sender];
 
 	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
-
+	
 	uint256 _interest = calculateInterest(_tokenAddress, msg.sender);
 
+	require(CWS.transfer(msg.sender, _interest) == true,
+		"Seascape Staking: Failed to transfer reward CWS token");
+		
 	_session.claimed = _session.claimed.add(_interest);
 	_balance.claimed = _balance.claimed.add(_interest);
 
