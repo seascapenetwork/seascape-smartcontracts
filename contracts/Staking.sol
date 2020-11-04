@@ -32,7 +32,7 @@ contract Staking is Ownable {
     struct Balance {
 	uint256 amount;
 	uint256 claimed;
-	uint256 startTime;
+	uint256 claimedTime;
 	bool minted;
     }
 
@@ -46,7 +46,7 @@ contract Staking is Ownable {
 
     event SessionStarted(address indexed stakingToken, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime, uint256 totalStaked);
-    event Claimed(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime);
+    event Claimed(address indexed stakingToken, address indexed owner, uint256 amount, uint256 claimedTime);
     event Withdrawn(address indexed stakingToken, address indexed owner, uint256 amount, uint256 startTime, uint256 totalStaked);
     
     //--------------------------------------------------
@@ -172,6 +172,7 @@ contract Staking is Ownable {
 		
 	_session.claimed = _session.claimed.add(_interest);
 	_balance.claimed = _balance.claimed.add(_interest);
+	_balance.claimedTime = block.timestamp;
 
 	emit Claimed(_tokenAddress, msg.sender, _interest, block.timestamp);
     }
@@ -194,9 +195,12 @@ contract Staking is Ownable {
 
 	// _balance.startTime is misleading.
 	// Because, it's updated in every deposit time or claim time.
-	uint256 _earnPeriod = block.timestamp.sub(_balance.startTime);
+	uint256 _earnPeriod = block.timestamp.sub(_balance.claimedTime);
 	
-	return _interest.mul(_earnPeriod).sub(_balance.claimed);
+	uint256 _claimable = _interest.mul(_earnPeriod);
+
+	return (_portion, _session.rewardUnit, _balance.amount, scaler,
+		_interest, _earnPeriod, _claimable);
     }
     
     /// @notice Withdraws _amount of LP token
