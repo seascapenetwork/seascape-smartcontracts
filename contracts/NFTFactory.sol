@@ -6,6 +6,11 @@ import "./openzeppelin/contracts/math/SafeMath.sol";
 contract NFTFactory is Ownable {
     using SafeMath for uint256;
 
+    address private nft;
+    
+    constructor(address _nft) public {
+	nft = _nft;
+    }
 
     //--------------------------------------------------
     // Only Seascape Staking contract
@@ -18,7 +23,9 @@ contract NFTFactory is Ownable {
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
-
+    function setNFT(address _nft) public onlyOwner {
+	nft = _nft;
+    }
 
     //--------------------------------------------------
     // Public methods
