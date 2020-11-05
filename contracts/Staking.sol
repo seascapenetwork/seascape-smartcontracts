@@ -21,7 +21,7 @@ contract Staking is Ownable {
     Counters.Counter private sessionId;
 
     /// @dev Total amount of Crowns stored for all sessions
-    uint256 rewardBalance = 0;
+    uint256 rewardSupply = 0;
     
     struct Session {
 	address stakingToken;
@@ -86,13 +86,11 @@ contract Staking is Ownable {
 
 	uint256 newSupply = rewardSupply.add(_totalReward);
 	// Amount of tokens to reward should be in the balance already
-	require(CWS.balanceOf(address(this)) >= newRewardBalance, "Seascape Staking: Not enough balance of Crowns for reward");
+	require(CWS.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
 
 	uint256 _rewardUnit = _totalReward.div(_period);
 	
-	sessions[_tokenAddress] = Session(_totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
-	
-	rewardBalance = newRewardBalance;
+	sessions[_sessionId] = Session(_tokenAddress, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
 
 	sessionId.increment();
 	rewardSupply = newSupply;
