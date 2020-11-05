@@ -62,22 +62,6 @@ contract Staking is Ownable {
     // Only owner
     //--------------------------------------------------
 
-    /// @notice Withdraws CWS tokens used outside of Crowns
-    function withdrawCWS(address _tokenAddress) external onlyOwner {
-	require(sessions[_tokenAddress].totalReward > 0, "Seascape Staking: No session was registered");
-	require(isStartedFor(_tokenAddress) == false,    "Seascape Staking: Session should end before claiming");
-
-	uint256 remained = sessions[_tokenAddress].totalReward.sub(sessions[_tokenAddress].claimed);
-	require(remained > 0,                            "Seascape Staking: No tokens to withdraw back");
-
-	CWS.safeTransferFrom(address(this), owner(), remained);
-
-	// Prevent from double distribution
-	sessions[_tokenAddress].claimed = sessions[_tokenAddress].totalReward;
-
-	rewardBalance = rewardBalance.sub(remained);
-    }
-
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every second. It allows to claim a
