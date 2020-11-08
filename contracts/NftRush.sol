@@ -85,7 +85,7 @@ contract NftRush is Ownable {
     
     
     /// @notice Sets a NFT factory that will mint a token for stakers
-    function setNFTFactory(address _address) external onlyOwner {
+    function setNftFactory(address _address) external onlyOwner {
 	nftFactory = NFTFactory(_address);
     }
 
