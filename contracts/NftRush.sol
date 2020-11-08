@@ -47,6 +47,11 @@ contract NftRush is Ownable {
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
+    // struct: session id => timestamp
+    mapping(uint256 => uint256) public dailyWinnersTime;
+    mapping(address => uint256) private dailyClaimablesAmount;
+    mapping(address => uint256[]) private dailyClaimablesSessions;
+
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed owner, uint256 id, uint256 amount, uint256 startTime);
     event Claimed(address indexed owner, uint256 id, string indexed claimType, uint256 claimedTime);
@@ -75,6 +80,8 @@ contract NftRush is Ownable {
 	sessionId.increment();
 	lastSessionId = _sessionId;
 
+	dailyWinnersTime[_sessionId] = _startTime;
+
 	emit SessionStarted(_sessionId, _startTime, _startTime + _period, _generation);
     }
  
@@ -85,6 +92,15 @@ contract NftRush is Ownable {
 	}
 
 	return true;
+    }
+
+    function isDailyWinnersAdded(uint256 _sessionId) internal view returns(bool) {
+	return block.timestamp < dailyWinnersTime[_sessionId] + (1 days);
+    }
+
+
+    function setDailyWinnersTime(uint256 _sessionId) internal {
+	dailyWinnersTime[_sessionId] = block.timestamp + (1 days);
     }
     
     
@@ -155,7 +171,39 @@ contract NftRush is Ownable {
     }
 
 
+    function addDailyWinners(uint256 _sessionId, address[10] memory _winners) public onlyOwner {
+	require(isStartedFor(_sessionId) == true, "NFT Rush: session is finished");
+	require(isDailyWinnersAdded(_sessionId) == false, "NFT Rush: daily winners set already");
+
+
+	setDailyWinnersTime(_sessionId);
+	
+	for (uint i=0; i<10; i++) {
+	    dailyClaimablesSessions[_winners[i]].push(_sessionId);
+	    dailyClaimablesAmount[_winners[i]] = dailyClaimablesAmount[_winners[i]].add(1);
+	}
+    }
+
+    function claimDailyNft() public {
+	require(dailyClaimablesAmount[_msgSender()] > 0, "NFT Rush: no daily leaderboard claimable found");
+
+	uint256 _claimAmount = dailyClaimablesAmount[_msgSender()];
+	uint256[] storage _claimSession = dailyClaimablesSessions[_msgSender()];
+
+	uint256 _sessionId = _claimSession[_claimAmount-1];
+
+	uint256 _generation = sessions[_sessionId].generation;
+	
+	if (nftFactory.mintQuality(msg.sender, _generation, NftTypes.RARE)) {
+	    delete _claimSession[_claimAmount-1];
+	    dailyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
+	    
+            emit Claimed(msg.sender, _sessionId, "daily", block.timestamp);
+	}
+    }
+
     //--------------------------------------------------
     // Public methods
     //--------------------------------------------------
+    
 }
