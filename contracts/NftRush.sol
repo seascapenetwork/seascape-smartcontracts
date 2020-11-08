@@ -44,7 +44,7 @@ contract NftRush is Ownable {
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
-    event Deposited(address indexed owner, uint256 id, uint256 amount, uint256 startTime, uint256 totalStaked);
+    event Deposited(address indexed owner, uint256 id, uint256 amount, uint256 startTime);
     event Claimed(address indexed owner, uint256 id, uint256 amount, uint256 claimedTime);
     
     //--------------------------------------------------
