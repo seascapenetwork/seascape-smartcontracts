@@ -116,10 +116,6 @@ contract NftRush is Ownable {
 
 	_balance.amount = _balance.amount.add(_amount);
 	
-	// If user withdrew all LP tokens, but deposited before for the session
-	// Means, that player still can't mint more token anymore.
-        balances[_sessionId][msg.sender] = Balance(_amount, block.timestamp);
-	
 	depositTime[_sessionId][msg.sender]    = block.timestamp;
        
         emit Deposited(msg.sender, _sessionId, _amount, block.timestamp);
