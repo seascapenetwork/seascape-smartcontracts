@@ -31,13 +31,15 @@ contract NftRush is Ownable {
 	uint256 mintedTime;
     }
 
-    constructor(address _crowns, address _factory) public {
+    constructor(address _crowns, address _factory, uint256 _minDeposit) public {
 	// Starts at value 1. 
 	sessionId.increment();
 
 	nftFactory = NFTFactory(_factory);
 
 	crowns = CrownsToken(_crowns);
+
+	minDeposit = _minDeposit;
     }
 
     uint256 public lastSessionId;
@@ -103,7 +105,7 @@ contract NftRush is Ownable {
     /// @notice Deposits _amount of LP token
     /// of type _token into Staking contract.
     function deposit(uint256 _sessionId, uint256 _amount) external {
-	require(_amount > 0,              "NFT Rush: Amount to deposit should be greater than 0");
+	require(_amount > minDeposit,     "NFT Rush: Amount to deposit should be greater than min deposit");
 	require(_sessionId > 0,           "NFT Rush: Session is not started yet!");
 	require(isStartedFor(_sessionId), "NFT Rush: Session is finished");
 
