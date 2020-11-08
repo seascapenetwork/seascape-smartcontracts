@@ -105,7 +105,7 @@ contract NftRush is Ownable {
     /// @notice Deposits _amount of LP token
     /// of type _token into Staking contract.
     function deposit(uint256 _sessionId, uint256 _amount) external {
-	require(_amount > minDeposit,     "NFT Rush: Amount to deposit should be greater than min deposit");
+	require(_amount >= minDeposit,     "NFT Rush: Amount to deposit should be greater than min deposit");
 	require(_sessionId > 0,           "NFT Rush: Session is not started yet!");
 	require(isStartedFor(_sessionId), "NFT Rush: Session is finished");
 
