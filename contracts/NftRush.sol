@@ -114,25 +114,15 @@ contract NftRush is Ownable {
 	Balance storage _balance  = balances[_sessionId][msg.sender];
 	uint _depositTime = depositTime[_sessionId][msg.sender];
 
-	bool _minted             = false;
-	if (_depositTime > _session.startTime) {
-	    _minted = _balance.minted;
-	}
-		
-	if (_balance.amount > 0) {
-	    claim(_sessionId);
-	    _balance.amount = _amount.add(_balance.amount);
-	    _balance.minted = _minted;
-	} else {
-	    // If user withdrew all LP tokens, but deposited before for the session
-	    // Means, that player still can't mint more token anymore.
-            balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted);
-	}
+	_balance.amount = _balance.amount.add(_amount);
 	
-	_session.amount                        = _session.amount.add(_amount);
+	// If user withdrew all LP tokens, but deposited before for the session
+	// Means, that player still can't mint more token anymore.
+        balances[_sessionId][msg.sender] = Balance(_amount, block.timestamp);
+	
 	depositTime[_sessionId][msg.sender]    = block.timestamp;
        
-        emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
+        emit Deposited(msg.sender, _sessionId, _amount, block.timestamp);
     }
 
 
