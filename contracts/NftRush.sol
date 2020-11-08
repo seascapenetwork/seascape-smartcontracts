@@ -4,11 +4,13 @@ import "./crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./openzeppelin/contracts/access/Ownable.sol";
 import "./openzeppelin/contracts/math/SafeMath.sol";
 import "./openzeppelin/contracts/utils/Counters.sol";
+import "./SeascapeNftTypes.sol";
 import "./NFTFactory.sol";
 
 contract NftRush is Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
+    using NftTypes for NftTypes;
 
     NFTFactory nftFactory;
     
