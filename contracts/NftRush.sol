@@ -114,9 +114,7 @@ contract NftRush is Ownable {
 	require(crowns.spendFrom(msg.sender, _amount) == true,
 		"NFT Rush: Failed to transfer CWS into contract");
 
-	Session storage _session  = sessions[_sessionId];
 	Balance storage _balance  = balances[_sessionId][msg.sender];
-	uint _depositTime = depositTime[_sessionId][msg.sender];
 
 	_balance.amount = _balance.amount.add(_amount);
 	
@@ -135,8 +133,6 @@ contract NftRush is Ownable {
 
 	/// Validation of quality
 	// message is generated as owner + amount + last time stamp + quality
-        bytes memory pack = abi.encodePacked(msg.sender, _balance.amount, _balance.mintedTime, _quality);
-
 	bytes memory _prefix = "\x19Ethereum Signed Message:\n32";
 	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(msg.sender, _balance.amount, _balance.mintedTime, _quality));
 
