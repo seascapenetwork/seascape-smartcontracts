@@ -36,7 +36,7 @@ contract NftRush is Ownable {
 
 	nftFactory = NFTFactory(_factory);
 
-	crows = CrownsToken(_crowns);
+	crowns = CrownsToken(_crowns);
     }
 
     uint256 public lastSessionId;
