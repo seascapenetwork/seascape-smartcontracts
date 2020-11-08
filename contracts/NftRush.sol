@@ -107,7 +107,7 @@ contract NftRush is Ownable {
 
 	require(crowns.balanceOf(msg.sender) >= _amount,
 		"NFT Rush: Not enough CWS to deposit");
-	require(crowns.transferFrom(msg.sender, address(this), _amount) == true,
+	require(crowns.spendFrom(msg.sender, _amount) == true,
 		"NFT Rush: Failed to transfer CWS into contract");
 
 	Session storage _session  = sessions[_sessionId];
