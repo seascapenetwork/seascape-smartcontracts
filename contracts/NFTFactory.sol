@@ -2,21 +2,17 @@ pragma solidity 0.6.7;
 
 import "./openzeppelin/contracts/access/AccessControl.sol";
 import "./openzeppelin/contracts/math/SafeMath.sol";
+import "./SeascapeNftTypes.sol";
 import "./SeascapeNFT.sol";
 
 contract NFTFactory is AccessControl {
     using SafeMath for uint256;
+    using NftTypes for NftTypes;
 
     bytes32 public constant STATIC_ROLE = keccak256("STATIC");
     bytes32 public constant GENERATOR_ROLE = keccak256("GENERATOR");
 
     SeascapeNFT private nft;
-
-    uint8 constant NORMAL = 1;
-    uint8 constant SPECIAL = 2;
-    uint8 constant RARE = 3;
-    uint8 constant EPIC = 4;
-    uint8 constant LEGENDARY = 5;
     
     constructor(SeascapeNFT _nft) public {
 	nft = _nft;
@@ -27,7 +23,7 @@ contract NFTFactory is AccessControl {
     // Only Seascape Staking contract
     //--------------------------------------------------
     function mint(address _owner, uint256 _generation) public onlyStaticUser returns(bool) {
-	return nft.mint(_owner, _generation, NORMAL);
+	return nft.mint(_owner, _generation, NftTypes.NORMAL);
     }
 
     function mintQuality(address _owner, uint256 _generation, uint8 _quality) public onlyGenerator returns(bool) {
