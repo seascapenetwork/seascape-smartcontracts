@@ -49,7 +49,7 @@ contract NftRush is Ownable {
 
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed owner, uint256 id, uint256 amount, uint256 startTime);
-    event Claimed(address indexed owner, uint256 id, uint256 amount, uint256 claimedTime);
+    event Claimed(address indexed owner, uint256 id, string indexed claimType, uint256 claimedTime);
     
     //--------------------------------------------------
     // Only owner
@@ -147,7 +147,7 @@ contract NftRush is Ownable {
 		"NFT Rush: not enough interval since last minted time");
 	
 	if (nftFactory.mintQuality(msg.sender, _session.generation, _quality)) {
-            emit Claimed(msg.sender, _sessionId, _balance.amount, block.timestamp);
+            emit Claimed(msg.sender, _sessionId, "claim", block.timestamp);
 
             _balance.mintedTime = block.timestamp;
 	    _balance.amount = 0;
