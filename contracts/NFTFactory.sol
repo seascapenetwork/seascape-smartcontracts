@@ -29,6 +29,11 @@ contract NFTFactory is AccessControl {
     function mint(address _owner, uint256 _generation) public onlyStaticUser returns(bool) {
 	return nft.mint(_owner, _generation, NORMAL);
     }
+
+    function mintQuality(address _owner, uint256 _generation, uint8 _quality) public onlyGenerator returns(bool) {
+	require (_quality > 0 && _quality < 6, "NFT Factory: invalid quality");
+	return nft.mint(_owner, _generation, _quality);
+    }
     
     
     //--------------------------------------------------
