@@ -66,20 +66,16 @@ contract NftRush is Ownable {
 
 	uint256 _sessionId = sessionId.current();
 
-	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation, 0, 0);
+	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation);
 
 	sessionId.increment();
-	lastSessionIds[_tokenAddress] = _sessionId;
+	lastSessionId = _sessionId;
 
 	emit SessionStarted(_sessionId, _startTime, _startTime + _period, _generation);
     }
  
 
     function isStartedFor(uint256 _sessionId) internal view returns(bool) {
-	if (sessions[_sessionId].totalReward == 0) {
-	    return false;
-	}
-
 	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
 	    return false;
 	}
@@ -221,25 +217,5 @@ contract NftRush is Ownable {
     // Public methods
     //--------------------------------------------------
 
-    /// @notice Returns amount of Token staked by _owner
-    function stakedBalanceOf(uint256 _sessionId, address _owner) external view returns(uint256) {
-	return balances[_sessionId][_owner].amount;
-    }
-
-    /// @notice Returns amount of CWS Tokens earned by _address
-    function earned(uint256 _sessionId, address _owner) external view returns(uint256) {
-	uint256 _interest = calculateInterest(_sessionId, _owner);
-	return balances[_sessionId][_owner].claimed.add(_interest);
-    }
-
-    /// @notice Returns amount of CWS Tokens that _address could claim.
-    function claimable(uint256 _sessionId, address _owner) external view returns(uint256) {
-	return calculateInterest(_sessionId, _owner);
-    }
-
-    /// @notice Returns total amount of Staked LP Tokens
-    function stakedBalance(uint256 _sessionId) external view returns(uint256) {
-	return sessions[_sessionId].amount;
-    }
 }
 
