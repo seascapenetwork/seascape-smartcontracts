@@ -122,79 +122,35 @@ contract NftRush is Ownable {
     }
 
 
-    function claim(uint256 _sessionId) public {
+    /// @dev claim a function
+    function claim(uint256 _sessionId, uint8 _v, bytes32 _r, bytes32 _s, uint8 _quality) public {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][msg.sender];
 
 	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
+
+	/// Validation of quality
+	// message is generated as owner + amount + last time stamp + quality
+        bytes memory pack = abi.encodePacked(msg.sender, _balance.amount, _balance.mintedTime, _quality);
+
+	bytes memory _prefix = "\x19Ethereum Signed Message:\n32";
+	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(msg.sender, _balance.amount, _balance.mintedTime, _quality));
+
+	bytes32 _message = keccak256(abi.encodePacked(_prefix, _messageNoPrefix));
+
+	address _recover = ecrecover(_message, _v, _r, _s);
+
+	require(_recover == owner(),
+		"NFT Rush: Quality verification failed");
+
+	require(_balance.mintedTime == 0 || (_balance.mintedTime + _session.interval >= block.timestamp),
+		"NFT Rush: not enough interval since last minted time");
 	
-	uint256 _interest = calculateInterest(_sessionId, msg.sender);
+	if (nftFactory.mintQuality(msg.sender, _session.generation, _quality)) {
+            emit Claimed(msg.sender, _sessionId, _balance.amount, block.timestamp);
 
-	require(CWS.transfer(msg.sender, _interest) == true,
-		"Seascape Staking: Failed to transfer reward CWS token");
-		
-	_session.claimed     = _session.claimed.add(_interest);
-	_balance.claimed     = _balance.claimed.add(_interest);
-	_balance.claimedTime = block.timestamp;
-	rewardSupply         = rewardSupply.sub(_interest);
-
-	emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
-    }
-
-    function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {
-	Session storage _session = sessions[_sessionId];
-	Balance storage _balance = balances[_sessionId][_owner];
-
-	// How much of total deposit is belong to player as a floating number
-	if (_balance.amount == 0 || _session.amount == 0) {
-	    return 0;
-	}
-
-	uint256 _sessionCap = block.timestamp;
-	if (isStartedFor(_sessionId) == false) {
-	    _sessionCap = _session.startTime.add(_session.period);
-	}
-
-	uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
-	
-       	uint256 _interest = _session.rewardUnit.mul(_portion).div(scaler);
-
-	// _balance.startTime is misleading.
-	// Because, it's updated in every deposit time or claim time.
-	uint256 _earnPeriod = _sessionCap.sub(_balance.claimedTime);
-	
-	return _interest.mul(_earnPeriod);
-    }
-
-    /// @notice Withdraws _amount of LP token
-    /// of type _token out of Staking contract.
-    function withdraw(uint256 _sessionId, uint256 _amount) external {
-	Balance storage _balance  = balances[_sessionId][msg.sender];
-
-	require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
-
-	claim(_sessionId);
-
-	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
-
-	require(_token.transfer(msg.sender, _amount) == true, "Seascape Staking: Failed to transfer token from contract to user");
-	
-	_balance.amount = _balance.amount.sub(_amount);
-	sessions[_sessionId].amount = sessions[_sessionId].amount.sub(_amount);
-
-	emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
-    }
-
-    /// @notice Mints an NFT for staker. One NFT per session, per token.
-    function claimNFT(uint256 _sessionId) external {
-	require(isStartedFor(_sessionId), "Seascape Staking: No active session");
-
-	Balance storage _balance = balances[_sessionId][msg.sender];
-	require(_balance.claimed.add(_balance.amount) > 0, "Seascape Staking: Deposit first");
-	require(_balance.minted == false, "Seascape Staking: Already minted");
-
-	if (nftFactory.mint(msg.sender, sessions[_sessionId].generation)) {
-	    balances[_sessionId][msg.sender].minted = true;
+            _balance.mintedTime = block.timestamp;
+	    _balance.amount = 0;
 	}
     }
 
@@ -202,6 +158,4 @@ contract NftRush is Ownable {
     //--------------------------------------------------
     // Public methods
     //--------------------------------------------------
-
 }
-
