@@ -8,7 +8,6 @@ import "./NFTFactory.sol";
 
 contract NftRush is Ownable {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
 
     NFTFactory nftFactory;
