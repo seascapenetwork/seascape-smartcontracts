@@ -142,4 +142,73 @@ contract("NftRush", async accounts => {
 	    return assert.equal(e.reason, "NFT Rush: not enough interval since last minted time");
 	}
     });
+
+    // ------------------------------------------------------------
+    // Leaderboard related data
+    // ------------------------------------------------------------
+
+    // in nftrush.sol contract, at the method claimDailyNft
+    // comment requirement of isDailWinnersAddress against false checking
+    it("add daily leaderboard winners as an owner", async () => {
+	let nftRush = await NftRush.deployed();
+
+	let lastSessionId = await nftRush.lastSessionId();
+
+	let winners = [];
+	for(var i=0; i<10; i++) {
+	    if (i%2 == 0) {
+		winners.push(accounts[0]);
+	    } else {
+		winners.push(accounts[1]);
+	    }
+	}
+
+	// contract deployer. only it can add winners list into the contract
+	let owner = accounts[0];
+
+	try {
+	    await nftRush.addDailyWinners(lastSessionId, winners);
+	} catch(e) {
+	    if (e.reason == "NFT Rush: already set or too early") {
+		return true;
+	    }
+	}
+    });
+
+    // in nftrush.sol contract, at the method claimDailyNft
+    // comment requirement of isDailWinnersAddress against false checking
+    it("claim nft for daily items", async() => {
+	let nftRush = await NftRush.deployed();
+	let lastSessionId = await nftRush.lastSessionId();
+	let nftAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
+	nftAmount = parseInt(nftAmount.toString());
+
+	if (!nftAmount) {
+	    return true;
+	}
+
+	for(var i=0; i<nftAmount; i++) {
+	    await nftRush.claimDailyNft();
+
+	    let updatedAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
+	    updatedAmount = parseInt(updatedAmount.toString());
+	    if (updatedAmount != nftAmount - (i+1)) {
+		fail("daily claimable amount didn't updated after nft claiming");
+	    }
+	}
+
+	let zeroAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
+	zeroAmount = parseInt(zeroAmount.toString());
+
+	if (zeroAmount != 0) {
+	    fail("daily claimables after all claims should be equal to 0");
+	}
+
+	
+	try {
+	    await nftRush.claimDailyNft();
+	} catch(e) {
+	    return assert.equal(e.reason, "NFT Rush: no daily leaderboard claimable found");
+	}
+    });
 });
