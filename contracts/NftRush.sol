@@ -24,6 +24,7 @@ contract NftRush is Ownable {
 	uint256 period;        // duration of session
 	uint256 startTime;     // unix timestamp when session starts
 	uint256 generation;    // nft generation
+	bool    winnersSet;    // was all time winners set
     }
 
     struct Balance {
@@ -48,13 +49,20 @@ contract NftRush is Ownable {
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
     // struct: session id => timestamp
-    mapping(uint256 => uint256) public dailyWinnersTime;
-    mapping(address => uint256) private dailyClaimablesAmount;
-    mapping(address => uint256[]) private dailyClaimablesSessions;
+    mapping(uint256 => uint256) public dailyWinnersTime;                  // tracks the last daily winners set time.
+                                                                          // be careful, if the daily winners setting doesn't set all 10 winners,
+                                                                          // you wouldn't be able to set missed winners in a next round
+    mapping(address => uint256) private dailyClaimablesAmount;            // tracks amount of claimable nft for each user
+    mapping(address => uint256[]) private dailyClaimablesSessions;        // stores a session id where user won an nft.
 
-    mapping(uint256 => uint256) public weeklyWinnersTime;
+    mapping(uint256 => uint256) public weeklyWinnersTime;                 // tracks the last weekly winners set time.
     mapping(address => uint256) private weeklyClaimablesAmount;
     mapping(address => uint256[]) private weeklyClaimablesSessions;
+
+    // session id => addresses
+    mapping(address => uint256) private allTimeClaimablesAmount;          // tracks the amount of leaderboard winning in sessions for each user
+    mapping(address => uint256[]) private allTimeClaimablesSessions;      // session id
+
     
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed owner, uint256 id, uint256 amount, uint256 startTime);
@@ -79,7 +87,7 @@ contract NftRush is Ownable {
 
 	uint256 _sessionId = sessionId.current();
 
-	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation);
+	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation, false);
 
 	sessionId.increment();
 	lastSessionId = _sessionId;
@@ -114,6 +122,17 @@ contract NftRush is Ownable {
 
     function setWeeklyWinnersTime(uint256 _sessionId) internal {
 	weeklyWinnersTime[_sessionId] = block.timestamp + (1 weeks);
+    }
+
+    
+    function isAllTimeWinnersAdded(uint256 _sessionId) internal view returns(bool) {
+	Session storage _session = sessions[_sessionId];
+	return isStartedFor(_sessionId) == false && _session.startTime > 0 && _session.winnersSet == false;
+    }
+
+
+    function setAllTimeWinnersTime(uint256 _sessionId) internal {
+	sessions[_sessionId].winnersSet = true;
     }
     
     
@@ -244,6 +263,36 @@ contract NftRush is Ownable {
 	    weeklyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
 	    
             emit Claimed(msg.sender, _sessionId, "weekly", block.timestamp);
+	}
+    }
+
+    function addAllTimeWinners(uint256 _sessionId, address[10] memory _winners) public onlyOwner {
+	require(isAllTimeWinnersAdded(_sessionId) == false, "NFT Rush: all time winners set already");
+
+
+	setAllTimeWinnersTime(_sessionId);
+	
+	for (uint i=0; i<10; i++) {
+	    allTimeClaimablesSessions[_winners[i]].push(_sessionId);
+	    allTimeClaimablesAmount[_winners[i]] = allTimeClaimablesAmount[_winners[i]].add(1);
+	}
+    }
+
+    function claimAllTimeNft() public {
+	require(allTimeClaimablesAmount[_msgSender()] > 0, "NFT Rush: no all time leaderboard claimable found");
+
+	uint256 _claimAmount = allTimeClaimablesAmount[_msgSender()];
+	uint256[] storage _claimSession = allTimeClaimablesSessions[_msgSender()];
+
+	uint256 _sessionId = _claimSession[_claimAmount-1];
+
+	uint256 _generation = sessions[_sessionId].generation;
+	
+	if (nftFactory.mintQuality(msg.sender, _generation, NftTypes.LEGENDARY)) {
+	    delete _claimSession[_claimAmount-1];
+	    allTimeClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
+	    
+            emit Claimed(msg.sender, _sessionId, "all-time", block.timestamp);
 	}
     }
 
