@@ -52,8 +52,8 @@ contract NftRush is Ownable {
     mapping(uint256 => uint256) public dailyWinnersTime;                  // tracks the last daily winners set time.
                                                                           // be careful, if the daily winners setting doesn't set all 10 winners,
                                                                           // you wouldn't be able to set missed winners in a next round
-    mapping(address => uint256) private dailyClaimablesAmount;            // tracks amount of claimable nft for each user
-    mapping(address => uint256[]) private dailyClaimablesSessions;        // stores a session id where user won an nft.
+    mapping(address => uint256) public dailyClaimablesAmount;            // tracks amount of claimable nft for each user
+    mapping(address => uint256[]) public dailyClaimablesSessions;        // stores a session id where user won an nft.
 
     mapping(uint256 => uint256) public weeklyWinnersTime;                 // tracks the last weekly winners set time.
     mapping(address => uint256) private weeklyClaimablesAmount;
@@ -205,7 +205,7 @@ contract NftRush is Ownable {
 
     function addDailyWinners(uint256 _sessionId, address[10] memory _winners) public onlyOwner {
 	require(isStartedFor(_sessionId) == true, "NFT Rush: session is finished");
-	require(isDailyWinnersAdded(_sessionId) == false, "NFT Rush: daily winners set already");
+	require(isDailyWinnersAdded(_sessionId) == false, "NFT Rush: already set or too early");
 
 
 	setDailyWinnersTime(_sessionId);
