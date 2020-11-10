@@ -234,9 +234,10 @@ contract Staking is Ownable {
 	require(_balance.claimed.add(_balance.amount) > 0, "Seascape Staking: Deposit first");
 	require(_balance.minted == false, "Seascape Staking: Already minted");
 
-	if (nftFactory.mint(msg.sender, sessions[_sessionId].generation)) {
-	    balances[_sessionId][msg.sender].minted = true;
-	}
+	uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
+	require(_tokenId > 0, "NFT Rush: failed to mint a token");
+	
+	balances[_sessionId][msg.sender].minted = true;
     }
 
 
