@@ -65,8 +65,8 @@ contract NftRush is Ownable {
 
     
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
-    event Claimed(address indexed owner, uint256 id, string indexed claimType, uint256 claimedTime);
     event Deposited(address indexed owner, uint256 session_id, uint256 amount);
+    event Claimed(address indexed owner, uint256 session_id, string indexed claimType, uint256 nftId);
     
     //--------------------------------------------------
     // Only owner
@@ -194,12 +194,14 @@ contract NftRush is Ownable {
 	require(_balance.mintedTime == 0 || (_balance.mintedTime + _session.interval >= block.timestamp),
 		"NFT Rush: not enough interval since last minted time");
 	
-	if (nftFactory.mintQuality(msg.sender, _session.generation, _quality)) {
-            emit Claimed(msg.sender, _sessionId, "claim", block.timestamp);
+        uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
+	require(_tokenId > 0, "NFT Rush: failed to mint a token");
+	
 
-            _balance.mintedTime = block.timestamp;
-	    _balance.amount = 0;
-	}
+	_balance.mintedTime = block.timestamp;
+	_balance.amount = 0;
+
+	emit Claimed(msg.sender, _sessionId, "claim", _tokenId);
     }
 
 
@@ -226,12 +228,12 @@ contract NftRush is Ownable {
 
 	uint256 _generation = sessions[_sessionId].generation;
 	
-	if (nftFactory.mintQuality(msg.sender, _generation, NftTypes.RARE)) {
-	    delete _claimSession[_claimAmount-1];
-	    dailyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
+	uint256 _tokenId = nftFactory.mintQuality(msg.sender, _generation, NftTypes.RARE);
+	require(_tokenId > 0, "NFT Rush: failed to mint a token");
+	delete _claimSession[_claimAmount-1];
+	dailyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
 	    
-            emit Claimed(msg.sender, _sessionId, "daily", block.timestamp);
-	}
+	emit Claimed(msg.sender, _sessionId, "daily", _tokenId);
     }
 
 
@@ -258,12 +260,13 @@ contract NftRush is Ownable {
 
 	uint256 _generation = sessions[_sessionId].generation;
 	
-	if (nftFactory.mintQuality(msg.sender, _generation, NftTypes.RARE)) {
-	    delete _claimSession[_claimAmount-1];
-	    weeklyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
+	uint256 _tokenId = nftFactory.mintQuality(msg.sender, _generation, NftTypes.RARE);
+
+	require(_tokenId > 0, "NFT Rush: failed to mint a token");
+	delete _claimSession[_claimAmount-1];
+	weeklyClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
 	    
-            emit Claimed(msg.sender, _sessionId, "weekly", block.timestamp);
-	}
+	emit Claimed(msg.sender, _sessionId, "weekly", _tokenId);
     }
 
     function addAllTimeWinners(uint256 _sessionId, address[10] memory _winners) public onlyOwner {
@@ -288,12 +291,13 @@ contract NftRush is Ownable {
 
 	uint256 _generation = sessions[_sessionId].generation;
 	
-	if (nftFactory.mintQuality(msg.sender, _generation, NftTypes.LEGENDARY)) {
-	    delete _claimSession[_claimAmount-1];
-	    allTimeClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
+	uint256 _tokenId = nftFactory.mintQuality(msg.sender, _generation, NftTypes.LEGENDARY);
+	require (_tokenId > 0, "NFT Rush: failed to mint a token");
+	
+	delete _claimSession[_claimAmount-1];
+	allTimeClaimablesAmount[_msgSender()] = _claimAmount.sub(1);
 	    
-            emit Claimed(msg.sender, _sessionId, "all-time", block.timestamp);
-	}
+	emit Claimed(msg.sender, _sessionId, "all-time", _tokenId);
     }
 
     //--------------------------------------------------
