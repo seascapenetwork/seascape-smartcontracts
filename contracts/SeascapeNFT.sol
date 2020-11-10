@@ -36,7 +36,7 @@ contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
 	_;
     }
 
-    function mint(address _to, uint256 _generation, uint8 _quality) public onlyFactory returns(bool) {
+    function mint(address _to, uint256 _generation, uint8 _quality) public onlyFactory returns(uint256) {
 	uint256 _tokenId = tokenId.current();
 
 	_safeMint(_to, _tokenId);
@@ -45,7 +45,7 @@ contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
 
 	tokenId.increment();
 
-	return true;
+	return _tokenId;
     }
 
     function setOwner(address _owner) public onlyOwner {

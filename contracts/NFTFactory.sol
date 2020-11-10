@@ -22,11 +22,11 @@ contract NFTFactory is AccessControl {
     //--------------------------------------------------
     // Only Seascape Staking contract
     //--------------------------------------------------
-    function mint(address _owner, uint256 _generation) public onlyStaticUser returns(bool) {
+    function mint(address _owner, uint256 _generation) public onlyStaticUser returns(uint256) {
 	return nft.mint(_owner, _generation, NftTypes.NORMAL);
     }
 
-    function mintQuality(address _owner, uint256 _generation, uint8 _quality) public onlyGenerator returns(bool) {
+    function mintQuality(address _owner, uint256 _generation, uint8 _quality) public onlyGenerator returns(uint256) {
 	require (_quality > 0 && _quality < 6, "NFT Factory: invalid quality");
 	return nft.mint(_owner, _generation, _quality);
     }
