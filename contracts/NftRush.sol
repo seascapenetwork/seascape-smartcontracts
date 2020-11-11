@@ -191,7 +191,7 @@ contract NftRush is Ownable {
 	require(_recover == owner(),
 		"NFT Rush: Quality verification failed");
 
-	require(_balance.mintedTime == 0 || (_balance.mintedTime + _session.interval >= block.timestamp),
+	require(_balance.mintedTime == 0 || (_balance.mintedTime + _session.interval < block.timestamp),
 		"NFT Rush: not enough interval since last minted time");
 	
         uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
