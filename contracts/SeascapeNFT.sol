@@ -21,6 +21,8 @@ contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
     address private factory;
 
     mapping(uint256 => Params) public paramsOf;
+
+    event Minted(address indexed owner, uint256 indexed id, uint256 generation, uint8 quality);
     
     /**
      * @dev Sets the {name} and {symbol} of token.
@@ -46,6 +48,7 @@ contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
 
 	tokenId.increment();
 
+	emit Minted(_to, _tokenId, _generation, _quality);
 	return _tokenId;
     }
 
