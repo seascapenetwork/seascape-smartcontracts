@@ -12,13 +12,15 @@ let accounts;
  * For test purpose, starts a game session
  */
 module.exports = async function(callback) {
-    let res = init();
+    const networkId = await web3.eth.net.getId();
+    let res = init(networkId);
+    
     console.log("Deposit of "+depositInt+" CWS was successful!");
 
     callback(null, res);
 };
 
-let init = async function() {
+let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
     let nftRush = await NftRush.deployed();
     let crowns = await Crowns.deployed();
