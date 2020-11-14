@@ -37,6 +37,7 @@ let init = async function(networkId) {
         
     //should add nft rush as generator role in nft factory
     await factory.addGenerator(nftRush.address, {from: accounts[0]});
+    console.log("nft rush was granted permission to mint nft");
 
     //should set nft factory in nft
     await nft.setFactory(factory.address);
@@ -48,6 +49,7 @@ let init = async function(networkId) {
 				      startTime,
 				      generation,
 				      {from: accounts[0]});
+    console.log("Started a nft rush session");
 }.bind(this);
 
 
