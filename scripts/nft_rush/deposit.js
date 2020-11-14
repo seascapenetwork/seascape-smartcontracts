@@ -23,7 +23,15 @@ module.exports = async function(callback) {
 let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
     let nftRush = await NftRush.deployed();
+
     let crowns = await Crowns.deployed();
+	
+    /*if (networkId == 4) {
+	crowns = await Crowns.at(process.env.CROWNS_RINKEBY);
+    } else {
+	crowns = await Crowns.deployed();
+    }*/
+    
     let lastSessionId = await nftRush.lastSessionId();
     
     return await deposit(nftRush, crowns, lastSessionId);
