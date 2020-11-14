@@ -33,7 +33,7 @@ let init = async function(networkId) {
 let deposit = async function(nftRush, crowns, lastSessionId) {
     /////// depositing token
     //should approve nft rush to spend cws of player
-    await crowns.approve(nftRush.address, depositAmount, {from: accounts[0]});
+    await crowns.approve(nftRush.address, depositAmount);
 
     //should spend deposit in nft rush
     await nftRush.deposit(lastSessionId, depositAmount, {from: accounts[0]});    
