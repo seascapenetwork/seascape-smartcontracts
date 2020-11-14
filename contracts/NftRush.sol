@@ -65,7 +65,7 @@ contract NftRush is Ownable {
 
     
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
-    event Deposited(address indexed owner, uint256 session_id, uint256 amount);
+    event Deposited(address indexed owner, uint256 session_id, uint256 balanceAmount, uint256 prevMintedTime);
     event Claimed(address indexed owner, uint256 session_id, string indexed claimType, uint256 nftId);
     
     //--------------------------------------------------
@@ -168,7 +168,7 @@ contract NftRush is Ownable {
 	
 	depositTime[_sessionId][msg.sender]    = block.timestamp;
        
-        emit Deposited(msg.sender, _sessionId, _amount);
+        emit Deposited(msg.sender, _sessionId, _balance.amount, _balance.mintedTime);
     }
 
 
