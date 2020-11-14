@@ -26,8 +26,15 @@ let init = async function(networkId) {
     let nftRush = await NftRush.deployed();
     let factory = await Factory.deployed();
     let nft     = await Nft.deployed();
-    let crowns = await Crowns.deployed();
-    
+
+    let crowns  = await Crowns.deployed();
+	
+    /*if (networkId == 4) {
+	crowns = await Crowns.at(process.env.CROWNS_RINKEBY);
+    } else {
+	crowns = await Crowns.deployed();
+    }*/
+        
     //should add nft rush as generator role in nft factory
     await factory.addGenerator(nftRush.address, {from: accounts[0]});
 
