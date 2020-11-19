@@ -71,7 +71,7 @@ contract Staking is Ownable {
 
 	sessionId.increment(); 	// starts at value 1
 
-	nftFactory = NFTFactory(_address);
+	nftFactory = NFTFactory(_nftFactory);
     }
     
     //--------------------------------------------------
