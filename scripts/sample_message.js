@@ -11,18 +11,16 @@ module.exports = function(callback) {
 
 let init = async function() {
     await web3.eth.getAccounts(function(err,res) { accounts = res; });
-    return await sampleMsgSigning();
-}.bind(this);
-
-let sampleMsgSigning = async function() {
     let addr = accounts[0];
 
-    let raw256_1 = 12345;  // amount wei
-    let raw256_2 = 54321;  // minted time
+    return await sampleMsgSigning(addr, "40", 0, 1);
+}.bind(this);
+
+let sampleMsgSigning = async function(walletAddr, amount, mintedTime, quality) {
+    let addr = accounts[0];
     let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
-						[raw256_1, raw256_2]);
-    let quality = 3;
-    let bytes1  = web3.utils.bytesToHex([quality]);
+						[web3.utils.toWei(amount), mintedTime]);
+    let bytes1 = web3.utils.bytesToHex([quality]);
     
     let str = addr + bytes32.substr(2) + bytes1.substr(2);
     let keccak = web3.utils.keccak256(str);
