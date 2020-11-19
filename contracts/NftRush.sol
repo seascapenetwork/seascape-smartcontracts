@@ -66,7 +66,7 @@ contract NftRush is Ownable {
     
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed owner, uint256 session_id, uint256 balanceAmount, uint256 prevMintedTime);
-    event Claimed(address indexed owner, uint256 session_id, string indexed claimType, uint256 nftId);
+    event Minted(address indexed owner, uint256 session_id, uint256 nftId);
     
     //--------------------------------------------------
     // Only owner
@@ -172,8 +172,8 @@ contract NftRush is Ownable {
     }
 
 
-    /// @dev claim a function
-    function claim(uint256 _sessionId, uint8 _v, bytes32 _r, bytes32 _s, uint8 _quality) public {
+    /// @dev mints an nft
+    function mint(uint256 _sessionId, uint8 _v, bytes32 _r, bytes32 _s, uint8 _quality) public {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][msg.sender];
 
@@ -216,6 +216,7 @@ contract NftRush is Ownable {
 	    dailyClaimablesSessions[_winners[i]].push(_sessionId);
 	    dailyClaimablesAmount[_winners[i]] = dailyClaimablesAmount[_winners[i]].add(1);
 	}
+	emit Minted(msg.sender, _sessionId, _tokenId);
     }
 
     function claimDailyNft() public {
