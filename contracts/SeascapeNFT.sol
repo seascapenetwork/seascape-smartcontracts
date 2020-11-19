@@ -35,7 +35,7 @@ contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
     }
 
     modifier onlyFactory() {
-	require(factory == _msgSender(), "Seascape NFT: Only NFT Factory can call a function");
+	require(factory == _msgSender(), "Seascape NFT: Only NFT Factory can call the method");
 	_;
     }
 
