@@ -60,12 +60,6 @@ contract Staking is Ownable {
 
 	
     /// @dev CWS is not changable after contract deployment.
-    constructor(IERC20 _cws) public {
-	CWS = _cws;
-
-	sessionId.increment(); 	// starts at value 1
-    }
-
     constructor(IERC20 _cws, address _nftFactory) public {
 	CWS = _cws;
 

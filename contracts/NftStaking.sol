@@ -56,22 +56,6 @@ contract NftStaking is Ownable, IERC721Receiver {
     event Deposited(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event Claimed(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 claimedTime);
 
-	
-    /// @dev CWS is not changable after contract deployment.
-    constructor(IERC20 _cws) public {
-	CWS = _cws;
-
-	sessionId.increment(); 	// starts at value 1
-    }
-
-    constructor(IERC20 _cws,   address _nftFactory) public {
-	CWS = _cws;
-
-	sessionId.increment(); 	// starts at value 1
-
-	nftFactory = NFTFactory(_nftFactory);
-    }
-
     constructor(IERC20 _cws, address _nftFactory, address _nft) public {
 	CWS = _cws;
 
