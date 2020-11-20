@@ -1,8 +1,8 @@
-var NFT = artifacts.require("./SeascapeNFT.sol");
+var Nft = artifacts.require("./SeascapeNft.sol");
 
 module.exports = function(deployer, network) {
-    deployer.deploy(NFT).then(function(){
-	console.log("Seascape NFT contract was deployed at address: "+NFT.address);
+    deployer.deploy(Nft).then(function(){
+	console.log("Seascape Nft deployed at address: "+Nft.address);
     });
 };
  

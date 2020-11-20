@@ -1,6 +1,6 @@
 var NftRush = artifacts.require("./NftRush.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
-var Factory = artifacts.require("./NFTFactory.sol");
+var Factory = artifacts.require("./NftFactory.sol");
 
 var minDeposit = web3.utils.toWei('5', 'ether');
 if (process.env.NFT_RUSH_MIN_DEPOSIT !== undefined) {

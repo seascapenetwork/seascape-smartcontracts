@@ -1,7 +1,7 @@
 var NftStaking = artifacts.require("./NftStaking.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
-var Factory = artifacts.require("./NFTFactory.sol");
-var Nft = artifacts.require("./SeascapeNFT.sol");
+var Factory = artifacts.require("./NftFactory.sol");
+var Nft = artifacts.require("./SeascapeNft.sol");
 
 
 module.exports = function(deployer, network) {
