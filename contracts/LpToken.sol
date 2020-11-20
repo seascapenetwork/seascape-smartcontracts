@@ -7,7 +7,7 @@ import "./openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./openzeppelin/contracts/math/SafeMath.sol";
 
 /// @author Medet Ahmetson
-contract LP_Token is ERC20, Ownable {
+contract LpToken is ERC20, Ownable {
     using SafeMath for uint256;
 
     uint256 private constant _million = 1000000;
