@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.7;
 
-import "./openzeppelin/contracts/access/Ownable.sol";
-import "./openzeppelin/contracts/utils/Counters.sol";
-import "./openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./../openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
 
 /// @author Medet Ahmetson
-contract SeascapeNFT is ERC721, ERC721Burnable, Ownable {
+contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private tokenId;
