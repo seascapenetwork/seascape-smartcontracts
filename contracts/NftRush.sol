@@ -44,37 +44,37 @@ contract NftRush is Ownable {
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
-    uint256[10] public spentDailyRewards;        // spent token leaderboard
-    uint256[10] public spentAllTimeRewards;
-    uint256[10] public mintedDailyRewards;       // minted nft amount leaderboard
-    uint256[10] public mintedAllTimeRewards;
+    uint256[10] public spentDailyAmounts;        // spent token leaderboard
+    uint256[10] public spentAllTimeAmounts;
+    uint256[10] public mintedDailyAmounts;       // minted nft amount leaderboard
+    uint256[10] public mintedAllTimeAmounts;
 
     // struct: session id => timestamp
     mapping(uint256 => uint256) public spentDailyWinnersTime;                  // tracks the last daily winners set time.
                                                                           // be careful, if the daily winners setting doesn't set all 10 winners,
                                                                           // you wouldn't be able to set missed winners in a next round
-    mapping(address => uint256) public spentDailyAmounts;            // tracks amount of claimable nft for each user
+    mapping(address => uint256) public spentDailyClaimables;            // tracks amount of claimable nft for each user
     mapping(address => Reward[]) public spentDailyRewards;        // stores a session id where user won an nft.
 
     // session id => addresses
-    mapping(address => uint256) public spentAllTimeAmounts;          // tracks the amount of leaderboard winning in sessions for each user
+    mapping(address => uint256) public spentAllTimeClaimables;          // tracks the amount of leaderboard winning in sessions for each user
     mapping(address => Reward[]) public spentAllTimeRewards;      // session id
 
     // struct: session id => timestamp
     mapping(uint256 => uint256) public mintedDailyWinnersTime;                  // tracks the last daily winners set time.
                                                                           // be careful, if the daily winners setting doesn't set all 10 winners,
                                                                           // you wouldn't be able to set missed winners in a next round
-    mapping(address => uint256) public mintedDailyAmounts;            // tracks amount of claimable nft for each user
+    mapping(address => uint256) public mintedDailyClaimables;            // tracks amount of claimable nft for each user
     mapping(address => Reward[]) public mintedDailyRewards;        // stores a session id where user won an nft.
 
     // session id => addresses
-    mapping(address => uint256) public mintedAllTimeAmounts;          // tracks the amount of leaderboard winning in sessions for each user
+    mapping(address => uint256) public mintedAllTimeClaimables;          // tracks the amount of leaderboard winning in sessions for each user
     mapping(address => Reward[]) public mintedAllTimeRewards;      // session id
     
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
-    event Rewarded(address indexed owner, uint256 sessionId, string type, uint256 amount);	
+    event Rewarded(address indexed owner, uint256 sessionId, string rewardType, uint256 amount);	
 	
     constructor(address _crowns, address _factory, uint256 _minDeposit) public {
 	// Starts at value 1. 
@@ -107,7 +107,7 @@ contract NftRush is Ownable {
 
 	uint256 _sessionId = sessionId.current();
 
-	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation, false);
+	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation, false, false);
 
 	sessionId.increment();
 	lastSessionId = _sessionId;
@@ -129,38 +129,38 @@ contract NftRush is Ownable {
 	minDeposit = _deposit;
     }
 
-    function setAllRewards(uint256[10] _spentDaily, uint256[10] _spentAllTime, uint256[10] _mintedDaily, uint256[10] _mintedAllTime) public onlyOwner {
+    function setAllRewards(uint256[10] memory _spentDaily, uint256[10] memory _spentAllTime, uint256[10] memory _mintedDaily, uint256[10] memory _mintedAllTime) public onlyOwner {
+	setDailySpents(_spentDaily);
+	setAllTimeSpents(_spentAllTime);
+	setDailyMinted(_mintedDaily);
+	setAllTimeMinted(_mintedAllTime);
+    }
+
+    function setAllSpents(uint256[10] memory _daily, uint256[10] memory _allTime) public onlyOwner {
 	setDailySpents(_daily);
 	setAllTimeSpents(_allTime);
+    }
+
+    function setAllMinted(uint256[10] memory _daily, uint256[10] memory _allTime) public onlyOwner {
 	setDailyMinted(_daily);
 	setAllTimeMinted(_allTime);
     }
 
-    function setAllSpents(uint256[10] _daily, uint256[10] _allTime) public onlyOwner {
-	setDailySpents(_daily);
-	setAllTimeSpents(_allTime);
+
+    function setDailySpents(uint256[10] memory _rewards) public onlyOwner {
+	spentDailyAmounts = _rewards;
     }
 
-    function setAllMinted(uint256[10] _daily, uint256[10] _allTime) public onlyOwner {
-	setDailyMinted(_daily);
-	setAllTimeMinted(_allTime);
+    function setAllTimeSpents(uint256[10] memory _rewards) public onlyOwner {
+	spentAllTimeAmounts = _rewards;
     }
 
-
-    function setDailySpents(uint256[10] _rewards) public onlyOwner {
-	spentDailyRewards = _rewards;
+    function setDailyMinted(uint256[10] memory _rewards) public onlyOwner {	    
+	mintedDailyAmounts = _rewards;
     }
 
-    function setAllTimeSpents(uint256[10] _rewards) public onlyOwner {
-	spentAllTimeRewards = _rewards;
-    }
-
-    function setDailySpents(uint256[10] _rewards) public onlyOwner {	    
-	mintedDailyRewards = _rewards;
-    }
-
-    function setAllTimeSpents(uint256[10] _rewards) public onlyOwner {
-	mintedAllRewards = _rewards;
+    function setAllTimeMinted(uint256[10] memory _rewards) public onlyOwner {
+	mintedAllTimeAmounts = _rewards;
     }
     
     function addDailySpentWinners(uint256 _sessionId, address[10] memory _winners, uint8 _amount) public onlyOwner {
@@ -168,19 +168,19 @@ contract NftRush is Ownable {
 	require(_amount <= 10,                                 "NFT Rush: too many winners");
 
         if (_amount > 0) {
-	    uint256 _totalRewards = calculateTotalRewards(spentDailyRewards, _amount);	
+	    uint256 _totalRewards = calculateTotalRewards(spentDailyAmounts, _amount);	
             require(crowns.transferFrom(owner(), address(this), _totalRewards) == true, "NFT Rush: not enough CWS to give as a reward");	
     
             for (uint i=0; i<_amount; i++) {
-		Reward memory _reward = Reward(_sessionId, _rewards[i]);
+		Reward memory _reward = Reward(_sessionId, spentDailyAmounts[i]);
 		spentDailyRewards[_winners[i]].push(_reward);
 
 		// increase amount of daily rewards that msg.sender could claim
-		spentDailyAmounts[_winners[i]] = spentDailyAmounts[_winners[i]].add(1);
+		spentDailyClaimables[_winners[i]] = spentDailyClaimables[_winners[i]].add(1);
             }
 	}
 
- 	setSpentDailyWinnersTime(_sessionId);
+ 	setDailySpentWinnersTime(_sessionId);
     }
 
     function addAllTimeSpentWinners(uint256 _sessionId, address[10] memory _winners, uint8 _amount) public onlyOwner {
@@ -188,19 +188,19 @@ contract NftRush is Ownable {
 	require(_amount <= 10,                              "NFT Rush: too many winners");
 
 	if (_amount > 0) {		    
-	    uint256 _totalRewards = calculateTotalRewards(spentAllTimeRewards, _amount);	
+	    uint256 _totalRewards = calculateTotalRewards(spentAllTimeAmounts, _amount);	
             require(crowns.transferFrom(owner(), address(this), _totalRewards) == true, "NFT Rush: not enough CWS to give as a reward");	
     
             for (uint i=0; i<_amount; i++) {
-		Reward memory _reward = Reward(_sessionId, _rewards[i]);
+		Reward memory _reward = Reward(_sessionId, spentAllTimeAmounts[i]);
 		spentAllTimeRewards[_winners[i]].push(_reward);
 
 		// increase amount of daily rewards that msg.sender could claim
-		spentAllTimeAmounts[_winners[i]] = spentAllTimeAmounts[_winners[i]].add(1);
+		spentAllTimeClaimables[_winners[i]] = spentAllTimeClaimables[_winners[i]].add(1);
             }
 	}
 
-	setAllTimeWinnersTime(_sessionId);		
+	setAllTimeSpentWinnersTime(_sessionId);		
     }
 
     function addDailyMintedWinners(uint256 _sessionId, address[10] memory _winners, uint8 _amount) public onlyOwner {
@@ -208,19 +208,19 @@ contract NftRush is Ownable {
 	require(_amount <= 10,                                  "NFT Rush: too many winners");
 
         if (_amount > 0) {
-	    uint256 _totalRewards = calculateTotalRewards(mintedDailyRewards, _amount);	
+	    uint256 _totalRewards = calculateTotalRewards(mintedDailyAmounts, _amount);	
             require(crowns.transferFrom(owner(), address(this), _totalRewards) == true, "NFT Rush: not enough CWS to give as a reward");	
     
             for (uint i=0; i<_amount; i++) {
-		Reward memory _reward = Reward(_sessionId, _rewards[i]);
+		Reward memory _reward = Reward(_sessionId, mintedDailyAmounts[i]);
 		mintedDailyRewards[_winners[i]].push(_reward);
 
 		// increase amount of daily rewards that msg.sender could claim
-		mintedDailyAmounts[_winners[i]] = mintedDailyAmounts[_winners[i]].add(1);
+		mintedDailyClaimables[_winners[i]] = mintedDailyClaimables[_winners[i]].add(1);
             }
 	}
 
- 	setMintedDailyWinnersTime(_sessionId);
+ 	setDailyMintedWinnersTime(_sessionId);
     }
 
     function addAllTimeMintedWinners(uint256 _sessionId, address[10] memory _winners, uint8 _amount) public onlyOwner {
@@ -228,15 +228,15 @@ contract NftRush is Ownable {
 	require(_amount <= 10,                                    "NFT Rush: too many winners");
 
 	if (_amount > 0) {		    
-	    uint256 _totalRewards = calculateTotalRewards(mintedAllTimeRewards, _amount);	
+	    uint256 _totalRewards = calculateTotalRewards(mintedAllTimeAmounts, _amount);	
             require(crowns.transferFrom(owner(), address(this), _totalRewards) == true, "NFT Rush: not enough CWS to give as a reward");	
     
             for (uint i=0; i<_amount; i++) {
-		Reward memory _reward = Reward(_sessionId, _rewards[i]);
+		Reward memory _reward = Reward(_sessionId, mintedAllTimeAmounts[i]);
 		mintedAllTimeRewards[_winners[i]].push(_reward);
 
 		// increase amount of daily rewards that msg.sender could claim
-		mintedAllTimeAmounts[_winners[i]] = mintedAllTimeAmounts[_winners[i]].add(1);
+		mintedAllTimeClaimables[_winners[i]] = mintedAllTimeClaimables[_winners[i]].add(1);
             }
 	}
 
@@ -302,65 +302,65 @@ contract NftRush is Ownable {
     }
 
     function claimDailySpent() public {
-	require(spentDailyAmounts[_msgSender()] > 0, "NFT Rush: reward not found");
+	require(spentDailyClaimables[_msgSender()] > 0, "NFT Rush: reward not found");
 
-	uint256 _claimAmount = spentDailyAmounts[_msgSender()];
-	uint256[] storage _reward = spentDailyRewards[_msgSender()];
+	uint256 _claimAmount = spentDailyClaimables[_msgSender()];
+	Reward[] storage _reward = spentDailyRewards[_msgSender()];
 
-	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
+	uint256 _sessionId = _reward[_claimAmount-1].sessionId;		
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
 	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
-	spentDailyAmounts[_msgSender()] = _claimAmount.sub(1);
+	spentDailyClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
 	emit Rewarded(msg.sender, _sessionId, "spent-daily", _amount);
     }
 
     function claimAllTimeSpent() public {
-	require(spentAllTimeAmounts[_msgSender()] > 0, "NFT Rush: reward not found");
+	require(spentAllTimeClaimables[_msgSender()] > 0, "NFT Rush: reward not found");
 
-	uint256 _claimAmount = spentAllTimeAmounts[_msgSender()];
-	uint256[] storage _reward = spentAllTimeRewards[_msgSender()];
+	uint256 _claimAmount = spentAllTimeClaimables[_msgSender()];
+	Reward[] storage _reward = spentAllTimeRewards[_msgSender()];
 
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
 	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
-	spentAllTimeAmounts[_msgSender()] = _claimAmount.sub(1);
+	spentAllTimeClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
 	emit Rewarded(msg.sender, _sessionId, "spent-alltime", _amount);
     }
 
     function claimDailyMinted() public {	    
-	require(mintedDailyAmounts[_msgSender()] > 0, "NFT Rush: reward not found");
+	require(mintedDailyClaimables[_msgSender()] > 0, "NFT Rush: reward not found");
 
-	uint256 _claimAmount = mintedDailyAmounts[_msgSender()];
-	uint256[] storage _reward = mintedDailyRewards[_msgSender()];
+	uint256 _claimAmount = mintedDailyClaimables[_msgSender()];
+	Reward[] storage _reward = mintedDailyRewards[_msgSender()];
 
-	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
+	uint256 _sessionId = _reward[_claimAmount-1].sessionId;		
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
 	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
-	mintedDailyAmounts[_msgSender()] = _claimAmount.sub(1);
+	mintedDailyClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
 	emit Rewarded(msg.sender, _sessionId, "minted-daily", _amount);
     }
 
     function claimAllTimeMinted() public {
-	require(mintedAllTimeAmounts[_msgSender()] > 0, "NFT Rush: reward not found");
+	require(mintedAllTimeClaimables[_msgSender()] > 0, "NFT Rush: reward not found");
 
-	uint256 _claimAmount = mintedAllTimeAmounts[_msgSender()];
-	uint256[] storage _reward = mintedAllTimeRewards[_msgSender()];
+	uint256 _claimAmount = mintedAllTimeClaimables[_msgSender()];
+	Reward[] storage _reward = mintedAllTimeRewards[_msgSender()];
 
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
 	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
-	mintedAllTimeAmounts[_msgSender()] = _claimAmount.sub(1);
+	mintedAllTimeClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
 	emit Rewarded(msg.sender, _sessionId, "minted-alltime", _amount);
     }
@@ -402,7 +402,7 @@ contract NftRush is Ownable {
     }
 
     function isDailyMintedWinnersAdded(uint256 _sessionId) internal view returns(bool) {
-	return block.timestamp < spentMintedWinnersTime[_sessionId] + (1 days);
+	return block.timestamp < mintedDailyWinnersTime[_sessionId] + (1 days);
     }
 
 
@@ -420,7 +420,7 @@ contract NftRush is Ownable {
 	sessions[_sessionId].mintedWinnersSet = true;
     }
 
-    function calculateTotalRewards(uint256[10] _rewards, uint256 _amount) returns (uint256) {
+    function calculateTotalRewards(uint256[10] memory _rewards, uint256 _amount) internal returns (uint256) {
 	uint256 _totalReward = 0;
 	for (uint i=0; i<_amount; i++) {
 	    _totalReward = _totalReward.add(_rewards[i]);
