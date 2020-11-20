@@ -1,23 +1,23 @@
 pragma solidity 0.6.7;
 
-import "./openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./openzeppelin/contracts/access/Ownable.sol";
-import "./openzeppelin/contracts/math/SafeMath.sol";
-import "./openzeppelin/contracts/utils/Counters.sol";
-import "./NFTFactory.sol";
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../seascape_nft/NftFactory.sol";
 
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
 /// @notice Contract is attached to Seascape Nft Factory
-contract Staking is Ownable {
+contract LpMining is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
 
     uint256 scaler = 10**18;
 	
-    NFTFactory nftFactory;
+    NftFactory nftFactory;
     
     IERC20 public CWS;
 
@@ -65,7 +65,7 @@ contract Staking is Ownable {
 
 	sessionId.increment(); 	// starts at value 1
 
-	nftFactory = NFTFactory(_nftFactory);
+	nftFactory = NftFactory(_nftFactory);
     }
     
     //--------------------------------------------------
@@ -111,8 +111,8 @@ contract Staking is Ownable {
      
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
-    function setNFTFactory(address _address) external onlyOwner {
-	nftFactory = NFTFactory(_address);
+    function setNftFactory(address _address) external onlyOwner {
+	nftFactory = NftFactory(_address);
     }
 
 

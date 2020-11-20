@@ -1,11 +1,11 @@
 pragma solidity 0.6.7;
 
-import "./crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
-import "./openzeppelin/contracts/access/Ownable.sol";
-import "./openzeppelin/contracts/math/SafeMath.sol";
-import "./openzeppelin/contracts/utils/Counters.sol";
-import "./SeascapeNftTypes.sol";
-import "./NFTFactory.sol";
+import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../seascape_nft/NftTypes.sol";
+import "./../seascape_nft/NftFactory.sol";
 
 
 contract NftRush is Ownable {
@@ -13,7 +13,7 @@ contract NftRush is Ownable {
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
-    NFTFactory nftFactory;
+    NftFactory nftFactory;
     
     Counters.Counter private sessionId;
 
@@ -80,7 +80,7 @@ contract NftRush is Ownable {
 	// Starts at value 1. 
 	sessionId.increment();
 
-	nftFactory = NFTFactory(_factory);
+	nftFactory = NftFactory(_factory);
 
 	crowns = CrownsToken(_crowns);
 
@@ -121,7 +121,7 @@ contract NftRush is Ownable {
     
     /// @notice Sets a NFT factory that will mint a token for stakers
     function setNftFactory(address _address) external onlyOwner {
-	nftFactory = NFTFactory(_address);
+	nftFactory = NftFactory(_address);
     }
 
 

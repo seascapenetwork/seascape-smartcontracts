@@ -1,13 +1,13 @@
 pragma solidity 0.6.7;
 
-import "./openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./openzeppelin/contracts/access/Ownable.sol";
-import "./openzeppelin/contracts/math/SafeMath.sol";
-import "./openzeppelin/contracts/utils/Counters.sol";
-import "./NFTFactory.sol";
-import "./openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./SeascapeNFT.sol";
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./../seascape_nft/NftFactory.sol";
+import "./../seascape_nft/SeascapeNft.sol";
 
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
@@ -18,10 +18,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     uint256 scaler = 10**18;
 	
-    NFTFactory nftFactory;
+    NftFactory nftFactory;
     
-    IERC20 public CWS;
-    SeascapeNFT private nft;
+    IERC20 public crowns;
+    SeascapeNft private nft;
 
     Counters.Counter private sessionId;
 
@@ -55,14 +55,14 @@ contract NftStaking is Ownable, IERC721Receiver {
     event Deposited(address indexed owner, uint256 sessionId, uint256 nftId);
     event Claimed(address indexed owner, uint256 sessionId, uint256 amount, uint256 nftId);
 
-    constructor(IERC20 _cws, address _nftFactory, address _nft) public {
-	CWS = _cws;
+    constructor(address _crowns, address _nftFactory, address _nft) public {
+	crowns = IERC20(_crowns);
 
 	sessionId.increment(); 	// starts at value 1
 
-	nftFactory = NFTFactory(_nftFactory);
+	nftFactory = NftFactory(_nftFactory);
 
-	nft = SeascapeNFT(_nft);
+	nft = SeascapeNft(_nft);
     }
     
     //--------------------------------------------------
@@ -89,7 +89,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
 	// required CWS balance of this contract
 	uint256 newSupply = rewardSupply.add(_totalReward);
-	require(CWS.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
+	require(crowns.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
 
 	//--------------------------------------------------------------------
 	// creating the session
@@ -110,8 +110,8 @@ contract NftStaking is Ownable, IERC721Receiver {
      
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
-    function setNFTFactory(address _address) external onlyOwner {
-	nftFactory = NFTFactory(_address);
+    function setNftFactory(address _address) external onlyOwner {
+	nftFactory = NftFactory(_address);
     }
 
 
@@ -163,7 +163,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
 	uint256 _interest = calculateInterest(_sessionId, msg.sender, _index);
 
-	require(CWS.transfer(msg.sender, _interest) == true, "Seascape Staking: Failed to transfer reward CWS token");
+	require(crowns.transfer(msg.sender, _interest) == true, "Seascape Staking: Failed to transfer reward CWS token");
 		
 	_session.claimed     = _session.claimed.add(_interest);
 	rewardSupply         = rewardSupply.sub(_interest);
