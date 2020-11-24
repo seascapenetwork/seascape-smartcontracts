@@ -6,7 +6,7 @@ let Factory = artifacts.require("NFTFactory");
 
 let accounts;
 let interval = 10;  // seconds
-let period = 180;   // 3 min
+let period = 3600 * 3;   // 3 min
 let generation = 0;
 
 /**

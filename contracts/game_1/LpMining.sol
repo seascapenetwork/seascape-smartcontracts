@@ -196,7 +196,7 @@ contract LpMining is Ownable {
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
-    function claimNFT(uint256 _sessionId) external {
+    function claimNft(uint256 _sessionId) external {
 	require(isStartedFor(_sessionId), "Seascape Staking: No active session");
 
 	Balance storage _balance = balances[_sessionId][msg.sender];
