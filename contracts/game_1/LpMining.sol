@@ -157,13 +157,16 @@ contract LpMining is Ownable {
     }
 
 
-    function claim(uint256 _sessionId) public {
+    function claim(uint256 _sessionId) public returns(bool) {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][msg.sender];
 
 	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
 	
 	uint256 _interest = calculateInterest(_sessionId, msg.sender);
+	if (_interest == 0) {
+	    return false;
+	}
 
 	require(CWS.transfer(msg.sender, _interest) == true, "Seascape Staking: Failed to transfer reward CWS token");
 		
@@ -173,6 +176,7 @@ contract LpMining is Ownable {
 	rewardSupply         = rewardSupply.sub(_interest);
 
 	emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
+	return true;
     }
 
 
