@@ -19,7 +19,9 @@ contract NftRush is Ownable {
 
     CrownsToken private crowns;
     uint256 private minDeposit;
-    
+
+    /// @notice Game session. Smartcontract is active during the game session.
+    /// Game session is active for a certain period of time only
     struct Session {
 	uint256 interval;      // period between intervals
 	uint256 period;        // duration of session
@@ -29,11 +31,14 @@ contract NftRush is Ownable {
 	bool    mintedWinnersSet;
     }
 
+    /// @notice Tracking player data within game session
     struct Balance {
 	uint256 amount;
 	uint256 mintedTime;
     }
 
+    /// @notice Tracking leaderboard rewards within game session.
+    /// Nft Rush (this contract game) has a leaderboard
     struct Reward {
 	uint256 sessionId;
 	uint256 cws;
@@ -274,7 +279,7 @@ contract NftRush is Ownable {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][msg.sender];
 
-	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
+	require(_balance.amount > 0, "NFT Rush: No deposit was found");
 
 	/// Validation of quality
 	// message is generated as owner + amount + last time stamp + quality
@@ -310,7 +315,7 @@ contract NftRush is Ownable {
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;		
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
-	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
+	require(crowns.transfer(_msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
 	spentDailyClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
@@ -326,7 +331,7 @@ contract NftRush is Ownable {
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
-	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
+	require(crowns.transfer(_msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
 	spentAllTimeClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
@@ -342,7 +347,7 @@ contract NftRush is Ownable {
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;		
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
-	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
+	require(crowns.transfer(_msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
 	mintedDailyClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
@@ -358,7 +363,7 @@ contract NftRush is Ownable {
 	uint256 _sessionId = _reward[_claimAmount-1].sessionId;
 	uint256 _amount = _reward[_claimAmount-1].cws;
 
-	require(crowns.transferFrom(address(this), _msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
+	require(crowns.transfer(_msgSender(), _amount) == true, "NFT Rush: failed to reward CWS to winner");
 	delete _reward[_claimAmount-1];
 	mintedAllTimeClaimables[_msgSender()] = _claimAmount.sub(1);
 	    
