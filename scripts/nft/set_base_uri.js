@@ -1,7 +1,7 @@
-let Nft = artifacts.require("SeascapeNFT");
+let Nft = artifacts.require("SeascapeNft");
 
 let accounts;
-let uri = "http://api-test.blocklords.io:81/nft/metadata/";
+let uri = "https://api-test.blocklords.io:81/nft/metadata/";
 
 module.exports = async function(callback) {
     let res = init();
