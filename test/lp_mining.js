@@ -1,11 +1,13 @@
 let LpMining = artifacts.require("LpMining");
 let LpToken = artifacts.require("LpToken");
 let Crowns = artifacts.require("CrownsToken");
+let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("NftFactory");
 
 contract("Game 1: Lp Mining", async accounts => {
     // Sample data to use for game
     let totalReward = web3.utils.toWei('100', 'ether');    // CWS amount to share
-    let period = 5;                                        // seconds
+    let period = 7;                                        // seconds
     let startTime = null;                                  // defined in test unit, asynchrounues functions
                                                            // may invalidate the predefined time
     let generation = 0;
@@ -16,6 +18,8 @@ contract("Game 1: Lp Mining", async accounts => {
     let lpMining = null;
     let lpToken = null;
     let crowns = null;
+    let nft = null;
+    let factory = null;
 
     //--------------------------------------------------
     
@@ -142,15 +146,13 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should claim some Crowns", async() => {
 	let player = accounts[1];
         let _lpMining = lpMining;
-	
+
 	try {
 	    await _lpMining.claim(sessionId, {from: player});
 	} catch(e) {
-	    console.log(e);
 	    assert.fail('Nothing was generated to claim');
 	    return;
 	}
-
     });
 
     
@@ -172,5 +174,41 @@ contract("Game 1: Lp Mining", async accounts => {
 	}
 
 	assert.fail();
+    });
+
+
+    //--------------------------------------------------
+
+    // Claiming Seascape Nft.
+    // First, we need to link Smartcontracts between each other.
+    it("should link nft, factory and lp mining contracts", async() => {
+	nft = await Nft.deployed();
+	factory = await Factory.deployed();
+
+	await nft.setFactory(factory.address);
+	await factory.addStaticUser(lpMining.address);
+    });
+
+    // Claiming Seascape Nft.
+    // First, we need to link Smartcontracts between each other.
+    it("should link nft, factory and lp mining contracts", async() => {
+	nft = await Nft.deployed();
+	factory = await Factory.deployed();
+
+	await nft.setFactory(factory.address);
+	await factory.addStaticUser(lpMining.address);
+    });
+
+    // Claiming Seascape Nft.
+    it("should claim Nft", async() => {
+	let player = accounts[1];
+	
+	await lpMining.claimNft(sessionId, {from: player});
+    });
+
+    it("should claim Nft second time (only testing)", async() => {
+	let player = accounts[1];
+	
+	await lpMining.claimNft(sessionId, {from: player});
     });
 });
