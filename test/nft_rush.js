@@ -1,8 +1,7 @@
 let NftRush = artifacts.require("NftRush");
-let LpToken = artifacts.require("LP_Token");
 let Crowns = artifacts.require("CrownsToken");
-let Nft = artifacts.require("SeascapeNFT");
-let Factory = artifacts.require("NFTFactory");
+let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("NftFactory");
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -14,79 +13,97 @@ let eventName = res.logs[0].event;
 let eventRes = res.logs[0].args;
 console.log(eventRes);
 */
-contract("NftRush", async accounts => {
+contract("Game 2: Nft Rush", async accounts => {
     // Samples
-    let interval = 10;  // seconds
+    let interval = 5;  // seconds
     let period = 180;   // 3 min
     let generation = 0;
     let depositAmount = web3.utils.toWei("5", "ether");
 
-    it("should add nft rush as generator role in nft factory", async () => {
-	let factory = await Factory.deployed();
-	let nftRush = await NftRush.deployed();
+    let spentDailyReward = web3.utils.toWei("110", "ether");
+    let spentAlltimeReward = web3.utils.toWei("110", "ether");
+    let mintedDailyReward = web3.utils.toWei("110", "ether");
+    let mintedAlltimsReward = web3.utils.toWei("110", "ether");    
+    let totalReward = parseInt(spentDailyReward) + parseInt(spentAlltimeReward) + parseInt(mintedDailyReward) + parseInt(mintedAlltimsReward);
+    let rewardsAmounts = [20, 18, 16, 14, 12, 10, 8, 6, 4, 2];    
+    
+    // following vars used in multiple test units:
+    let nft = null;
+    let factory = null;
+    let nftRush = null;
+    let crowns = null;
+    let lastSessionId = null;
+    let player = null;
+    let gameOwner = null;
 
-	await factory.addGenerator(nftRush.address, {from: accounts[0]});
+    //--------------------------------------------------
 
-	let generatorRoled = await factory.isGenerator(nftRush.address);
-    });
-
-    it("should set nft factory in nft", async () => {
-	let factory = await Factory.deployed();
-	let nft     = await Nft.deployed();
-
+    // before player starts, need a few things prepare.
+    // one of things to allow nft to be minted by nft factory
+    it("should link nft, nft factory and nft rush contracts", async () => {
+	factory = await Factory.deployed();
+	nftRush    = await NftRush.deployed();
+	nft     = await Nft.deployed();
+	gameOwner = accounts[0];
+	
 	await nft.setFactory(factory.address);
+	await factory.addGenerator(nftRush.address, {from: gameOwner});
     });
 
+    //--------------------------------------------------
+
+    // before player plays the game,
+    // game session should start by the game owner
     it("should start a session", async () => {
-	let nftRush    = await NftRush.deployed();
+	player = accounts[0];
 	
 	let startTime = Math.floor(Date.now()/1000) + 1;
 
-	await nftRush.startSession(interval, period, startTime, generation, {from: accounts[0]});
+	await nftRush.startSession(interval, period, startTime, generation, {from: player});
 
-	let lastSessionId = await nftRush.lastSessionId();
+	lastSessionId = await nftRush.lastSessionId();
 	assert.equal(lastSessionId, 1, "session id is expected to be 1");
     });
 
-    /////// depositing token
+    //--------------------------------------------------
+    
+    // before deposit of nft token,
+    // player needs to approve the token to be transferred by nft rush contract
     it("should approve nft rush to spend cws of player", async () => {
-	let crowns = await Crowns.deployed();
-	let nftRush = await NftRush.deployed();
+	crowns = await Crowns.deployed();	
 
-	await crowns.approve(nftRush.address, depositAmount, {from: accounts[0]});
+	await crowns.approve(nftRush.address, depositAmount, {from: player});
 
-	let allowance = await crowns.allowance(accounts[0], nftRush.address);
+	let allowance = await crowns.allowance(player, nftRush.address);
 	assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
     });
 
-    it("should spend deposit in nft rush", async () => {
-	let nftRush = await NftRush.deployed();
-	let lastSessionId = await nftRush.lastSessionId();
-	
-	await nftRush.deposit(lastSessionId, depositAmount, {from: accounts[0]});
+    //--------------------------------------------------
 
-	let balance = await nftRush.balances(lastSessionId, accounts[0]);
+    // player deposits the cws
+    it("should spend spend in nft rush", async () => {
+	await nftRush.spend(lastSessionId, depositAmount, {from: player});
+	
+	let balance = await nftRush.balances(lastSessionId, player);
 	assert.equal(balance.amount, depositAmount, "balance of player after deposit is not what expected");
     });
 
+    //--------------------------------------------------
+
+    // player should receive random nft
     it("should claim random nft", async () => {
-	let nftRush = await NftRush.deployed();
 	let quality = getRandomInt(5) + 1;
 
-	let lastSessionId = await nftRush.lastSessionId();
-	let balance = await nftRush.balances(lastSessionId, accounts[0]);
-
-	let addr = accounts[0];
-
+	let balance = await nftRush.balances(lastSessionId, player);
 	
 	let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
 						     [web3.utils.toWei(web3.utils.fromWei(balance.amount)),
 						      parseInt(balance.mintedTime.toString())]);
 	let bytes1 = web3.utils.bytesToHex([quality]);
-	let str = addr + bytes32.substr(2) + bytes1.substr(2);
+	let str = player + bytes32.substr(2) + bytes1.substr(2);
 	
 	let data = web3.utils.keccak256(str);
-	let hash = await web3.eth.sign(data, addr);
+	let hash = await web3.eth.sign(data, gameOwner);
 	let r = hash.substr(0,66);
 	let s = "0x" + hash.substr(66,64);
 	let v = parseInt(hash.substr(130), 16);
@@ -94,7 +111,7 @@ contract("NftRush", async accounts => {
 	    v += 27;
 	}
 
-	await nftRush.claim(lastSessionId, v, r, s, quality);
+	await nftRush.mint(lastSessionId, v, r, s, quality);
 
 	let updatedBalance = await nftRush.balances(lastSessionId, accounts[0]);
 	assert.equal(updatedBalance.amount, 0, "deposit should be reset to 0");
@@ -102,32 +119,24 @@ contract("NftRush", async accounts => {
 
     it("double claiming should fail as the interval didn't passed", async () => {
 	// approve deposit
-	let crowns = await Crowns.deployed();
-	let nftRush = await NftRush.deployed();
+	await crowns.approve(nftRush.address, depositAmount, {from: player});
 
-	await crowns.approve(nftRush.address, depositAmount, {from: accounts[0]});
+	// deposit	
+	await nftRush.spend(lastSessionId, depositAmount, {from: player});
 
-	// deposit
-	let lastSessionId = await nftRush.lastSessionId();
-	
-	await nftRush.deposit(lastSessionId, depositAmount, {from: accounts[0]});
-
-	// claim
-	
+	// claim	
 	let quality = getRandomInt(5) + 1;
 
-	let balance = await nftRush.balances(lastSessionId, accounts[0]);
+	let balance = await nftRush.balances(lastSessionId, gameOwner);
 
-	let addr = accounts[0];
-	
 	let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
 						     [web3.utils.toWei(web3.utils.fromWei(balance.amount)),
 						      parseInt(balance.mintedTime.toString())]);
 	let bytes1 = web3.utils.bytesToHex([quality]);
-	let str = addr + bytes32.substr(2) + bytes1.substr(2);
+	let str = player + bytes32.substr(2) + bytes1.substr(2);
 	
 	let data = web3.utils.keccak256(str);
-	let hash = await web3.eth.sign(data, addr);
+	let hash = await web3.eth.sign(data, gameOwner);
 	let r = hash.substr(0,66);
 	let s = "0x" + hash.substr(66,64);
 	let v = parseInt(hash.substr(130), 16);
@@ -137,7 +146,7 @@ contract("NftRush", async accounts => {
 
 	
 	try {
-	    await nftRush.claim(lastSessionId, v, r, s, quality);
+	    await nftRush.mint(lastSessionId, v, r, s, quality);
 	} catch(e) {
 	    return assert.equal(e.reason, "NFT Rush: not enough interval since last minted time");
 	}
@@ -147,68 +156,37 @@ contract("NftRush", async accounts => {
     // Leaderboard related data
     // ------------------------------------------------------------
 
-    // in nftrush.sol contract, at the method claimDailyNft
-    // comment requirement of isDailWinnersAddress against false checking
-    it("add daily leaderboard winners as an owner", async () => {
-	let nftRush = await NftRush.deployed();
+    it("set winner's reward amounts", async () => {
+	// used for all leaderboard types
+	rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
 
-	let lastSessionId = await nftRush.lastSessionId();
-
-	let winners = [];
-	for(var i=0; i<10; i++) {
-	    if (i%2 == 0) {
-		winners.push(accounts[0]);
-	    } else {
-		winners.push(accounts[1]);
-	    }
-	}
-
-	// contract deployer. only it can add winners list into the contract
-	let owner = accounts[0];
-
-	try {
-	    await nftRush.addDailyWinners(lastSessionId, winners);
-	} catch(e) {
-	    if (e.reason == "NFT Rush: already set or too early") {
-		return true;
-	    }
-	}
+	await nftRush.setAllRewards(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
     });
 
-    // in nftrush.sol contract, at the method claimDailyNft
-    // comment requirement of isDailWinnersAddress against false checking
-    it("claim nft for daily items", async() => {
-	let nftRush = await NftRush.deployed();
-	let lastSessionId = await nftRush.lastSessionId();
-	let nftAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-	nftAmount = parseInt(nftAmount.toString());
+    it("set the winner list (daily spent)", async () => {
+	let amount = 1;
+	let player = accounts[1];
+	let winners = [player, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner];
 
-	if (!nftAmount) {
-	    return true;
+	let approveAmount = 0;
+	for(var i=0; i<amount; i++) {
+	    approveAmount += rewardsAmounts[0];
 	}
 
-	for(var i=0; i<nftAmount; i++) {
-	    await nftRush.claimDailyNft();
+	await crowns.approve(nftRush.address, approveAmount, {from: gameOwner});
 
-	    let updatedAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-	    updatedAmount = parseInt(updatedAmount.toString());
-	    if (updatedAmount != nftAmount - (i+1)) {
-		fail("daily claimable amount didn't updated after nft claiming");
-	    }
-	}
+	await nftRush.addDailySpentWinners(lastSessionId, winners, amount);
 
-	let zeroAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-	zeroAmount = parseInt(zeroAmount.toString());
+	let claimables = await nftRush.spentDailyClaimables(player);
+	assert.equal(claimables, 1, "expected 1 daily spent leaderboard reward");
+    });
 
-	if (zeroAmount != 0) {
-	    fail("daily claimables after all claims should be equal to 0");
-	}
-
+    it("claim daily spent leaderboard reward", async () => {
+	let player = accounts[1];
+	await nftRush.claimDailySpent({from: player});
 	
-	try {
-	    await nftRush.claimDailyNft();
-	} catch(e) {
-	    return assert.equal(e.reason, "NFT Rush: no daily leaderboard claimable found");
-	}
+	let claimables = await nftRush.spentDailyClaimables(player);
+	assert.equal(claimables, 0, "expected no reward at all after claiming reward");
     });
+    
 });
