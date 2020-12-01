@@ -5,8 +5,8 @@ let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
 let accounts;
-let reward = web3.utils.toWei("200", "ether");  // cws
-let period = 3600 * 24 * 7;   // 1 week
+let reward = web3.utils.toWei("200000", "ether");  // cws
+let period = 3600 * 24 * 60;   // 1 week
 let generation = 0;
 let lpTokenAddress = "0xdc935332d39a4c632864dbbed3cfdbf049fb9267";
 
