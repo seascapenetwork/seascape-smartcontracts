@@ -15,11 +15,11 @@ contract LpMining is Ownable {
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
 
-    uint256 scaler = 10**18;
+    uint256 private constant scaler = 10**18;
 	
     NftFactory nftFactory;
-    
-    IERC20 public CWS;
+  
+    IERC20 public immutable CWS;
 
     Counters.Counter private sessionId;
 
@@ -57,6 +57,7 @@ contract LpMining is Ownable {
     event Deposited(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event Claimed(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 claimedTime);
     event Withdrawn(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
+    event FactorySet(address indexed factoryAddress);	
 
 	
     /// @dev CWS is not changable after contract deployment.
@@ -85,7 +86,7 @@ contract LpMining is Ownable {
 	// game session for the lp token was already created, then:
 	uint256 _lastId = lastSessionIds[_lpToken];
 	if (_lastId > 0) {
-	    require(isStartedFor(_lastId)==false,     "Seascape Staking: Can't start when session is active");
+	    require(isActive(_lastId)==false,     "Seascape Staking: Can't start when session is active");
 	}
 
 	// required CWS balance of this contract
@@ -112,7 +113,10 @@ contract LpMining is Ownable {
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
     function setNftFactory(address _address) external onlyOwner {
+	require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
 	nftFactory = NftFactory(_address);
+
+	emit FactorySet(_address);	    
     }
 
 
@@ -124,12 +128,12 @@ contract LpMining is Ownable {
     function deposit(uint256 _sessionId, uint256 _amount) external {
 	require(_amount > 0,              "Seascape Staking: Amount to deposit should be greater than 0");
 	require(_sessionId > 0,           "Seascape Staking: Session id should be greater than 0!");
-	require(isStartedFor(_sessionId), "Seascape Staking: Session is not active");
+	require(isActive(_sessionId), "Seascape Staking: Session is not active");
 
 	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
 	
 	require(_token.balanceOf(msg.sender) >= _amount,                         "Seascape Staking: Not enough LP tokens to deposit");
-	require(_token.transferFrom(msg.sender, address(this), _amount) == true, "Seascape Staking: Failed to transfer LP tokens into contract");
+	require(_token.transferFrom(msg.sender, address(this), _amount), "Seascape Staking: Failed to transfer LP tokens into contract");
 
 	Session storage _session  = sessions[_sessionId];
 	Balance storage _balance  = balances[_sessionId][msg.sender];
@@ -144,6 +148,7 @@ contract LpMining is Ownable {
 	    claim(_sessionId);
 	    _balance.amount = _amount.add(_balance.amount);
 	    _balance.minted = _minted;
+
 	} else {
 	    // If user withdrew all LP tokens, but deposited before for the session
 	    // Means, that player still can't mint more token anymore.
@@ -168,7 +173,7 @@ contract LpMining is Ownable {
 	    return false;
 	}
 
-	require(CWS.transfer(msg.sender, _interest) == true, "Seascape Staking: Failed to transfer reward CWS token");
+	require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
 		
 	_session.claimed     = _session.claimed.add(_interest);
 	_balance.claimed     = _balance.claimed.add(_interest);
@@ -191,7 +196,7 @@ contract LpMining is Ownable {
 
 	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
 
-	require(_token.transfer(msg.sender, _amount) == true, "Seascape Staking: Failed to transfer token from contract to user");
+	require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
 	
 	_balance.amount = _balance.amount.sub(_amount);
 	sessions[_sessionId].amount = sessions[_sessionId].amount.sub(_amount);
@@ -201,12 +206,12 @@ contract LpMining is Ownable {
 
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
     function claimNft(uint256 _sessionId) external {
-	require(isStartedFor(_sessionId), "Seascape Staking: No active session");
-
+	// it also indicates that session exists
 	Balance storage _balance = balances[_sessionId][msg.sender];
 	require(_balance.claimed.add(_balance.amount) > 0, "Seascape Staking: Deposit first");
-        // uncomment in a production mode:
-	//require(_balance.minted == false, "Seascape Staking: Already minted");
+
+	// uncomment in a production mode:
+	require(_balance.minted == false, "Seascape Staking: Already minted");
 
 	uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
 	require(_tokenId > 0,                              "Seascape Staking: failed to mint a token");
@@ -243,13 +248,13 @@ contract LpMining is Ownable {
     //---------------------------------------------------
     // Internal methods
     //---------------------------------------------------
-    
-    function isStartedFor(uint256 _sessionId) internal view returns(bool) {
-	if (sessions[_sessionId].totalReward == 0) {
-	    return false;
-	}
 
-	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+    /// @dev check whether the session is active or not
+    function isActive(uint256 _sessionId) internal view returns(bool) {
+	uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
+
+	// _endTime will be 0 if session never started.
+	if (now > _endTime) {
 	    return false;
 	}
 
@@ -266,7 +271,7 @@ contract LpMining is Ownable {
 	}
 
 	uint256 _sessionCap = block.timestamp;
-	if (isStartedFor(_sessionId) == false) {
+	if (isActive(_sessionId) == false) {
 	    _sessionCap = _session.startTime.add(_session.period);
 	}
 
