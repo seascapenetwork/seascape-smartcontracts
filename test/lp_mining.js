@@ -22,7 +22,7 @@ contract("Game 1: Lp Mining", async accounts => {
     let factory = null;
 
     //--------------------------------------------------
-    
+
     // Before using the game contract, we should start the game session.
     // Before starting game session we should transfer CWS token to contract balance.
     // CWS in contract balance is required for game session award.
@@ -35,20 +35,20 @@ contract("Game 1: Lp Mining", async accounts => {
 	let balance = await crowns.balanceOf.call(lpMining.address);
 	assert.equal(balance, totalReward, "Lp Mining contract balance should match to total reward");
     });
-    
+
 
     //--------------------------------------------------
-    
+
     // Before using the game contract, we should start the game session.
     it("should start a session that lasts "+period+" seconds", async () => {
 	lpToken = await LpToken.deployed();
 	startTime = Math.floor(Date.now()/1000) + 2;
-	
+
         await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
 				      {from: accounts[0]})
 
 	sessionId = await lpMining.lastSessionIds.call(lpToken.address);
-	
+
 	assert.equal(sessionId, 1, "Started session id expected to be 1");
     });
 
@@ -56,7 +56,7 @@ contract("Game 1: Lp Mining", async accounts => {
 
     it("should not overwrite a session before time expiration", async () => {
 	startTime = Math.floor(Date.now()/1000) + 2;
-	
+
 	try {
 	    await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
 				       {from: accounts[0]});
@@ -68,16 +68,16 @@ contract("Game 1: Lp Mining", async accounts => {
     });
 
     //------------------------------------------------------------
-    
+
     it("should overwrite a session after time expiration", async() => {
 	// wait until passes 2 second after session period
 	let wait = (period + 2) * 1000; // milliseconds
         await new Promise(resolve => setTimeout(resolve, wait));
 
-	
+
 	await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
-	
-	startTime = Math.floor(Date.now()/1000) + 2;	
+
+	startTime = Math.floor(Date.now()/1000) + 2;
 	await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
 				   {from: accounts[0]});
 
@@ -114,7 +114,7 @@ contract("Game 1: Lp Mining", async accounts => {
     });
 
     //--------------------------------------------------
-    
+
     it("should deposit a staking token by a player", async() => {
 	let from = accounts[1];
 
@@ -131,12 +131,12 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should produce some Crowns for staked Lp token", async() => {
 	let player = accounts[1];
 	let cwsBalance = await lpMining.claimable.call(sessionId, player);
-	
-	let wait = 2 * 1000; // milliseconds	
+
+	let wait = 2 * 1000; // milliseconds
         await new Promise(resolve => setTimeout(resolve, wait));
 
 	let stakedBalance = await lpMining.claimable.call(sessionId, player);
-	
+
 	assert.equal(stakedBalance > cwsBalance, true, "Claimables after some time should be increased");
     });
 
@@ -155,7 +155,7 @@ contract("Game 1: Lp Mining", async accounts => {
 	}
     });
 
-    
+
     it("should withdraw all Lp Tokens", async() => {
 	let player = accounts[1];
 	await lpMining.withdraw(sessionId, depositAmount, {from: player});
@@ -166,7 +166,7 @@ contract("Game 1: Lp Mining", async accounts => {
 
     it("should fail to claim any token without LP token", async() => {
 	let player = accounts[1];
-	
+
 	try {
 	    await lpMining.claim(sessionId, {from: player});
 	} catch(e) {
@@ -202,13 +202,17 @@ contract("Game 1: Lp Mining", async accounts => {
     // Claiming Seascape Nft.
     it("should claim Nft", async() => {
 	let player = accounts[1];
-	
+
 	await lpMining.claimNft(sessionId, {from: player});
     });
 
-    it("should claim Nft second time (only testing)", async() => {
-	let player = accounts[1];
-	
-	await lpMining.claimNft(sessionId, {from: player});
+    it("should throw an exception if you claim Nft second time", async() => {
+	    let player = accounts[1];
+      try{
+        await lpMining.claimNft(sessionId, {from: player});
+        assert.fail();
+      } catch(e) {
+        return assert.equal(e.reason, "Seascape Staking: Already minted");
+      }
     });
 });
