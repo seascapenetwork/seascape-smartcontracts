@@ -203,12 +203,17 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should claim Nft", async() => {
 	let player = accounts[1];
 	
+
 	await lpMining.claimNft(sessionId, {from: player});
     });
 
-    it("should claim Nft second time (only testing)", async() => {
-	let player = accounts[1];
-	
-	await lpMining.claimNft(sessionId, {from: player});
+    it("should throw an exception if you claim Nft second time", async() => {
+	    let player = accounts[1];
+      try{
+        await lpMining.claimNft(sessionId, {from: player});
+        assert.fail();
+      } catch(e) {
+        return assert.equal(e.reason, "Seascape Staking: Already minted");
+      }
     });
 });
