@@ -1,12 +1,11 @@
 let NftRush = artifacts.require("NftRush");
-let LpToken = artifacts.require("LP_Token");
 let Crowns = artifacts.require("CrownsToken");
-let Nft = artifacts.require("SeascapeNFT");
-let Factory = artifacts.require("NFTFactory");
+let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("NftFactory");
 
 let accounts;
 let interval = 10;  // seconds
-let period = 3600 * 3;   // 3 min
+let period = 3600 * 60 * 5;   // 1 week 
 let generation = 0;
 
 /**
