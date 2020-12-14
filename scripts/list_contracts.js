@@ -1,9 +1,9 @@
 let NftRush = artifacts.require("NftRush");
-let LpToken = artifacts.require("LP_Token");
+let LpToken = artifacts.require("LpToken");
 let Crowns = artifacts.require("CrownsToken");
-let Nft = artifacts.require("SeascapeNFT");
-let Factory = artifacts.require("NFTFactory");
-let Staking = artifacts.require("Staking");
+let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("NftFactory");
+let Staking = artifacts.require("LpMining");
 let NftStaking = artifacts.require("NftStaking");
 
 module.exports = function(callback) {
@@ -22,7 +22,7 @@ let init = async function() {
     console.log("Crowns:      "+crowns.address);
     console.log("Nft:         "+nft.address);
     console.log("Factory:     "+factory.address);
-    console.log("Staking:     "+staking.address);
+    console.log("Lp Mining:   "+staking.address);
     console.log("Nft Staking: "+nftStaking.address);
     
     return true;
