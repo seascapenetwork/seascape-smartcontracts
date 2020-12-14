@@ -81,7 +81,7 @@ contract("Game 2: Nft Rush", async accounts => {
     //--------------------------------------------------
 
     // player deposits the cws
-    it("should spend spend in nft rush", async () => {
+    it("should spend in nft rush", async () => {
 	await nftRush.spend(lastSessionId, depositAmount, {from: player});
 	
 	let balance = await nftRush.balances(lastSessionId, player);
