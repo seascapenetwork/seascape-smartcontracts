@@ -119,7 +119,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     // Only game users
     //--------------------------------------------------
 
-    /// @notice deposits _amount of LP token
+    /// @notice deposits nft to stake along with it's SP
     function deposit(uint256 _sessionId, uint256 _nftId, uint256 _sp, uint8 _v, bytes32 _r, bytes32 _s) external {
 	require(_nftId > 0,              "Nft Staking: Nft id must be greater than 0");
 	require(_sp > 0,                  "Nft Staking: Seascape Points must be greater than 0");
@@ -157,6 +157,7 @@ contract NftStaking is Ownable, IERC721Receiver {
         emit Deposited(msg.sender, _sessionId, _nftId);
     }
 
+    /// @dev earned CWS tokens are sent to Nft staker
     function transfer(uint256 _sessionId, uint256 _index) internal returns(uint256) {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][msg.sender][_index];
@@ -172,7 +173,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     }
 
 
-    /// @notice Withdraws _amount of LP token
+    /// @notice Claim earned CWS tokens
     /// of type _token out of Staking contract.
     function claim(uint256 _sessionId, uint256 _index) external {
 	require(_index < slots[_sessionId][msg.sender],             "Nft Staking: slot is not deposited");
@@ -181,8 +182,11 @@ contract NftStaking is Ownable, IERC721Receiver {
 	uint256 _claimed = transfer(_sessionId, _index);	
 
 	Balance storage _balance = balances[_sessionId][msg.sender][_index];
+
 	uint256 _nftId = _balance.nftId;
-        nft.burn(_nftId);	
+
+	nft.burn(_nftId);	
+
 	sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_balance.sp);
 	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].sub(1);
 
