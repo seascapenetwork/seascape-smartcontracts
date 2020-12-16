@@ -2,6 +2,7 @@ let NftRush = artifacts.require("NftRush");
 let Crowns = artifacts.require("CrownsToken");
 let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
+let NftLeaderboard = artifacts.require("NftLeaderboard");
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -23,14 +24,15 @@ contract("Game 2: Nft Rush", async accounts => {
     let spentDailyReward = web3.utils.toWei("110", "ether");
     let spentAlltimeReward = web3.utils.toWei("110", "ether");
     let mintedDailyReward = web3.utils.toWei("110", "ether");
-    let mintedAlltimsReward = web3.utils.toWei("110", "ether");    
+    let mintedAlltimsReward = web3.utils.toWei("110", "ether");
     let totalReward = parseInt(spentDailyReward) + parseInt(spentAlltimeReward) + parseInt(mintedDailyReward) + parseInt(mintedAlltimsReward);
-    let rewardsAmounts = [20, 18, 16, 14, 12, 10, 8, 6, 4, 2];    
-    
+    let rewardsAmounts = [20, 18, 16, 14, 12, 10, 8, 6, 4, 2];
+
     // following vars used in multiple test units:
     let nft = null;
     let factory = null;
     let nftRush = null;
+    let nftLeaderboard = null;
     let crowns = null;
     let lastSessionId = null;
     let player = null;
@@ -40,12 +42,13 @@ contract("Game 2: Nft Rush", async accounts => {
 
     // before player starts, need a few things prepare.
     // one of things to allow nft to be minted by nft factory
-    it("should link nft, nft factory and nft rush contracts", async () => {
+    it("should link nft, nft factory, nft leaderboard and nft rush contracts", async () => {
 	factory = await Factory.deployed();
 	nftRush    = await NftRush.deployed();
 	nft     = await Nft.deployed();
+  nftLeaderboard    = await NftLeaderboard.deployed();
 	gameOwner = accounts[0];
-	
+
 	await nft.setFactory(factory.address);
 	await factory.addGenerator(nftRush.address, {from: gameOwner});
     });
@@ -56,7 +59,7 @@ contract("Game 2: Nft Rush", async accounts => {
     // game session should start by the game owner
     it("should start a session", async () => {
 	player = accounts[0];
-	
+
 	let startTime = Math.floor(Date.now()/1000) + 1;
 
 	await nftRush.startSession(interval, period, startTime, generation, {from: player});
@@ -66,11 +69,11 @@ contract("Game 2: Nft Rush", async accounts => {
     });
 
     //--------------------------------------------------
-    
+
     // before deposit of nft token,
     // player needs to approve the token to be transferred by nft rush contract
     it("should approve nft rush to spend cws of player", async () => {
-	crowns = await Crowns.deployed();	
+	crowns = await Crowns.deployed();
 
 	await crowns.approve(nftRush.address, depositAmount, {from: player});
 
@@ -81,9 +84,9 @@ contract("Game 2: Nft Rush", async accounts => {
     //--------------------------------------------------
 
     // player deposits the cws
-    it("should spend in nft rush", async () => {
+    it("should spend spend in nft rush", async () => {
 	await nftRush.spend(lastSessionId, depositAmount, {from: player});
-	
+
 	let balance = await nftRush.balances(lastSessionId, player);
 	assert.equal(balance.amount, depositAmount, "balance of player after deposit is not what expected");
     });
@@ -95,13 +98,13 @@ contract("Game 2: Nft Rush", async accounts => {
 	let quality = getRandomInt(5) + 1;
 
 	let balance = await nftRush.balances(lastSessionId, player);
-	
+
 	let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
 						     [web3.utils.toWei(web3.utils.fromWei(balance.amount)),
 						      parseInt(balance.mintedTime.toString())]);
 	let bytes1 = web3.utils.bytesToHex([quality]);
 	let str = player + bytes32.substr(2) + bytes1.substr(2);
-	
+
 	let data = web3.utils.keccak256(str);
 	let hash = await web3.eth.sign(data, gameOwner);
 	let r = hash.substr(0,66);
@@ -121,10 +124,10 @@ contract("Game 2: Nft Rush", async accounts => {
 	// approve deposit
 	await crowns.approve(nftRush.address, depositAmount, {from: player});
 
-	// deposit	
+	// deposit
 	await nftRush.spend(lastSessionId, depositAmount, {from: player});
 
-	// claim	
+	// claim
 	let quality = getRandomInt(5) + 1;
 
 	let balance = await nftRush.balances(lastSessionId, gameOwner);
@@ -134,7 +137,7 @@ contract("Game 2: Nft Rush", async accounts => {
 						      parseInt(balance.mintedTime.toString())]);
 	let bytes1 = web3.utils.bytesToHex([quality]);
 	let str = player + bytes32.substr(2) + bytes1.substr(2);
-	
+
 	let data = web3.utils.keccak256(str);
 	let hash = await web3.eth.sign(data, gameOwner);
 	let r = hash.substr(0,66);
@@ -144,7 +147,7 @@ contract("Game 2: Nft Rush", async accounts => {
 	    v += 27;
 	}
 
-	
+
 	try {
 	    await nftRush.mint(lastSessionId, v, r, s, quality);
 	} catch(e) {
@@ -160,7 +163,7 @@ contract("Game 2: Nft Rush", async accounts => {
 	// used for all leaderboard types
 	rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
 
-	await nftRush.setAllRewards(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
+	await nftLeaderboard.setAllRewards(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
     });
 
     it("set the winner list (daily spent)", async () => {
@@ -175,18 +178,18 @@ contract("Game 2: Nft Rush", async accounts => {
 
 	await crowns.approve(nftRush.address, approveAmount, {from: gameOwner});
 
-	await nftRush.addDailySpentWinners(lastSessionId, winners, amount);
+	await nftLeaderboard.addDailySpentWinners(lastSessionId, winners, amount);
 
-	let claimables = await nftRush.spentDailyClaimables(player);
+	let claimables = await nftLeaderboard.spentDailyClaimables(player);
 	assert.equal(claimables, 1, "expected 1 daily spent leaderboard reward");
     });
 
     it("claim daily spent leaderboard reward", async () => {
 	let player = accounts[1];
-	await nftRush.claimDailySpent({from: player});
-	
-	let claimables = await nftRush.spentDailyClaimables(player);
+	await nftLeaderboard.claimDailySpent({from: player});
+
+	let claimables = await nftLeaderboard.spentDailyClaimables(player);
 	assert.equal(claimables, 0, "expected no reward at all after claiming reward");
     });
-    
+
 });
