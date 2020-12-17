@@ -34,23 +34,6 @@ abstract contract NftLeaderboard is Ownable {
   mapping(address => uint256) public spentDailyClaimables;            // tracks amount of claimable nft for each user
   mapping(address => Reward[]) public spentDailyRewards;        // stores a session id where user won an nft.
 
-  // session id => addresses
-
- 
-  mapping(address => uint256) public spentAllTimeClaimables;          // tracks the amount of leaderboard winning in NftRush.sessions() for each user
-  mapping(address => Reward[]) public spentAllTimeRewards;      // session id
-
-
-                                                                        // be careful, if the daily winners setting doesn't set all 10 winners,                                                             // you wouldn't be able to set missed winners in a next round
-  mapping(address => uint256) public mintedDailyClaimables;            // tracks amount of claimable nft for each user
-  mapping(address => Reward[]) public mintedDailyRewards;        // stores a session id where user won an nft.
-
-  // session id => addresses
-  mapping(address => uint256) public mintedAllTimeClaimables;          // tracks the amount of leaderboard winning in NftRush.sessions() for each user
-  mapping(address => Reward[]) public mintedAllTimeRewards;      // session id
-
-
-
     // session id => addresses
     mapping(address => uint256) public spentAllTimeClaimables;          // tracks the amount of leaderboard winning in sessions for each user
     mapping(address => Reward[]) public spentAllTimeRewards;      // session id
@@ -68,9 +51,6 @@ abstract contract NftLeaderboard is Ownable {
 
   
   event Rewarded(address indexed owner, uint256 sessionId, string rewardType, uint256 amount);
-
-
-
 
 
   function setAllRewards(uint256[10] memory _spentDaily, uint256[10] memory _spentAllTime, uint256[10] memory _mintedDaily, uint256[10] memory _mintedAllTime) public onlyOwner {
@@ -266,55 +246,6 @@ setAllTimeMintedWinnersTime(_sessionId);
   //--------------------------------------------------
   // Interval methods
   //--------------------------------------------------
-
-
-
-  function isDailySpentWinnersAdded(uint256 _sessionId) internal view returns(bool) {
-return block.timestamp < spentDailyWinnersTime[_sessionId] + (1 days);
-  }
-
-
-  function setDailySpentWinnersTime(uint256 _sessionId) internal {
-spentDailyWinnersTime[_sessionId] = block.timestamp + (1 days);
-  }
-
-  function isAllTimeSpentWinnersAdded(uint256 _sessionId) internal view returns(bool) {
-Session storage _session = sessions[_sessionId];
-return isStartedFor(_sessionId) == false && _session.startTime > 0 && _session.spentWinnersSet == false;
-  }
-
-
-  function setAllTimeSpentWinnersTime(uint256 _sessionId) internal {
-sessions[_sessionId].spentWinnersSet = true;
-  }
-
-  function isDailyMintedWinnersAdded(uint256 _sessionId) internal view returns(bool) {
-return block.timestamp < mintedDailyWinnersTime[_sessionId] + (1 days);
-  }
-
-
-  function setDailyMintedWinnersTime(uint256 _sessionId) internal {
-mintedDailyWinnersTime[_sessionId] = block.timestamp + (1 days);
-  }
-
-  function isAllTimeMintedWinnersAdded(uint256 _sessionId) internal view returns(bool) {
-Session storage _session = sessions[_sessionId];
-return isStartedFor(_sessionId) == false && _session.startTime > 0 && _session.mintedWinnersSet == false;
-  }
-
-
-  function setAllTimeMintedWinnersTime(uint256 _sessionId) internal {
-sessions[_sessionId].mintedWinnersSet = true;
-  }
-
-  function calculateTotalRewards(uint256[10] memory _rewards, uint256 _amount) internal returns (uint256) {
-uint256 _totalReward = 0;
-for (uint i=0; i<_amount; i++) {
-    _totalReward = _totalReward.add(_rewards[i]);
-}
-
-return _totalReward;
-  }
 
 
     function isDailySpentWinnersAdded(uint256 _sessionId) internal view returns(bool) {
