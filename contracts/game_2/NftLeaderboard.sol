@@ -6,6 +6,8 @@ import "./../openzeppelin/contracts/utils/Counters.sol";
 
 
 abstract contract NftLeaderboard is Ownable {
+    using SafeMath for uint256;
+    using Counters for Counters.Counter;
 
   /// @notice Tracking leaderboard rewards within game session.
   /// Nft Rush (this contract game) has a leaderboard
