@@ -17,7 +17,6 @@ contract NftRush is Ownable, NftLeaderboard {
     
     Counters.Counter private sessionId;
 
-    CrownsToken private crowns;
     uint256 private minDeposit;
 
     /// @notice Game session. Smartcontract is active during the game session.

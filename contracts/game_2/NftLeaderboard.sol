@@ -1,5 +1,6 @@
 pragma solidity 0.6.7;
 
+import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
@@ -16,6 +17,7 @@ abstract contract NftLeaderboard is Ownable {
   uint256 cws;
   }
 
+  CrownsToken public crowns;
 
   uint256[10] public spentDailyAmounts;        // spent token leaderboard
   uint256[10] public spentAllTimeAmounts;
