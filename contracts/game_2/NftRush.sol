@@ -43,12 +43,7 @@ contract NftRush is Ownable, NftLeaderboard {
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
-    uint256[10] public spentDailyAmounts;        // spent token leaderboard
-    uint256[10] public spentAllTimeAmounts;
-    uint256[10] public mintedDailyAmounts;       // minted nft amount leaderboard
-    uint256[10] public mintedAllTimeAmounts;
 
-    
     event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
