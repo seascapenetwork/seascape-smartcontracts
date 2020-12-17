@@ -19,17 +19,6 @@ contract NftRush is Ownable, NftLeaderboard {
 
     uint256 private minDeposit;
 
-    /// @notice Game session. Smartcontract is active during the game session.
-    /// Game session is active for a certain period of time only
-    struct Session {
-	uint256 interval;      // period between intervals
-	uint256 period;        // duration of session
-	uint256 startTime;     // unix timestamp when session starts
-	uint256 generation;    // nft generation
-	bool    spentWinnersSet;    // was all time winners set
-	bool    mintedWinnersSet;
-    }
-
     /// @notice Tracking player data within game session
     struct Balance {
 	uint256 amount;
@@ -37,8 +26,6 @@ contract NftRush is Ownable, NftLeaderboard {
     }
 
 
-    uint256 public lastSessionId;
-    mapping(uint256 => Session) public sessions;
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
@@ -168,14 +155,5 @@ contract NftRush is Ownable, NftLeaderboard {
 
     //--------------------------------------------------
     // Interval methods
-    //--------------------------------------------------
-    
-    function isStartedFor(uint256 _sessionId) internal view returns(bool) {
-	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
-	    return false;
-	}
-
-	return true;
-    }
-
+    //--------------------------------------------------    
 }

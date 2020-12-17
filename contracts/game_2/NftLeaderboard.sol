@@ -19,6 +19,22 @@ abstract contract NftLeaderboard is Ownable {
 
   CrownsToken public crowns;
 
+  
+    /// @notice Game session. Smartcontract is active during the game session.
+    /// Game session is active for a certain period of time only
+    struct Session {
+	uint256 interval;      // period between intervals
+	uint256 period;        // duration of session
+	uint256 startTime;     // unix timestamp when session starts
+	uint256 generation;    // nft generation
+	bool    spentWinnersSet;    // was all time winners set
+	bool    mintedWinnersSet;
+    }
+
+    uint256 public lastSessionId;
+    mapping(uint256 => Session) public sessions;
+
+  
   uint256[10] public spentDailyAmounts;        // spent token leaderboard
   uint256[10] public spentAllTimeAmounts;
   uint256[10] public mintedDailyAmounts;       // minted nft amount leaderboard
@@ -294,5 +310,14 @@ setAllTimeMintedWinnersTime(_sessionId);
 
 	return _totalReward;
     }
+
+    function isStartedFor(uint256 _sessionId) internal view returns(bool) {
+	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+	    return false;
+	}
+
+	return true;
+    }
+
 
 }
