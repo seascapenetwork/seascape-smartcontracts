@@ -8,7 +8,7 @@ module.exports = {
     },
     networks: {
        development: {
-	   host: "blockchain",
+	   host: "local-node",
 	   port: 8545,
 	   network_id: "*", // match any network
 	   from: process.env.ADDRESS_1
