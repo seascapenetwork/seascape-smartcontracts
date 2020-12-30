@@ -19,7 +19,14 @@ let grantPermission = async function(factory, address) {
 let init = async function() {
     web3.eth.getAccounts(function(err,res) {accounts = res;});
 
-    let factory = await Factory.at(factoryAddress);
+    let factory = null;
+    const networkId = await web3.eth.net.getId();
+    
+    if (networkId == 4) {
+	factory = await Factory.at(factoryAddress);	
+    } else {
+	factory = await Factory.deployed();
+    }    
     console.log("Nft factory: "+factory.address);
 
     let granted = await factory.isGenerator(accounts[0]);
