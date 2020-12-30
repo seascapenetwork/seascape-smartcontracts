@@ -16,7 +16,7 @@ let winnersAmount = 10; // ten winners are tracked
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
     let res = init(networkId);
-        console.log("Session started successfully");
+    console.log("Session started successfully");
     
     callback(null, res);
 };
@@ -50,7 +50,7 @@ let init = async function(networkId) {
     
     //should start a session
     let startTime = Math.floor(Date.now()/1000) + 1;
-    return await nftRush.startSession(interval,
+    await nftRush.startSession(interval,
 				      period,
 				      startTime,
 				      generation,
