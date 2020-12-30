@@ -303,17 +303,93 @@ contract("Game 3: Nft Staking", async accounts => {
     }
   });
 
-  // it("17.	deposit two nft's and claim all  ", async () => {
-  //
-  // });
-  // it("18.	claim all should fail, as it was claimed in step ", async () => {
-  //     });
-  // it("19.	deposit three nfts and claim all ", async () => {
-  //     });
-  // it("20.	claim all should fail, as it was claimed in the last step ", async () => {
-  //     });
+  it("17.	deposit two nft's and claim all  ", async () => {
+    //first nft
+    nftId++;
+    index=0;
 
+    let signature = await sign(nftId,sp);
+    await nft.approve(nftStaking.address, nftId);
+    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
+    //second nft
+    nftId++;
+    index=1;
 
+    signature = await sign(nftId,sp);
+    await nft.approve(nftStaking.address, nftId);
+    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+
+    //claimAll
+    try{
+      await nftStaking.claimAll(lastSessionId);
+    }catch(e){
+      console.log("There was a problem with claimAll function.");
+    }
+
+    //check that the slot(s) are empty
+    let balanceAfter = await nftStaking.balances(lastSessionId, player, index);
+    assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+  });
+
+  it("18.	claim all should fail, as it was claimed in step ", async () => {
+
+    try{
+      //if claimAll() dont fail, test should fail
+      await nftStaking.claimAll(lastSessionId);
+      assert.fail;
+    }catch{
+      //if claimAll() fails, the test should pass
+      assert(true);
+    }
+  });
+
+  it("19.	deposit three nfts and claim all ", async () => {
+  //first nft
+  nftId++;
+  index=0;
+
+  let signature = await sign(nftId,sp);
+  await nft.approve(nftStaking.address, nftId);
+  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+
+  //second nft
+  nftId++;
+  index=1;
+
+  signature = await sign(nftId,sp);
+  await nft.approve(nftStaking.address, nftId);
+  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+
+  //first nft
+  nftId++;
+  index=2;
+
+  signature = await sign(nftId,sp);
+  await nft.approve(nftStaking.address, nftId);
+  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+
+  //claimAll
+  try{
+    await nftStaking.claimAll(lastSessionId);
+  }catch(e){
+    console.log("There was a problem with claimAll function.");
+  }
+
+  //check that the slot(s) are empty
+  let balanceAfter = await nftStaking.balances(lastSessionId, player, index);
+  assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+  });
+
+  it("20.	claim all should fail, as it was claimed in the last step ", async () => {
+    try{
+      //if claimAll() dont fail, test should fail
+      await nftStaking.claimAll(lastSessionId);
+      assert.fail;
+    }catch{
+      //if claimAll() fails, the test should pass
+      assert(true);
+    }
+  });
 
 });
