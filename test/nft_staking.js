@@ -9,10 +9,10 @@ function getRandomInt(max) {
 }
 
 
-
 contract("Game 3: Nft Staking", async accounts => {
 
-  let period = 604800;   // one week in seconds
+  //game data
+  let period = 604800;
   let generation = 0;
   let totalReward = web3.utils.toWei("10", "ether");;
   let depositAmount = web3.utils.toWei("30", "ether");
@@ -27,6 +27,7 @@ contract("Game 3: Nft Staking", async accounts => {
   let lastSessionId = null;
   let player = null;
   let gameOwner = null;
+  let signature = null;
 
   //token & slot data
   let index = 0;
@@ -79,9 +80,7 @@ contract("Game 3: Nft Staking", async accounts => {
     assert.equal(lastSessionId, 1, "session id is expected to be 1");
   });
 
-
   it("3. starting a session while there is another session should fail", async () => {
-
     let startTime = Math.floor(Date.now()/1000) + 5;
 
     try{
@@ -97,7 +96,6 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //mint.js
     web3.eth.getAccounts(function(err,res) {accounts = res;});
-
     let granted = await factory.isGenerator(accounts[0]);
     if (!granted) {
         let res = await factory.addGenerator(accounts[0]);
@@ -105,11 +103,9 @@ contract("Game 3: Nft Staking", async accounts => {
       //replace with throw errror
 	     console.log(`Account ${accounts[0]} was already granted a permission`);
     }
-
     let owner = player;
     let generation = 0;
     let quality = 1;
-
     //mint 2 tokens of each quality
     for(var i = 0; i < 10; i++){
       await factory.mintQuality(owner, generation, quality+Math.floor(i/2));
@@ -117,13 +113,11 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //check nft user balance after
     let balanceAfter = await nft.balanceOf(player);
-    assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+10, "5 Nft tokens should be minted");
+    assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+10, "10 Nft tokens should be minted");
   });
 
-
   it("4. should deposit first nft to game contract (deposit method)", async () => {
-
-    let signature = await sign(nftId,sp);
+    signature = await sign(nftId,sp);
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
@@ -138,7 +132,7 @@ contract("Game 3: Nft Staking", async accounts => {
     nftId++;
     index++;
 
-    let signature = await sign(nftId,sp);
+    signature = await sign(nftId,sp);
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
@@ -152,9 +146,8 @@ contract("Game 3: Nft Staking", async accounts => {
   it("6. should deposit third nft to game contract ", async () => {
     nftId++;
     index++;
-    console.log("nftId: ", nftId," index: " ,index);
 
-    let signature = await sign(nftId,sp);
+    signature = await sign(nftId,sp);
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
@@ -167,8 +160,8 @@ contract("Game 3: Nft Staking", async accounts => {
 
   it("7. depositing fourth nft should fail, as game has 3 slots only ", async () => {
     nftId++;
-    console.log("nftId: ", nftId);
-    let signature = await sign(nftId,sp);
+
+    signature = await sign(nftId,sp);
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
@@ -180,7 +173,6 @@ contract("Game 3: Nft Staking", async accounts => {
       //if deposit() fails, the test should pass
       assert(true);
     }
-
   });
 
       //check the contract slots, not user balance
@@ -194,7 +186,6 @@ contract("Game 3: Nft Staking", async accounts => {
   });
 
   it("9. claiming for first slot should fail, since it was claimed earlier ", async () => {
-
     try{
       //if claim() dont fail, test should fail
       await nftStaking.claim(lastSessionId, index);
@@ -216,7 +207,6 @@ contract("Game 3: Nft Staking", async accounts => {
   });
 
   it("11. claiming for second slot should fail, since it was claimed earlier ", async () => {
-
     try{
       //if claim() dont fail, test should fail
       await nftStaking.claim(lastSessionId, index);
@@ -237,11 +227,10 @@ contract("Game 3: Nft Staking", async accounts => {
     }
 
     balanceAfter = await nftStaking.balances(lastSessionId, player, index);
-    assert.equal(parseInt(balanceAfter.nftId) , 0, "There should be no nft in slot " +index)
+    assert.equal(balanceAfter.nftId , 0, "There should be no nft in slot " +index)
   });
 
   it("13. claiming for third slot should fail, since it was claimed earlier ", async () => {
-
     try{
       //if claim() doesnt fail, test should fail
       await nftStaking.claim(lastSessionId, index);
@@ -253,7 +242,6 @@ contract("Game 3: Nft Staking", async accounts => {
   });
 
   it("14. claim all (claimAll) should fail, since all slots are empty ", async () => {
-
     try{
       //if claimAll() doesent fail, test should fail
       await nftStaking.claimAll(lastSessionId);
@@ -265,11 +253,10 @@ contract("Game 3: Nft Staking", async accounts => {
   });
 
   it("15. deposit one more nft and claim all ", async () => {
-
     nftId++;
     index=0;
 
-    let signature = await sign(nftId,sp);
+    signature = await sign(nftId,sp);
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
@@ -277,7 +264,7 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //check that the token has been deposited
     balanceBefore = await nftStaking.balances(lastSessionId, player, index);
-	  assert.equal(parseInt(balanceBefore.nftId), nftId, "Deposited nftId should be " +nftId);
+	  assert.equal(balanceBefore.nftId, nftId, "Deposited nftId should be " +nftId);
 
     //claimAll
     try{
@@ -286,13 +273,14 @@ contract("Game 3: Nft Staking", async accounts => {
       console.log("There was a problem with claimAll function.");
     }
 
-    //check that the slot(s) are empty
-    balanceAfter = await nftStaking.balances(lastSessionId, player, index);
-    assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    //check that the slots are empty
+    for(index = 0; index < 3 ; index++){
+      balanceAfter = await nftStaking.balances(lastSessionId, player, index);
+      assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    }
   });
 
   it("16. claim all should fail, as it was claimed in previous step ", async () => {
-
     try{
       //if claimAll() dont fail, test should fail
       await nftStaking.claimAll(lastSessionId);
@@ -303,22 +291,14 @@ contract("Game 3: Nft Staking", async accounts => {
     }
   });
 
-  it("17.	deposit two nft's and claim all  ", async () => {
-    //first nft
-    nftId++;
-    index=0;
-
-    let signature = await sign(nftId,sp);
-    await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
-
-    //second nft
-    nftId++;
-    index=1;
-
-    signature = await sign(nftId,sp);
-    await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+  it("17. deposit two nft's and claim all  ", async () => {
+    //deposit two nfts
+    for(index=0; index<2; index++){
+      nftId++;
+      signature = await sign(nftId,sp);
+      await nft.approve(nftStaking.address, nftId);
+      await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+    }
 
     //claimAll
     try{
@@ -327,13 +307,14 @@ contract("Game 3: Nft Staking", async accounts => {
       console.log("There was a problem with claimAll function.");
     }
 
-    //check that the slot(s) are empty
-    let balanceAfter = await nftStaking.balances(lastSessionId, player, index);
-    assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    //check that the slots are empty
+    for(index = 0; index < 3 ; index++){
+      balanceAfter = await nftStaking.balances(lastSessionId, player, index);
+      assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    }
   });
 
-  it("18.	claim all should fail, as it was claimed in step ", async () => {
-
+  it("18. claim all should fail, as it was claimed in step ", async () => {
     try{
       //if claimAll() dont fail, test should fail
       await nftStaking.claimAll(lastSessionId);
@@ -344,44 +325,30 @@ contract("Game 3: Nft Staking", async accounts => {
     }
   });
 
-  it("19.	deposit three nfts and claim all ", async () => {
-  //first nft
-  nftId++;
-  index=0;
+  it("19. deposit three nfts and claim all ", async () => {
+    //deposit three nfts
+    for(index=0; index<3; index++){
+      nftId++;
+      signature = await sign(nftId,sp);
+      await nft.approve(nftStaking.address, nftId);
+      await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+    }
 
-  let signature = await sign(nftId,sp);
-  await nft.approve(nftStaking.address, nftId);
-  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+    //claimAll
+    try{
+      await nftStaking.claimAll(lastSessionId);
+    }catch(e){
+      console.log("There was a problem with claimAll function.");
+    }
 
-  //second nft
-  nftId++;
-  index=1;
-
-  signature = await sign(nftId,sp);
-  await nft.approve(nftStaking.address, nftId);
-  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
-
-  //first nft
-  nftId++;
-  index=2;
-
-  signature = await sign(nftId,sp);
-  await nft.approve(nftStaking.address, nftId);
-  await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
-
-  //claimAll
-  try{
-    await nftStaking.claimAll(lastSessionId);
-  }catch(e){
-    console.log("There was a problem with claimAll function.");
-  }
-
-  //check that the slot(s) are empty
-  let balanceAfter = await nftStaking.balances(lastSessionId, player, index);
-  assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    //check that the slots are empty
+    for(index = 0; index < 3 ; index++){
+      balanceAfter = await nftStaking.balances(lastSessionId, player, index);
+      assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
+    }
   });
 
-  it("20.	claim all should fail, as it was claimed in the last step ", async () => {
+  it("20. claim all should fail, as it was claimed in the last step ", async () => {
     try{
       //if claimAll() dont fail, test should fail
       await nftStaking.claimAll(lastSessionId);
