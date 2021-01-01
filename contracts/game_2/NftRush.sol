@@ -7,18 +7,19 @@ import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../seascape_nft/NftTypes.sol";
 import "./../seascape_nft/NftFactory.sol";
 import "./NftLeaderboard.sol";
+import "./GameSession.sol";
 
-contract NftRush is Ownable, NftLeaderboard {
+contract NftRush is Ownable, GameSession, NftLeaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
     NftFactory nftFactory;
     
-    Counters.Counter private sessionId;
-
+	
     uint256 private minDeposit;
 
+    
     /// @notice Tracking player data within game session
     struct Balance {
 	uint256 amount;
@@ -30,15 +31,11 @@ contract NftRush is Ownable, NftLeaderboard {
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
 
-    event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
 
 	
     constructor(address _crowns, address _factory, uint256 _minDeposit) public {
-	// Starts at value 1. 
-	sessionId.increment();
-
 	nftFactory = NftFactory(_factory);
 
 	crowns = CrownsToken(_crowns);
@@ -50,7 +47,7 @@ contract NftRush is Ownable, NftLeaderboard {
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
-    
+
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every second. It allows to claim a
@@ -61,24 +58,16 @@ contract NftRush is Ownable, NftLeaderboard {
     /// @param _generation Seascape Nft generation that is given as a reward
     function startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external onlyOwner {
 	if (lastSessionId > 0) {
-	    require(isStartedFor(lastSessionId)==false, "NFT Rush: Can't start when session is active");
+	    require(isStartedFor(lastSessionId)==false,
+		    "NFT Rush: Can't start when session is active");
 	}
 
-	uint256 _sessionId = sessionId.current();
-
-	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation, false, false);
-
-	sessionId.increment();
-	lastSessionId = _sessionId;
-
-	// this variables are part of leaderboard,
-	// therefore located in leaderboard contract
-	spentDailyWinnersTime[_sessionId] = _startTime;
-	mintedDailyWinnersTime[_sessionId] = _startTime;    
-
+	uint256 _sessionId = _startSession(_interval, _period, _startTime, _generation);
+	//_setWinners(_sessionId, _startTime);
+	
 	emit SessionStarted(_sessionId, _startTime, _startTime + _period, _generation);
     }
- 
+
     
     /// @notice Sets a NFT factory that will mint a token for stakers
     function setNftFactory(address _address) external onlyOwner {

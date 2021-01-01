@@ -4,41 +4,33 @@ import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./GameSession.sol";
 
-
-abstract contract NftLeaderboard is Ownable {
+contract NftLeaderboard is Ownable, GameSession {
     using SafeMath for uint256;
-    using Counters for Counters.Counter;
+    using Counters for Counters.Counter;    
 
-  /// @notice Tracking leaderboard rewards within game session.
-  /// Nft Rush (this contract game) has a leaderboard
-  struct Reward {
-  uint256 sessionId;
-  uint256 cws;
-  }
-
-  CrownsToken public crowns;
+    /// @notice Tracking leaderboard rewards within game session.
+    /// Nft Rush (this contract game) has a leaderboard
+    struct Reward {      
+        uint256 sessionId;	
+        uint256 cws;	
+    }	
 
 
     /// @notice Game session. Smartcontract is active during the game session.
     /// Game session is active for a certain period of time only
-    struct Session {
-	uint256 interval;      // period between intervals
-	uint256 period;        // duration of session
-	uint256 startTime;     // unix timestamp when session starts
-	uint256 generation;    // nft generation
+    struct SessionWinners {
 	bool    spentWinnersSet;    // was all time winners set
 	bool    mintedWinnersSet;
-    }
+    }	
 
-    uint256 public lastSessionId;
-    mapping(uint256 => Session) public sessions;
+    mapping(uint256 => SessionWinners) public sessionWinners;    
 
-
-  uint256[10] public spentDailyAmounts;        // spent token leaderboard
-  uint256[10] public spentAllTimeAmounts;
-  uint256[10] public mintedDailyAmounts;       // minted nft amount leaderboard
-  uint256[10] public mintedAllTimeAmounts;
+    uint256[10] public spentDailyAmounts;        // spent token leaderboard    
+    uint256[10] public spentAllTimeAmounts;
+    uint256[10] public mintedDailyAmounts;       // minted nft amount leaderboard
+    uint256[10] public mintedAllTimeAmounts;
 
     // struct: session id => timestamp
     mapping(uint256 => uint256) public spentDailyWinnersTime;                  // tracks the last daily winners set time.
@@ -65,6 +57,14 @@ abstract contract NftLeaderboard is Ownable {
 
   event Rewarded(address indexed owner, uint256 sessionId, string rewardType, uint256 amount);
 
+  function _setWinners(uint256 _sessionId, uint256 _startTime) private {
+	// this variables are part of leaderboard,
+	// therefore located in leaderboard contract
+	spentDailyWinnersTime[_sessionId] = _startTime;
+	mintedDailyWinnersTime[_sessionId] = _startTime;	
+
+    sessionWinners[_sessionId] = SessionWinners(false, false);    
+  }
 
   function setAllRewards(uint256[10] memory _spentDaily, uint256[10] memory _spentAllTime, uint256[10] memory _mintedDaily, uint256[10] memory _mintedAllTime) public onlyOwner {
 setDailySpents(_spentDaily);
@@ -101,7 +101,7 @@ mintedAllTimeAmounts = _rewards;
   }
 
   function addDailySpentWinners(uint256 _sessionId, address[10] memory _winners, uint8 _amount) public onlyOwner {
-require(isDailySpentWinnersAdded(_sessionId) == true, "NFT Rush: already set or too early");
+      //require(isDailySpentWinnersAdded(_sessionId) == true, "NFT Rush: already set or too early");
 require(_amount <= 10,                                 "NFT Rush: too many winners");
 
       if (_amount > 0) {
@@ -183,7 +183,6 @@ setAllTimeMintedWinnersTime(_sessionId);
   //--------------------------------------------------
   // Only game user
   //--------------------------------------------------
-
 
 
     function claimDailySpent() public {
@@ -272,12 +271,13 @@ setAllTimeMintedWinnersTime(_sessionId);
 
     function isAllTimeSpentWinnersAdded(uint256 _sessionId) internal view returns(bool) {
 	Session storage _session = sessions[_sessionId];
-	return isStartedFor(_sessionId) == false && _session.startTime > 0 && _session.spentWinnersSet == false;
+	SessionWinners storage _sessionWinners = sessionWinners[_sessionId];
+	return isStartedFor(_sessionId) == false && _session.startTime > 0 && _sessionWinners.spentWinnersSet == false;
     }
 
 
     function setAllTimeSpentWinnersTime(uint256 _sessionId) internal {
-	sessions[_sessionId].spentWinnersSet = true;
+	sessionWinners[_sessionId].spentWinnersSet = true;
     }
 
     function isDailyMintedWinnersAdded(uint256 _sessionId) internal view returns(bool) {
@@ -291,12 +291,13 @@ setAllTimeMintedWinnersTime(_sessionId);
 
     function isAllTimeMintedWinnersAdded(uint256 _sessionId) internal view returns(bool) {
 	Session storage _session = sessions[_sessionId];
-	return isStartedFor(_sessionId) == false && _session.startTime > 0 && _session.mintedWinnersSet == false;
+	SessionWinners storage _sessionWinners = sessionWinners[_sessionId];
+	return isStartedFor(_sessionId) == false && _session.startTime > 0 && _sessionWinners.mintedWinnersSet == false;
     }
 
 
     function setAllTimeMintedWinnersTime(uint256 _sessionId) internal {
-	sessions[_sessionId].mintedWinnersSet = true;
+	sessionWinners[_sessionId].mintedWinnersSet = true;
     }
 
     function calculateTotalRewards(uint256[10] memory _rewards, uint256 _amount) internal returns (uint256) {
@@ -307,14 +308,5 @@ setAllTimeMintedWinnersTime(_sessionId);
 
 	return _totalReward;
     }
-
-    function isStartedFor(uint256 _sessionId) internal view returns(bool) {
-	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
-	    return false;
-	}
-
-	return true;
-    }
-
 
 }
