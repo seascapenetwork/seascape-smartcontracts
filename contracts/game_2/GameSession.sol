@@ -3,13 +3,10 @@ pragma solidity 0.6.7;
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../seascape_nft/NftTypes.sol";
-import "./../seascape_nft/NftFactory.sol";
 
 contract GameSession is Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
-    using NftTypes for NftTypes;
 
     Counters.Counter private sessionId;
 
