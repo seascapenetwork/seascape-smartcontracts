@@ -1,15 +1,16 @@
 pragma solidity 0.6.7;
 
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../seascape_nft/NftTypes.sol";
 import "./../seascape_nft/NftFactory.sol";
+import "./Crowns.sol";
 import "./Leaderboard.sol";
 import "./GameSession.sol";
 
-contract NftRush is Ownable, GameSession, Leaderboard {
+
+contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
@@ -30,14 +31,15 @@ contract NftRush is Ownable, GameSession, Leaderboard {
     mapping(uint256 => mapping(address => uint)) public depositTime;
 
 
-    event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
+    event Spent(address indexed owner, uint256 sessionId,
+		uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
 
 	
     constructor(address _crowns, address _factory, uint256 _minDeposit) public {
 	nftFactory = NftFactory(_factory);
 
-	crowns = CrownsToken(_crowns);
+	setCrowns(_crowns);		
 
 	minDeposit = _minDeposit;
     }

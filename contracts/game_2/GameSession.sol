@@ -1,6 +1,5 @@
 pragma solidity 0.6.7;
 
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
@@ -13,8 +12,6 @@ contract GameSession is Ownable {
     using NftTypes for NftTypes;
 
     Counters.Counter private sessionId;
-
-    CrownsToken public crowns;
 
     /// @notice Game session. Smartcontract is active during the game session.
     /// Game session is active for a certain period of time only

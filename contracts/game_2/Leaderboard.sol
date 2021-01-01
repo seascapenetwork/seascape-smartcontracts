@@ -1,12 +1,12 @@
 pragma solidity 0.6.7;
 
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./GameSession.sol";
+import "./Crowns.sol";
 
-contract Leaderboard is Ownable, GameSession {
+contract Leaderboard is Ownable, GameSession, Crowns {
     using SafeMath for uint256;
     using Counters for Counters.Counter;    
 
