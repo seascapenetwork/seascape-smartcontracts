@@ -6,10 +6,10 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../seascape_nft/NftTypes.sol";
 import "./../seascape_nft/NftFactory.sol";
-import "./NftLeaderboard.sol";
+import "./Leaderboard.sol";
 import "./GameSession.sol";
 
-contract NftRush is Ownable, GameSession, NftLeaderboard {
+contract NftRush is Ownable, GameSession, Leaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;

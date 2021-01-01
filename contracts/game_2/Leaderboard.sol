@@ -6,7 +6,7 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./GameSession.sol";
 
-contract NftLeaderboard is Ownable, GameSession {
+contract Leaderboard is Ownable, GameSession {
     using SafeMath for uint256;
     using Counters for Counters.Counter;    
 
