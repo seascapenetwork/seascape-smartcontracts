@@ -57,7 +57,7 @@ contract Leaderboard is Ownable, GameSession {
 
   event Rewarded(address indexed owner, uint256 sessionId, string rewardType, uint256 amount);
 
-  function _setWinners(uint256 _sessionId, uint256 _startTime) private {
+  function _setWinners(uint256 _sessionId, uint256 _startTime) internal {
 	// this variables are part of leaderboard,
 	// therefore located in leaderboard contract
 	spentDailyWinnersTime[_sessionId] = _startTime;

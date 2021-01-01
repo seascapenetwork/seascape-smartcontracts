@@ -14,9 +14,8 @@ contract NftRush is Ownable, GameSession, Leaderboard {
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
-    NftFactory nftFactory;
+    NftFactory nftFactory;    
     
-	
     uint256 private minDeposit;
 
     
@@ -63,7 +62,7 @@ contract NftRush is Ownable, GameSession, Leaderboard {
 	}
 
 	uint256 _sessionId = _startSession(_interval, _period, _startTime, _generation);
-	//_setWinners(_sessionId, _startTime);
+	_setWinners(_sessionId, _startTime);
 	
 	emit SessionStarted(_sessionId, _startTime, _startTime + _period, _generation);
     }
