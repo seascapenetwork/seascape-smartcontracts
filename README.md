@@ -10,7 +10,7 @@ The testnet contracts
  * Nft:                       ```0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a```
  * Factory:                   ```0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0```
  * Lp Mining ( First game):   ```0xBCd6277B5A27390773B4657A7406E1c3BA6165c0```
- * Nft Rush (Second game):    ```0xE75E9aF605c69E06Ff6842b413043FB3AF493F37```
+ * Nft Rush (Second game):    ```0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488```
  * Nft Staking (Third game):  ```0xF357647bb09557DA29ecD0bF24BC681a422C3c5e```
 
 ### This repository depends on the following **submodules**:
