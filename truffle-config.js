@@ -15,7 +15,7 @@ module.exports = {
         },
 	rinkeby: {
 	    provider: function() { 
-		return new HDWalletProvider(process.env.MNEMONIC, process.env.ALCHEMY_HTTP);
+		return new HDWalletProvider(process.env.MNEMONIC, process.env.REMOTE_HTTP);
 	    },
 	    network_id: 4,
 	    skipDryRun: true // To prevent async issues occured on node v. 14. see:
