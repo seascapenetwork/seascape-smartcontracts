@@ -38,6 +38,8 @@ let init = async function(networkId) {
 
     console.log("Total prize to pay: "+calculateTotalPrize());
 
+    //await announceDailySpentWinners(nftRush, 1);
+    //return;
     await setAllRewards(nftRush);
         
     //should add nft rush as generator role in nft factory
@@ -70,7 +72,7 @@ let setAllRewards = async function(nftRush) {
 	winners.push(wei);
     }
 
-    await nftRush.setAllRewards(winners, winners, winners, winners);
+    await nftRush.setPrizes(winners, winners, winners, winners);
 
     console.log("Set all reward prizes");
 };
@@ -86,7 +88,7 @@ let calculateTotalPrize = function() {
     return total;
 };
 
-let addDailyWinners = async function(nftRush, lastSessionId) {
+let announceDailySpentWinners = async function(nftRush, lastSessionId) {
     // in nftrush.sol contract, at the method claimDailyNft
     // comment requirement of isDailWinnersAddress against false checking
 
@@ -99,16 +101,24 @@ let addDailyWinners = async function(nftRush, lastSessionId) {
 	}
     }
 
+    let winnersAmount = 10;
+
     // contract deployer. only it can add winners list into the contract
     let owner = accounts[0];
 
     try {
-	await nftRush.addDailyWinners(lastSessionId, winners);
+	let res = await nftRush.announceDailySpentWinners(lastSessionId, winners, winnersAmount);
+	console.log(res);
     } catch(e) {
 	if (e.reason == "NFT Rush: already set or too early") {
+	    console.log("announcement failed");
 	    return true;
+	} else {
+	    console.error(e);
 	}
     }
+
+    console.log ("announced");
 };
 
 let claimDailyNft = async function(nftRush, lastSessionId) {
