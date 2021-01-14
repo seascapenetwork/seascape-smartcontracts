@@ -196,7 +196,16 @@ contract NftStaking is Ownable, IERC721Receiver {
     }	    
 	    
     function claimAll(uint256 _sessionId) external {
+    function claimAll(uint256 _sessionId, uint256 _bonus, uint8 v, ) external {
 	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
+
+	// todo:
+	// check that all three slots are full
+	// if full, then we will process bonus
+	if (slots[_sessionId][msg.sender] == 3) {
+	    require(verifyBonus(sessionId, bonus, signature) == true, "NFT Staking: bonus signature is invalid");
+	    require(crowns.transfer(_bonus, msg.inder) == true, "NFT Staking: failed to transfer bonus to player");
+	}
 	
 	for (uint _index=0; _index<slots[_sessionId][msg.sender]; _index++) {
    	    uint256 _claimed = transfer(_sessionId, _index);
@@ -232,8 +241,25 @@ contract NftStaking is Ownable, IERC721Receiver {
     //---------------------------------------------------
     // Internal methods
     //---------------------------------------------------
+
+    function verifyBonus(sessionId, bonus, bonusSignature) internal returns(bool) {
+	Balance storage _balance = balances[_sessionId][msg.sender][0];
+	    uint256 _nftId_slot1 = _balance.nftId;
+
+	    /// all three slot nfts
+
+	    /// creating a message from bonus + nft slot 1, nft slot 2, and slot 3
+	    messagePrefix = keccak256(nftId1, 2, 3, bonus)
+	    
+	    // verify that signature for message was signed by contract owner
+    }
     
-    function isStartedFor(uint256 _sessionId) internal view returns(bool) {	
+    function giveBonus(sessionId, bonus, bonusSignature) internal returns(bool) {
+	// crowns is ERC20
+	crowns.transfer(address(this), msg.sender, bonus);
+    }
+    
+    function isStartedFor(uint256 _sessionId) internal view returns(bool) {
 	if (sessions[_sessionId].totalReward == 0) {
 	    return false;
 	}
