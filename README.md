@@ -11,7 +11,7 @@ The testnet contracts
  * Factory:                   ```0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0```
  * Lp Mining ( First game):   ```0xBCd6277B5A27390773B4657A7406E1c3BA6165c0```
  * Nft Rush (Second game):    ```0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488```
- * Nft Staking (Third game):  ```0xF357647bb09557DA29ecD0bF24BC681a422C3c5e```
+ * Nft Staking (Third game):  ```0xaA7ff46b1EcC3cD8512394ED7aF80339c0859185```
 
 ### This repository depends on the following **submodules**:
  * crowns - an ERC-20 token used as a in-game token of Blocklords. Strategy game on ethereum at https://blocklords.io
