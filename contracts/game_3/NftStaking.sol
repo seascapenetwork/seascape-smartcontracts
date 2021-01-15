@@ -52,7 +52,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     mapping(uint256 => mapping(address => uint)) public depositTimes;
 
     event SessionStarted(uint256 sessionIdd, uint256 reward, uint256 startTime, uint256 endTime);
-    event Deposited(address indexed owner, uint256 sessionId, uint256 nftId);
+    event Deposited(address indexed owner, uint256 sessionId, uint256 nftId, uint256 slotId);
     event Claimed(address indexed owner, uint256 sessionId, uint256 amount, uint256 nftId);
 
     constructor(address _crowns, address _nftFactory, address _nft) public {
@@ -154,7 +154,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	depositTimes[_sessionId][msg.sender]    = block.timestamp;
 	slots[_sessionId][msg.sender]           = slots[_sessionId][msg.sender].add(1);
        
-        emit Deposited(msg.sender, _sessionId, _nftId);
+        emit Deposited(msg.sender, _sessionId, _nftId, index + 1);
     }
 
     /// @dev earned CWS tokens are sent to Nft staker
