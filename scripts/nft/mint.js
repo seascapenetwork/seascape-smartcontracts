@@ -1,4 +1,5 @@
 let Factory = artifacts.require("NftFactory");
+let Nft = artifacts.require("SeascapeNft");
 
 // rinkeby testnet
 let factoryAddress = '0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0';
@@ -8,6 +9,9 @@ module.exports = async function(callback) {
 
     callback(null, res);
 };
+
+let min = 1;
+let max = 5;
 
 let grantPermission = async function(factory, address) {
     let res = await factory.addGenerator(address);
@@ -20,14 +24,20 @@ let init = async function() {
     web3.eth.getAccounts(function(err,res) {accounts = res;});
 
     let factory = null;
-    const networkId = await web3.eth.net.getId();
+    const networkId = await web3.eth.net.getId();    
     
     if (networkId == 4) {
 	factory = await Factory.at(factoryAddress);	
     } else {
 	factory = await Factory.deployed();
-    }    
-    console.log("Nft factory: "+factory.address);
+    }
+
+    let nft = null;
+    if (networkId != 4) {
+	nft = await Nft.deployed();
+    }
+    let nft_granted = await nft.setFactory(factory.address);
+    console.log("Nft has been linked to factory: "+nft_granted.tx);
 
     let granted = await factory.isGenerator(accounts[0]);
     if (!granted) {
@@ -36,28 +46,25 @@ let init = async function() {
 	console.log(`Account ${accounts[0]} was already granted a permission`);
     }
 
+    let amount = 5;
+    let args = process.argv.slice(4);
+    if (args.length == 1) {
+	amount = parseInt(args[0]);
+	if (amount < min || amount > max) {
+	    throw "Number of minting NFTs should be between 1 and 5";
+	    process.exit(1);
+	}
+    }
+    
     let owner = accounts[0];
     let generation = 0;
-    let quality = 1;
 
-    let quality1 = await factory.mintQuality(owner, generation, quality);
-    console.log("Quality 1 was minted");
-    console.log(quality1);
-    
-    let quality2 = await factory.mintQuality(owner, generation, quality + 1);
-    console.log("Quality 2 was minted");
-    console.log(quality2);
-    
-    let quality3 = await factory.mintQuality(owner, generation, quality + 2);
-    console.log("Quality 3 was minted");
-    console.log(quality3);
-    
-    let quality4 = await factory.mintQuality(owner, generation, quality + 3);
-    console.log("Quality 4 was minted");
-    console.log(quality4);
-    
-    let quality5 = await factory.mintQuality(owner, generation, quality + 4);
-    console.log("Quality 5 was minted");    
-    console.log(quality5);
+    for (var quality = 1; quality <= amount; quality++) {
+	let res = await factory.mintQuality(owner, generation, quality);
+	console.log("-------------------------");
+	console.log(`Quality ${quality} was minted!`);	
+	console.log(`Txid: ${res.tx}`);
+	console.log();
+    }
 };
 
