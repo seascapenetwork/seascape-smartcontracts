@@ -48,13 +48,13 @@ let init = async function(networkId) {
     let gasPrice = await web3.eth.getGasPrice();
     let gasValue = 4700000;
     
-    //await crowns.transfer(nftStaking.address, web3.utils.toWei(totalReward.toString()), {from: accounts[0], gas: gasValue, gasPrice: gasPrice});    
+    await crowns.transfer(nftStaking.address, web3.utils.toWei(totalReward.toString()), {from: accounts[0], gas: gasValue, gasPrice: gasPrice});    
 
     //should add nft rush as generator role in nft factory
-    //await factory.addGenerator(nftStaking.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
+    await factory.addGenerator(nftStaking.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
 
     //should set nft factory in nft
-    //await nft.setFactory(factory.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
+    await nft.setFactory(factory.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
 
     //should start a session
     let startTime = Math.floor(Date.now()/1000) + 30;
