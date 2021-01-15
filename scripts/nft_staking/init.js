@@ -32,7 +32,7 @@ let init = async function(networkId) {
     let crowns  = null;
 	
     if (networkId == 4) {
-	nftStaking = await NftStaking.at("0xF357647bb09557DA29ecD0bF24BC681a422C3c5e");	
+	nftStaking = await NftStaking.at("0xaA7ff46b1EcC3cD8512394ED7aF80339c0859185");	
 	factory = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
 	nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
 
