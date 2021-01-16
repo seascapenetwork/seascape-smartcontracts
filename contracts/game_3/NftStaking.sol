@@ -142,8 +142,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
 	uint index = 0;
 	// use next empty slot
-	if (slots[_sessionId][msg.sender] > 0) {
-	    index = slots[_sessionId][msg.sender];
+	for (; index<3; index++) {
+	    if (balances[_sessionId][msg.sender][index].nftId == 0) {		
+		break;
+	    }
 	}
 
 	// If user withdrew all LP tokens, but deposited before for the session
