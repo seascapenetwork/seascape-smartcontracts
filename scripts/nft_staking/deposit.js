@@ -50,12 +50,22 @@ let deposit = async function(nftStaking, nft, lastSessionId) {
     let gameOwner = accounts[0];
     let signature = await sign(nftId, sp, gameOwner);
 
+    let slotIndex = 0;
+    let args = process.argv.slice(4);
+    if (args.length == 1) {
+	slotIndex = parseInt(args[0]);
+	if (slotIndex < 0 || slotIndex > 2) {
+	    throw "Slot index should be between 0 and 2";
+	    process.exit(1);
+	}
+    }
+    
     console.log(`Nft id: ${nftId} owned by ${player}`);
 
     //ERC721 approve and deposit token to contract
-    let deposit_res = await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+    let deposit_res = await nftStaking.deposit(lastSessionId, slotIndex, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
-    console.log(`Deposited NFT ${nftId} successfully.\nTxid: ${deposit_res.tx}`);
+    console.log(`Deposited NFT ${nftId} at slot index ${slotIndex} successfully.\nTxid: ${deposit_res.tx}`);
 }.bind(this);
 
 let approve = async function (nft, walletAddress, nftStakingAddress) {    

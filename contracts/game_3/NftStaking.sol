@@ -120,43 +120,36 @@ contract NftStaking is Ownable, IERC721Receiver {
     //--------------------------------------------------
 
     /// @notice deposits nft to stake along with it's SP
-    function deposit(uint256 _sessionId, uint256 _nftId, uint256 _sp, uint8 _v, bytes32 _r, bytes32 _s) external {
+    function deposit(uint256 _sessionId, uint256 _index, uint256 _nftId, uint256 _sp, uint8 _v, bytes32 _r, bytes32 _s) external {
+	require(_index < 3,             "Nft Staking: Slot index must be less than 3");		
 	require(_nftId > 0,              "Nft Staking: Nft id must be greater than 0");
 	require(_sp > 0,                  "Nft Staking: Seascape Points must be greater than 0");
 	require(_sessionId > 0,           "Nft Staking: Session id should be greater than 0!");
 	require(isStartedFor(_sessionId), "Nft Staking: Session is not active");
 	require(nft.ownerOf(_nftId) == msg.sender, "Nft Staking: Nft is not owned by method caller");
-	require(slots[_sessionId][msg.sender] < 3, "Nft Staking: all slots are used");
-
-	
+	require(balances[_sessionId][msg.sender][_index].nftId == 0, "Nft Staking: nft at the given slot is full already");
+		
 	/// Validation of quality
 	// message is generated as owner + amount + last time stamp + quality
 	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
 	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
 	address _recover = ecrecover(_message, _v, _r, _s);
 	require(_recover == owner(),     "Nft Staking: Seascape points verification failed");
-	
+
 	nft.safeTransferFrom(msg.sender, address(this), _nftId);
 
 	Session storage _session  = sessions[_sessionId];
 	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
-	uint index = 0;
-	// use next empty slot
-	for (; index<3; index++) {
-	    if (balances[_sessionId][msg.sender][index].nftId == 0) {		
-		break;
-	    }
-	}
 
 	// If user withdrew all LP tokens, but deposited before for the session
 	// Means, that player still can't mint more token anymore.
-        balances[_sessionId][msg.sender][index] = Balance(block.timestamp, _nftId, _sp);
+        balances[_sessionId][msg.sender][_index] = Balance(block.timestamp, _nftId, _sp);
 	
 	_session.totalSp                        = _session.totalSp.add(_sp);
 	depositTimes[_sessionId][msg.sender]    = block.timestamp;
 	slots[_sessionId][msg.sender]           = slots[_sessionId][msg.sender].add(1);
        
-        emit Deposited(msg.sender, _sessionId, _nftId, index + 1);
+        emit Deposited(msg.sender, _sessionId, _nftId, _index + 1);
     }
 
     /// @dev earned CWS tokens are sent to Nft staker
