@@ -196,7 +196,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     }
 
 
-    function claimAll(uint256 _sessionId, uint256 _bonus, uint8 _v, bytes32 _r, bytes32 _s) external {
+  function claimAll(uint256 _sessionId, uint256 _bonus, uint8 _v, bytes32 _r, bytes32 _s) external {
 	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
 	// todo:
@@ -269,8 +269,15 @@ contract NftStaking is Ownable, IERC721Receiver {
     }
 
     function giveBonus(uint256 _sessionId, uint256 _bonus) internal returns(bool) {
-	// crowns is ERC20
-      if(crowns.transfer(msg.sender, _bonus) == true){
+
+      uint256 unclaimed_reward = 0;
+      for(_index = 0; _index < 3; _index++){
+        unclaimed_reward = unclaimed_reward + calculateInterest(_sessionId, msg.sender, _index)
+          + (calculateInterest(_sessionId, msg.sender, _index) / 100 * _bonus);
+      }
+
+      if(crowns.transfer(msg.sender, unclaimed_reward) == true){
+        unclaimed_reward = 0;
 	      return true;
       }
       else{
