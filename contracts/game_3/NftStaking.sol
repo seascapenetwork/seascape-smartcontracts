@@ -196,16 +196,16 @@ contract NftStaking is Ownable, IERC721Receiver {
     }
 
 
-  function claimAll(uint256 _sessionId, uint256 _bonus, uint8 _v, bytes32 _r, bytes32 _s) external {
+  function claimAll(uint256 _sessionId, uint256 _bonusPercent, uint8 _v, bytes32 _r, bytes32 _s) external {
 	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
 	// todo:
 	// check that all three slots are full
 	// if full, then we will process bonus
 	if (slots[_sessionId][msg.sender] == 3) {
-	    require(verifyBonus(_sessionId, _bonus, _v, _r, _s) == true, "NFT Staking: bonus signature is invalid");
-	    //require(crowns.transfer(msg.sender, _bonus) == true, "NFT Staking: failed to transfer bonus to player");
-      require(giveBonus(_sessionId, _bonus) == true, "NFT Staking: failed to transfer bonus to player");
+	    require(verifyBonus(_sessionId, _bonusPercent, _v, _r, _s) == true, "NFT Staking: bonus signature is invalid");
+	    //require(crowns.transfer(msg.sender, _bonusPercent) == true, "NFT Staking: failed to transfer bonus to player");
+      require(giveBonus(_sessionId, _bonusPercent) == true, "NFT Staking: failed to transfer bonus to player");
 	}
 
 	for (uint _index=0; _index<slots[_sessionId][msg.sender]; _index++) {
@@ -244,7 +244,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     //---------------------------------------------------
 
 
-    function verifyBonus(uint256 _sessionId, uint256 _bonus, uint8 _v, bytes32 _r, bytes32 _s) internal returns(bool) {
+    function verifyBonus(uint256 _sessionId, uint256 _bonusPercent, uint8 _v, bytes32 _r, bytes32 _s) internal returns(bool) {
 
       uint[] memory _nftSlotIds = new uint[](3);
 
@@ -255,8 +255,8 @@ contract NftStaking is Ownable, IERC721Receiver {
       }
 
       //2. create a message from bonus +nft slot 1, slot 2, slot 3
-      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_bonus, _nftSlotIds[0],  _nftSlotIds[1], _nftSlotIds[2]));
-	    //bytes32 messagePrefix = keccak256(_bonus, _nftSlotIds[0],  _nftSlotIds[1], _nftSlotIds[2]);
+      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_bonusPercent, _nftSlotIds[0],  _nftSlotIds[1], _nftSlotIds[2]));
+	    //bytes32 messagePrefix = keccak256(_bonusPercent, _nftSlotIds[0],  _nftSlotIds[1], _nftSlotIds[2]);
 
       //Validation of bonus
 	    //3. verify that signature for message was signed by contract owner
@@ -268,15 +268,15 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     }
 
-    function giveBonus(uint256 _sessionId, uint256 _bonus) internal returns(bool) {
+    function giveBonus(uint256 _sessionId, uint256 _bonusPercent) internal returns(bool) {
 
-      uint256 unclaimed_reward = 0;
+      uint256 unclaimedReward = 0;
       for(uint _index = 0; _index < 3; _index++){
-        unclaimed_reward = unclaimed_reward + calculateInterest(_sessionId, msg.sender, _index)
-          + (calculateInterest(_sessionId, msg.sender, _index) / 100 * _bonus);
+        unclaimedReward = unclaimedReward + calculateInterest(_sessionId, msg.sender, _index)
+          + (calculateInterest(_sessionId, msg.sender, _index) / 100 * _bonusPercent);
       }
 
-      if(crowns.transfer(msg.sender, unclaimed_reward) == true){
+      if(crowns.transfer(msg.sender, _bonusPercent) == true){
 	      return true;
       }
       else{
