@@ -205,7 +205,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	if (slots[_sessionId][msg.sender] == 3) {
 	    require(verifyBonus(_sessionId, _bonus, _v, _r, _s) == true, "NFT Staking: bonus signature is invalid");
 	    //require(crowns.transfer(msg.sender, _bonus) == true, "NFT Staking: failed to transfer bonus to player");
-      require(giveBonus(_sessionId, _bonus, _bonusSignature) == true, "NFT Staking: failed to transfer bonus to player");
+      require(giveBonus(_sessionId, _bonus) == true, "NFT Staking: failed to transfer bonus to player");
 	}
 
 	for (uint _index=0; _index<slots[_sessionId][msg.sender]; _index++) {
@@ -244,7 +244,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     //---------------------------------------------------
 
 
-    function verifyBonus(_sessionId, _bonus, _bonusSignature) internal returns(bool) {
+    function verifyBonus(uint256 _sessionId, uint256 _bonus, uint8 _v, bytes32 _r, bytes32 _s) internal returns(bool) {
 
       uint[] memory _nftSlotIds = new uint[](3);
 
@@ -268,7 +268,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     }
 
-    function giveBonus(_sessionId, _bonus, _bonusSignature) internal returns(bool) {
+    function giveBonus(uint256 _sessionId, uint256 _bonus) internal returns(bool) {
 	// crowns is ERC20
       if(crowns.transfer(msg.sender, _bonus) == true){
 	      return true;
