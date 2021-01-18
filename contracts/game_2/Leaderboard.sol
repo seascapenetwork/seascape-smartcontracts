@@ -122,7 +122,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      */
     function announceDailySpentWinners(uint256 _sessionId,
 				  address[10] memory _winners,
-				  uint8 _winnersAmount) public onlyOwner {
+				  uint8 _winnersAmount) internal onlyOwner {
         //require(dailySpentWinnersAnnouncable(_sessionId) == true,
         //      "NFT Rush: already set or too early");
         require(_winnersAmount <= 10,
@@ -161,7 +161,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      */
     function announceAllTimeSpentWinners(uint256 _sessionId,
 				  address[10] memory _winners,
-				  uint8 _winnersAmount) public onlyOwner {
+				  uint8 _winnersAmount) internal onlyOwner {
         require(allTimeSpentWinnersAnnouncable(_sessionId) == true,
         	      "NFT Rush: all time winners set already or too early to set");
         require(_winnersAmount <= 10,
@@ -200,7 +200,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      */
     function announceDailyMintedWinners(uint256 _sessionId,
 				 address[10] memory _winners,
-				 uint8 _winnersAmount) public onlyOwner {
+				 uint8 _winnersAmount) internal onlyOwner {
 	require(dailyMintedWinnersAnnouncable(_sessionId) == true,
 		"NFT Rush: already set or too early");
 	require(_winnersAmount <= 10,
@@ -240,7 +240,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      */
     function announceAllTimeMintedWinners(uint256 _sessionId,
 				     address[10] memory _winners,
-				     uint8 _winnersAmount) public onlyOwner {
+				     uint8 _winnersAmount) internal onlyOwner {
 	require(allTimeMintedWinnersAnnouncable(_sessionId) == false,
 		"NFT Rush: all time winners set already");
 	require(_winnersAmount <= 10,
@@ -263,6 +263,26 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 	setAllTimeMintedWinnersTime(_sessionId);
     }
 
+
+    function announceDailyWinners(uint256 _sessionId,
+			 address[10] memory _spentWinners,				  
+				  uint8 _spentWinnersAmount,
+			 address[10] memory _mintedWinners,				  
+				  uint8 _mintedWinnersAmount) public onlyOwner {
+
+	announceDailySpentWinners(_sessionId, _spentWinners, _spentWinnersAmount);
+	announceDailyMintedWinners(_sessionId, _mintedWinners, _mintedWinnersAmount);	
+    }
+
+    function announceAllTimeWinners(uint256 _sessionId,				      
+			 address[10] memory _spentWinners,				  
+				  uint8 _spentWinnersAmount,
+			 address[10] memory _mintedWinners,				  
+				  uint8 _mintedWinnersAmount) public onlyOwner {
+
+	announceAllTimeSpentWinners(_sessionId, _spentWinners, _spentWinnersAmount);
+	announceAllTimeMintedWinners(_sessionId, _mintedWinners, _mintedWinnersAmount);	
+    }
 
     //--------------------------------------------------
     // Only game user
