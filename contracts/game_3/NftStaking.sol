@@ -270,13 +270,14 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     function giveBonus(uint256 _sessionId, uint256 _bonusPercent) internal returns(bool) {
 
-      uint256 unclaimedReward = 0;
+      uint256 totalBonus = 0;
       for(uint _index = 0; _index < 3; _index++){
-        unclaimedReward = unclaimedReward + calculateInterest(_sessionId, msg.sender, _index)
-          + (calculateInterest(_sessionId, msg.sender, _index) / 100 * _bonusPercent);
+        uint256 _interest = calculateInterest(_sessionId, msg.sender, _index);
+        totalBonus.add(_interest.div(100).mul(_bonusPercent));
+
       }
 
-      if(crowns.transfer(msg.sender, _bonusPercent) == true){
+      if(crowns.transfer(msg.sender, totalBonus) == true){
 	      return true;
       }
       else{
