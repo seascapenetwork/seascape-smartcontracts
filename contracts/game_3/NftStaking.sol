@@ -176,8 +176,8 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @notice Claim earned CWS tokens
     /// of type _token out of Staking contract.
     function claim(uint256 _sessionId, uint256 _index) external {
-	require(_index < slots[_sessionId][msg.sender],             "Nft Staking: slot is not deposited");
-	require(balances[_sessionId][msg.sender][_index].nftId > 0, "Nft Staking: nft at the given slot was not set");
+	require(_index < 3,             "Nft Staking: slot is not deposited");
+  require(balances[_sessionId][msg.sender][_index].nftId > 0, "Nft Staking: nft at the given slot was not set");
 
 	uint256 _claimed = transfer(_sessionId, _index);
 
@@ -204,7 +204,6 @@ contract NftStaking is Ownable, IERC721Receiver {
 	// if full, then we will process bonus
 	if (slots[_sessionId][msg.sender] == 3) {
 	    require(verifyBonus(_sessionId, _bonusPercent, _v, _r, _s) == true, "NFT Staking: bonus signature is invalid");
-	    //require(crowns.transfer(msg.sender, _bonusPercent) == true, "NFT Staking: failed to transfer bonus to player");
       require(giveBonus(_sessionId, _bonusPercent) == true, "NFT Staking: failed to transfer bonus to player");
 	}
 
