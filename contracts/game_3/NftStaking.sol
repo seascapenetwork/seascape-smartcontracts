@@ -199,9 +199,7 @@ contract NftStaking is Ownable, IERC721Receiver {
   function claimAll(uint256 _sessionId, uint256 _bonusPercent, uint8 _v, bytes32 _r, bytes32 _s) external {
 	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
-	// todo:
-	// check that all three slots are full
-	// if full, then we will process bonus
+	// check if all three slots are full, then we will process bonus
 	if (slots[_sessionId][msg.sender] == 3) {
 	    require(verifyBonus(_sessionId, _bonusPercent, _v, _r, _s) == true, "NFT Staking: bonus signature is invalid");
       require(giveBonus(_sessionId, _bonusPercent) == true, "NFT Staking: failed to transfer bonus to player");
