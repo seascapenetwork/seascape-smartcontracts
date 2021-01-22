@@ -45,6 +45,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	uint256 sp;                // seascape points
     }
 
+
     uint256 public lastSessionId;
     mapping(uint256 => Session) public sessions;
     mapping(uint256 => mapping(address => uint256)) public slots;
@@ -55,6 +56,9 @@ contract NftStaking is Ownable, IERC721Receiver {
     event Deposited(address indexed owner, uint256 sessionId, uint256 nftId);
     event Claimed(address indexed owner, uint256 sessionId, uint256 amount, uint256 nftId);
 
+
+
+    //instantinate contracts, start session
     constructor(address _crowns, address _nftFactory, address _nft) public {
 	crowns = IERC20(_crowns);
 
@@ -69,6 +73,8 @@ contract NftStaking is Ownable, IERC721Receiver {
     // Only owner
     //--------------------------------------------------
 
+
+    //encrypt token data
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) override external returns (bytes4) {
 	return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
@@ -195,7 +201,9 @@ contract NftStaking is Ownable, IERC721Receiver {
 	emit Claimed(msg.sender, _sessionId, _claimed, _nftId);
     }
 
-
+    //claim all crowns for staked nfts
+    //nfts are burned in the process
+    //give bonus if all slots are full
   function claimAll(uint256 _sessionId, uint256 _bonusPercent, uint8 _v, bytes32 _r, bytes32 _s) external {
 	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
@@ -240,7 +248,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     // Internal methods
     //---------------------------------------------------
 
-
+    //verify bonus signature
     function verifyBonus(uint256 _sessionId, uint256 _bonusPercent, uint8 _v, bytes32 _r, bytes32 _s) internal returns(bool) {
 
       uint[] memory _nftSlotIds = new uint[](3);
@@ -265,6 +273,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     }
 
+      //calculate total bonus in crowns and send it to player
     function giveBonus(uint256 _sessionId, uint256 _bonusPercent) internal returns(bool) {
 
       uint256 totalBonus = 0;
@@ -276,6 +285,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       return crowns.transfer(msg.sender, totalBonus);
     }
 
+      //check if session is active
     function isStartedFor(uint256 _sessionId) internal view returns(bool) {
 	if (sessions[_sessionId].totalReward == 0) {
 	    return false;
@@ -288,6 +298,8 @@ contract NftStaking is Ownable, IERC721Receiver {
 	return true;
     }
 
+
+      //calculate interest amount in crowns for individual slot
     function calculateInterest(uint256 _sessionId, address _owner, uint256 _index) internal view returns(uint256) {
 	Session storage _session = sessions[_sessionId];
 	Balance storage _balance = balances[_sessionId][_owner][_index];
