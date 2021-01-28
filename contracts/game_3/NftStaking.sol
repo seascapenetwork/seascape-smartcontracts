@@ -51,6 +51,10 @@ contract NftStaking is Ownable, IERC721Receiver {
     mapping(uint256 => mapping(address => uint256)) public slots;
     mapping(uint256 => mapping(address => Balance[3])) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTimes;
+    mapping(uint256 => mapping(address => uint256)) public earning;
+
+
+
 
     event SessionStarted(uint256 sessionIdd, uint256 reward, uint256 startTime, uint256 endTime);
     event Deposited(address indexed owner, uint256 sessionId, uint256 nftId);
@@ -204,6 +208,12 @@ contract NftStaking is Ownable, IERC721Receiver {
 
       	Balance storage _balance = balances[_sessionId][msg.sender][_index];
 
+        if(earning[_sessionId][msg.sender] > 0){
+            earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
+        } else{
+            earning[_sessionId][msg.sender] = _claimed;
+        }
+
       	uint256 _nftId = _balance.nftId;
 
       	nft.burn(_nftId);
@@ -239,7 +249,7 @@ contract NftStaking is Ownable, IERC721Receiver {
                 "NFT Staking: failed to transfer bonus to player");
       	}
 
-      	for (uint _index=0; _index<slots[_sessionId][msg.sender]; _index++) {
+      	for (uint _index=0; _index < slots[_sessionId][msg.sender]; _index++) {
             uint256 _claimed = transfer(_sessionId, _index);
 
       	    Balance storage _balance = balances[_sessionId][msg.sender][_index];
