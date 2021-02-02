@@ -6,6 +6,11 @@ module.exports = {
 	    version: "0.6.7"
 	}
     },
+    plugins: [
+	'truffle-plugin-verify'
+    ],
+    api_keys: {
+    },
     networks: {
        development: {
 	   host: "local-node",
