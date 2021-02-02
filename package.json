@@ -13,7 +13,8 @@
   "author": "",
   "license": "GPLv3",
   "devDependencies": {
-    "solium": "1.1.3"
+    "solium": "1.1.3",
+    "truffle-plugin-verify": "^0.5.4"
   },
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.1.1",

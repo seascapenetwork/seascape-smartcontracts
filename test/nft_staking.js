@@ -314,6 +314,11 @@ contract("Game 3: Nft Staking", async accounts => {
     }
   });
 
+  it("17.1 passing a bonus when not all slots are full should fail", async () => {
+
+  });
+
+
   it("18. claim all should fail, as it was claimed in step ", async () => {
     try{
       //if claimAll() dont fail, test should fail
@@ -346,6 +351,14 @@ contract("Game 3: Nft Staking", async accounts => {
       balanceAfter = await nftStaking.balances(lastSessionId, player, index);
       assert.equal(balanceAfter.nftId, 0, "There should be no nft in slot " +index);
     }
+  });
+
+  it("19.1 claiming a bonus, but signature is signed by non-contract owner should fail", async () => {
+
+  });
+
+  it("19.2 bonus should pass when all slots are full and signature of bonus is signed by contract owner", async () => {
+
   });
 
   it("20. claim all should fail, as it was claimed in the last step ", async () => {

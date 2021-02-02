@@ -78,15 +78,19 @@ contract LpMining is Ownable {
     /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
     function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation) external onlyOwner {
-	require(_lpToken != address(0),          "Seascape Staking: Staking token should not be equal to 0");
-	require(_startTime > block.timestamp,         "Seascape Staking: Seassion should start in the future");
-	require(_period > 0,                          "Seascape Staking: Session duration should be greater than 0");
-	require(_totalReward > 0,                     "Seascape Staking: Total reward of tokens to share should be greater than 0");
+	require(_lpToken != address(0),
+		"Seascape Staking: Staking token should not be equal to 0");
+	require(_startTime > block.timestamp,
+		"Seascape Staking: Seassion should start in the future");
+	require(_period > 0,
+		"Seascape Staking: Session duration should be greater than 0");
+	require(_totalReward > 0,
+		"Seascape Staking: Total reward of tokens should be greater than 0");
 
 	// game session for the lp token was already created, then:
 	uint256 _lastId = lastSessionIds[_lpToken];
 	if (_lastId > 0) {
-	    require(isActive(_lastId)==false,     "Seascape Staking: Can't start when session is active");
+	    require(isActive(_lastId)==false,     "Seascape Staking: Can't start when session is already active");
 	}
 
 	// required CWS balance of this contract
@@ -273,6 +277,11 @@ contract LpMining is Ownable {
 	uint256 _sessionCap = block.timestamp;
 	if (isActive(_sessionId) == false) {
 	    _sessionCap = _session.startTime.add(_session.period);
+
+	    // claimed after session expire, means no any claimables
+	    if (_balance.claimedTime > _sessionCap) {
+                return 0;
+	    }
 	}
 
 	uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
