@@ -176,14 +176,15 @@ contract LpMining is Ownable {
 	if (_interest == 0) {
 	    return false;
 	}
-
-	require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+	require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
 		
 	_session.claimed     = _session.claimed.add(_interest);
 	_balance.claimed     = _balance.claimed.add(_interest);
 	_balance.claimedTime = block.timestamp;
 	rewardSupply         = rewardSupply.sub(_interest);
 
+	require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+		
 	emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
 	return true;
     }
@@ -192,18 +193,34 @@ contract LpMining is Ownable {
     /// @notice Withdraws _amount of LP token
     /// of type _token out of Staking contract.
     function withdraw(uint256 _sessionId, uint256 _amount) external {
+	Session storage _session = sessions[_sessionId];
 	Balance storage _balance  = balances[_sessionId][msg.sender];
 
 	require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
 
-	claim(_sessionId);
-
 	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
+		
+	require(_token.balanceOf(address(this)) >= _amount, "Seascape Staking: Not enough Lp token in player balance");
+	uint256 _interest = calculateInterest(_sessionId, msg.sender);
+	if (_interest > 0) {
+	    require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+	}
 
-	require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
-	
 	_balance.amount = _balance.amount.sub(_amount);
-	sessions[_sessionId].amount = sessions[_sessionId].amount.sub(_amount);
+        _session.amount = _session.amount.sub(_amount);
+
+	/// CWS claims as in claim method
+	if (_interest > 0) {
+	    _session.claimed     = _session.claimed.add(_interest);	
+	    _balance.claimed     = _balance.claimed.add(_interest);
+	    _balance.claimedTime = block.timestamp;
+	    rewardSupply         = rewardSupply.sub(_interest);
+
+	    require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+	    emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
+	}
+	require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
+
 
 	emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
     }
