@@ -3,6 +3,7 @@ let Nft = artifacts.require("SeascapeNft");
 
 // rinkeby testnet
 let factoryAddress = '0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0';
+let nftAddress = '0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a';
 
 module.exports = async function(callback) {
     let res = init();
@@ -35,6 +36,8 @@ let init = async function() {
     let nft = null;
     if (networkId != 4) {
 	nft = await Nft.deployed();
+    } else {
+	nft = await Nft.at(nftAddress);
     }
     let nft_granted = await nft.setFactory(factory.address);
     console.log("Nft has been linked to factory: "+nft_granted.tx);
