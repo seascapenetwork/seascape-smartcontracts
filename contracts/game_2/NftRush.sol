@@ -17,7 +17,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
-    /// @notice to mint nft, using nft factory
+    /// @notice nft factory is a contract that mints nfts
     NftFactory nftFactory;    
 
     /// @notice minimum CWS amount to spend in game.
@@ -29,8 +29,8 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 	uint256 mintedTime;
     }
 
-    /// @notice Tracking player balance within game session.
-    /// @dev session id -> wallet address -> Balance struct
+    /// @notice Tracking player balance within a game session.
+    /// @dev session id =>(wallet address => (Balance struct))
     mapping(uint256 => mapping(address => Balance)) public balances;
 
     event Spent(address indexed owner, uint256 sessionId,
@@ -103,8 +103,10 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     //--------------------------------------------------
 
     /**
-     *  @notice Spend some crowns through game contract
-     *  The more player spends, the higher the chance of getting high quality NFT.
+     *  @notice Spend some crowns in the game, to get higher quality NFTs.
+     *  The more spending, higher the chance of getting high quality NFT.
+     *
+     *  Note, that player should approve Crowns to use by this game contract.
      *
      *  Emits a {Spent} event.
      *
@@ -121,13 +123,13 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
      */
     function spend(uint256 _sessionId, uint256 _amount) external {
 	require(_amount >= minSpend,
-		"NFT Rush: Amount of CWS to spend should be greater than min deposit");
+		"NFT Rush: Amount of CWS to spend should be greater or equal to min deposit");
 	require(_sessionId > 0,
 		"NFT Rush: Session is not started yet!");
 	require(isActive(_sessionId),
-		"NFT Rush: Session is finished");
+		"NFT Rush: Game session is already finished");
 	require(crowns.balanceOf(msg.sender) >= _amount,
-		"NFT Rush: Not enough CWS to spend in the game");
+		"NFT Rush: Not enough CWS, please check your CWS balance");
 	require(crowns.spendFrom(msg.sender, _amount) == true,
 		"NFT Rush: Failed to spend CWS");
 
@@ -167,10 +169,12 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 
 	require(_balance.amount > 0,
 		"NFT Rush: No deposit was found");
-
+	require(_balance.mintedTime == 0 ||
+		(_balance.mintedTime.add(_session.interval) < block.timestamp),
+		"NFT Rush: Still in locking period, please try again after locking interval passes");
+	
 	/// Validation of quality
 	/// message is generated as owner + amount + last time stamp + quality
-
 	bytes memory _prefix = "\x19Ethereum Signed Message:\n32";
 	bytes32 _messageNoPrefix =
 	    keccak256(abi.encodePacked(msg.sender,
@@ -182,11 +186,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 	address _recover = ecrecover(_message, _v, _r, _s);
 
 	require(_recover == owner(),
-		"NFT Rush: Quality verification failed");
-
-	require(_balance.mintedTime == 0 ||
-		(_balance.mintedTime.add(_session.interval) < block.timestamp),
-		"NFT Rush: The locking interval were not passed since the last minted time");
+		"NFT Rush: Failed to verify quality signature");
 	
         uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
 	require(_tokenId > 0,

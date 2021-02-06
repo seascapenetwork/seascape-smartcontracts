@@ -5,9 +5,7 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./GameSession.sol";
 import "./Crowns.sol";
 
-
-/// @title Nft Rush Leaderboard
-/// @notice There are four types of leaderboard in the game:
+/// @notice There are four types of leaderboards in the game:
 ///
 /// - all time spenders
 /// - top daily spenders
@@ -29,7 +27,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     /// winners were announced or not. And the last time when
     /// daily leaderboards were announced.
     /// @dev be careful, if the daily winners setting doesn't set all 10 winners,
-    /// you wouldn't be able to set missed winners in a next round
+    /// you wouldn't be able to set missed winners when settings next day winners.
     mapping(uint256 => Announcement) public announcement;    
 
     /**
@@ -62,14 +60,15 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     event Rewarded(address indexed owner, string rewardType, uint256 amount);
 
     //----------------------------------------------------------------------
-    // Pre-game. Following methods executed once before leaderboard begins
+    // Pre-game. Following methods executed once before game session begins
     //----------------------------------------------------------------------
 
     /**
-     *  @notice Sets the time when daily rewards should be announced.
+     *  @notice Starts a leaderboard for the game session. This method
+     *  should be invoked, once when game session started. otherwise,
+     *  would be impossible to track winners for the new session.
+     *  @dev it sets the start time of the leaderboard,
      *  So that, daily leaderboard could be announced once for each day.
-     *
-     *  It also sets the announcement places for alltime leaderboards
      *
      *  NOTE!!! This method should be called from Primary Smartcontract.
      *
@@ -84,7 +83,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 
 
     /**
-     *  @notice Sets all leaderboard winners prizes at once.
+     *  @notice Sets all prizes at once. Prizes in CWS token that winners would get.
      *
      *  @param _spentDaily list of prizes for daily top spenders
      *  @param _spentAllTime list of prizes for all time top spenders
@@ -123,8 +122,8 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     function announceDailySpentWinners(uint256 _sessionId,
 				  address[10] memory _winners,
 				  uint8 _winnersAmount) internal onlyOwner {
-        //require(dailySpentWinnersAnnouncable(_sessionId) == true,
-        //      "NFT Rush: already set or too early");
+        require(dailySpentWinnersAnnouncable(_sessionId) == true,
+              "NFT Rush: already set or too early");
         require(_winnersAmount <= 10,
 		"NFT Rush: exceeded possible amount of winners");
 
@@ -285,7 +284,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     }
 
     //--------------------------------------------------
-    // Only game user
+    // Player's methods to claim leaderboard prizes
     //--------------------------------------------------
 
 
@@ -393,7 +392,6 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     // It should be announced, when session period for that leaderboard is passed.
     //--------------------------------------------------
 
-
     /**
      *  @dev Check whether the winners list is announcable or not.
      *  It is announcable if:
@@ -487,9 +485,8 @@ contract Leaderboard is Ownable, GameSession, Crowns {
     }
 
     //--------------------------------------------------
-    // Interval methods
+    // Internal methods used by other methods as a utility.
     //--------------------------------------------------
-
 
     /**
      *  @dev Calculates sum of {_winnersAmount} amount of elements in array {_prizes}

@@ -9,9 +9,13 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../seascape_nft/NftFactory.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 
-/// @title A Liquidity pool mining
+/// @title Seascape NFT staking contract.
 /// @author Medet Ahmetson <admin@blocklords.io>
-/// @notice Contract is attached to Seascape Nft Factory
+/// @notice Nft Staking contract allows users to earn CWS token by staking NFTs.
+/// Nfts will have a Seascape point. Which is the weight of token
+/// in Seascape Network platform. The Seascape Point is calculated by Nft parameters
+/// such as generation and quality.
+/// The higher the NFT weight, the more user gets reward for NFT staking.
 contract NftStaking is Ownable, IERC721Receiver {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
@@ -20,7 +24,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     NftFactory nftFactory;
 
-    IERC20 public crowns;
+    IERC20 private crowns;
     SeascapeNft private nft;
 
     Counters.Counter private sessionId;
@@ -30,12 +34,12 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
-        uint256 totalReward;   // amount of CWS to airdrop
+        uint256 totalReward;   // amount of CWS to give as a reward during the session.
         uint256 period;        // session duration in seconds
         uint256 startTime;     // session start in unixtimestamp
         uint256 claimed;       // amount of distributed reward
-        uint256 totalSp;       // amount of lp token deposited to the session by users
-    	  uint256 rewardUnit;    // reward per second = totalReward/period
+        uint256 totalSp;       // amount of seascape points of all NFTs deposited to the session by users
+    	  uint256 rewardUnit;  // reward per second = totalReward/period
     }
 
     /// @notice balance of lp token that each player deposited to game session
@@ -52,9 +56,6 @@ contract NftStaking is Ownable, IERC721Receiver {
     mapping(uint256 => mapping(address => Balance[3])) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTimes;
     mapping(uint256 => mapping(address => uint256)) public earning;
-
-
-
 
     event SessionStarted(uint256 sessionIdd, uint256 reward, uint256 startTime, uint256 endTime);
     event Deposited(address indexed owner, uint256 sessionId, uint256 nftId);
@@ -84,13 +85,12 @@ contract NftStaking is Ownable, IERC721Receiver {
         override
         returns (bytes4)
     {
-	      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 
-    /// @notice Starts a staking session for a finit _period of
+    /// @notice Starts a staking session for a finite _period of
     /// time, starting from _startTime. The _totalReward of
-    /// CWS tokens will be distributed in every second. It allows to claim a
-    /// a _generation Seascape NFT.
+    /// CWS tokens will be distributed in every second.
     function startSession(
         uint256 _totalReward,
         uint256 _period,
@@ -105,9 +105,8 @@ contract NftStaking is Ownable, IERC721Receiver {
         require(_period > 0,
             "Seascape Staking: Session duration should be greater than 0");
     	  require(_totalReward > 0,
-            "Seascape Staking: Total reward of tokens to share should be greater than 0");
+            "Seascape Staking: Reward amount should be greater than 0");
 
-      	/// @dev game session for the lp token was already created, then:
       	if (lastSessionId > 0) {
       	    require(isStartedFor(lastSessionId)==false,
                 "Seascape Staking: Can't start when session is active");
@@ -126,7 +125,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	sessions[_sessionId] = Session(_totalReward, _period, _startTime, 0, 0, _rewardUnit);
 
       	//--------------------------------------------------------------------
-              // updating rest of session related data
+        // updating rest of session related data
       	//--------------------------------------------------------------------
       	sessionId.increment();
       	rewardSupply = newSupply;
@@ -144,6 +143,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @notice deposits nft to stake along with it's SP
     function deposit(
         uint256 _sessionId,
+	uint8 _index,
         uint256 _nftId,
         uint256 _sp,
         uint8 _v,
@@ -152,43 +152,30 @@ contract NftStaking is Ownable, IERC721Receiver {
     )
         external
     {
-	      require(_nftId > 0,
-            "Nft Staking: Nft id must be greater than 0");
-	      require(_sp > 0,
-            "Nft Staking: Seascape Points must be greater than 0");
-	      require(_sessionId > 0,
-            "Nft Staking: Session id should be greater than 0!");
-	      require(isStartedFor(_sessionId),
-            "Nft Staking: Session is not active");
-	      require(nft.ownerOf(_nftId) == msg.sender,
-            "Nft Staking: Nft is not owned by method caller");
-	      require(slots[_sessionId][msg.sender] < 3,
-            "Nft Staking: all slots are used");
+	require(_index >= 0 && _index <= 2, "Nft Staking: Slot index is invalid");
+	require(_nftId > 0, "Nft Staking: Nft id must be greater than 0");
+	require(_sp > 0, "Nft Staking: Seascape Points must be greater than 0");
+	require(_sessionId > 0, "Nft Staking: Session id should be greater than 0!");
+	require(isStartedFor(_sessionId), "Nft Staking: Session is not active");
+	require(nft.ownerOf(_nftId) == msg.sender, "Nft Staking: Nft is not owned by method caller");
+	require(balances[_sessionId][msg.sender][_index].nftId = 0, "Nft Staking: slot is used already");
 
-
-      	/// Validation of quality
+      	/// Verify the Seascape Points signature.
       	/// @dev message is generated as owner + amount + last time stamp + quality
       	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
       	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
             _messageNoPrefix));
       	address _recover = ecrecover(_message, _v, _r, _s);
-      	require(_recover == owner(),
-            "Nft Staking: Seascape points verification failed");
+      	require(_recover == owner(),  "Nft Staking: Seascape points verification failed");
 
+	
       	nft.safeTransferFrom(msg.sender, address(this), _nftId);
 
+	
       	Session storage _session  = sessions[_sessionId];
       	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
-      	uint index = 0;
 
-      	/// @notice use next empty slot
-      	if (slots[_sessionId][msg.sender] > 0) {
-      	    index = slots[_sessionId][msg.sender];
-      	}
-
-      	/// @dev If user withdrew all LP tokens, but deposited before for the session
-      	/// Means, that player still can't mint more token anymore.
-        balances[_sessionId][msg.sender][index] = Balance(block.timestamp, _nftId, _sp);
+        _balances[_index] = Balance(block.timestamp, _nftId, _sp);
 
       	_session.totalSp = _session.totalSp.add(_sp);
       	depositTimes[_sessionId][msg.sender] = block.timestamp;
@@ -200,23 +187,20 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @notice Claim earned CWS tokens
     /// of type _token out of Staking contract.
     function claim(uint256 _sessionId, uint256 _index) external {
-        require(_index < 3, "Nft Staking: slot is not deposited");
-        require(balances[_sessionId][msg.sender][_index].nftId > 0,
-            "Nft Staking: nft at the given slot was not set");
-
-      	uint256 _claimed = transfer(_sessionId, _index);
+        require(_index >= 0 && _index <= 2, "Nft Staking: slot index is invalid");
+        require(balances[_sessionId][msg.sender][_index].nftId > 0, "Nft Staking: Slot at index is empty");
 
       	Balance storage _balance = balances[_sessionId][msg.sender][_index];
+      	uint256 _nftId = _balance.nftId;
+      	nft.burn(_nftId);
 
+	uint256 _claimed = transfer(_sessionId, _index);
+	
         if(earning[_sessionId][msg.sender] > 0){
             earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
         } else{
             earning[_sessionId][msg.sender] = _claimed;
         }
-
-      	uint256 _nftId = _balance.nftId;
-
-      	nft.burn(_nftId);
 
       	sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_balance.sp);
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].sub(1);

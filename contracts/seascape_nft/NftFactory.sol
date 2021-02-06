@@ -5,6 +5,14 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./NftTypes.sol";
 import "./SeascapeNft.sol";
 
+/// @title Nft Factory mints Seascape NFTs
+/// @notice Nft factory has gives to other contracts or wallet addresses permission
+/// to mint NFTs. It gives two type of permission set as roles:
+///
+///   Static role - allows to mint only Common quality NFTs
+///   Generator role - allows to mint NFT of any quality.
+///
+/// Nft Factory can revoke the role, or give it to any number of contracts.
 contract NftFactory is AccessControl {
     using SafeMath for uint256;
     using NftTypes for NftTypes;
@@ -115,12 +123,6 @@ contract NftFactory is AccessControl {
      {
 	 revokeRole(GENERATOR_ROLE, account);
      }
-  
-
-    //--------------------------------------------------
-    // Public methods
-    //--------------------------------------------------
-
 }
 
 
