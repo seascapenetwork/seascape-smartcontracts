@@ -142,7 +142,7 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+      await nftStaking.deposit(lastSessionId, 0, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
     // check nft contract balance after
     balanceAfter = await nftStaking.balances(lastSessionId, player, index);
@@ -158,7 +158,7 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+      await nftStaking.deposit(lastSessionId, 1, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
     // check nft contract balance after
     balanceAfter = await nftStaking.balances(lastSessionId, player, index);
@@ -174,7 +174,7 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+      await nftStaking.deposit(lastSessionId, 2, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
     // check nft contract balance after
     balanceAfter = await nftStaking.balances(lastSessionId, player, index);
@@ -191,7 +191,7 @@ contract("Game 3: Nft Staking", async accounts => {
     await nft.approve(nftStaking.address, nftId);
     try{
       //if deposit() doesnt fail, test should fail
-      await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+	await nftStaking.deposit(lastSessionId, 3, nftId, sp, signature[0], signature[1], signature[2], {from: player});
       assert.fail;
     }catch{
       //if deposit() fails, the test should pass
@@ -288,7 +288,7 @@ contract("Game 3: Nft Staking", async accounts => {
 
     //ERC721 approve and deposit token to contract
     await nft.approve(nftStaking.address, nftId);
-    await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+      await nftStaking.deposit(lastSessionId, 0, nftId, sp, signature[0], signature[1], signature[2], {from: player});
 
     //check that the token has been deposited
     balanceBefore = await nftStaking.balances(lastSessionId, player, index);
@@ -331,7 +331,7 @@ contract("Game 3: Nft Staking", async accounts => {
         nftId++;
         signature = await signNft(nftId,sp);
         await nft.approve(nftStaking.address, nftId);
-        await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+          await nftStaking.deposit(lastSessionId, index, nftId, sp, signature[0], signature[1], signature[2], {from: player});
         balanceAfter = await nftStaking.balances(lastSessionId, player, index);
         nftIdSlot[index] = parseInt(balanceAfter.nftId);
       }
@@ -373,7 +373,7 @@ contract("Game 3: Nft Staking", async accounts => {
         nftId++;
         signature = await signNft(nftId,sp);
         await nft.approve(nftStaking.address, nftId);
-        await nftStaking.deposit(lastSessionId, nftId, sp, signature[0], signature[1], signature[2], {from: player});
+          await nftStaking.deposit(lastSessionId, index, nftId, sp, signature[0], signature[1], signature[2], {from: player});
         balanceAfter = await nftStaking.balances(lastSessionId, player, index);
         nftIdSlot[index] = parseInt(balanceAfter.nftId);
       }

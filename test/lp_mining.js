@@ -61,7 +61,7 @@ contract("Game 1: Lp Mining", async accounts => {
 	    await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
 				       {from: accounts[0]});
 	} catch(e) {
-	    return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is active');
+	    return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is already active');
 	}
 
 	assert.fail();

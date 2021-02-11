@@ -148,7 +148,7 @@ contract("Game 2: Nft Rush", async accounts => {
 	try {
 	    await nftRush.mint(lastSessionId, v, r, s, quality);
 	} catch(e) {
-	    return assert.equal(e.reason, "NFT Rush: The locking interval were not passed since the last minted time");
+	    return assert.equal(e.reason, "NFT Rush: Still in locking period, please try again after locking interval passes");
 	}
     });
 
@@ -173,9 +173,9 @@ contract("Game 2: Nft Rush", async accounts => {
 	    approveAmount += rewardsAmounts[0];
 	}
 
-	await crowns.approve(nftRush.address, approveAmount, {from: gameOwner});
+	await crowns.approve(nftRush.address, (approveAmount * 2).toString(), {from: gameOwner});
 
-	await nftRush.announceDailySpentWinners(lastSessionId, winners, amount);
+	await nftRush.announceDailyWinners(lastSessionId, winners, amount, winners, amount);
 
 	let claimables = await nftRush.spentDailyClaimables(player);
 	assert.equal(claimables > 0, true, "expected 1 daily spent leaderboard reward");
