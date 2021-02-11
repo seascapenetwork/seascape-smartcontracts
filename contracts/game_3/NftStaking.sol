@@ -158,7 +158,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	require(_sessionId > 0, "Nft Staking: Session id should be greater than 0!");
 	require(isStartedFor(_sessionId), "Nft Staking: Session is not active");
 	require(nft.ownerOf(_nftId) == msg.sender, "Nft Staking: Nft is not owned by method caller");
-	require(balances[_sessionId][msg.sender][_index].nftId = 0, "Nft Staking: slot is used already");
+	require(balances[_sessionId][msg.sender][_index].nftId == 0, "Nft Staking: slot is used already");
 
       	/// Verify the Seascape Points signature.
       	/// @dev message is generated as owner + amount + last time stamp + quality
