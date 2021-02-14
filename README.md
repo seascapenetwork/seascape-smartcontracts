@@ -17,7 +17,7 @@ The testnet contracts
  * Crowns:                    ```0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B```
  * Nft:                       ```0x66638F4970C2ae63773946906922c07a583b6069```
  * Factory:                   ```0x3eB88c3F2A719369320D731FbaE062b0f82F22e4```
- * Lp Mining ( First game):   ```0xF821e4eb2214C9489518318664e362309D5e0C98```
+ * Lp Mining ( First game):   ```0x7cAd84d08B1428873E4456ff4698c1154Dc72d3c```
  * Nft Rush (Second game):    ```0x56787dAb8A2D207E65667c90400Ac74E368C6b0F```
  * Nft Staking (Third game):  ```0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17```
 
