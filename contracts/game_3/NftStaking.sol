@@ -290,29 +290,25 @@ contract NftStaking is Ownable, IERC721Receiver {
         returns(bool)
     {
 
-        uint[] memory _nftSlotIds = new uint[](3);
+	Balance[3] storage _balance = balances[_sessionId][msg.sender];
 
-        /// @dev 1. needs to get nftID data from 3 slots
-        for(uint _index = 0; _index<3; _index++){
-            Balance storage _balance = balances[_sessionId][msg.sender][_index];
-	          _nftSlotIds[_index] = _balance.nftId;
-        }
-
-        /// @dev 2. generate a message from bonus +nft slot 1, slot 2, slot 3
+	require(_balance[0].nftId > 0, "NFT Staking: first slot is empty for bonus");
+	require(_balance[1].nftId > 0, "NFT Staking: first slot is empty for bonus");		
+	require(_balance[2].nftId > 0, "NFT Staking: first slot is empty for bonus");
+			
+        /// @dev 2. a message from bonus +nft slot 1, slot 2, slot 3
         bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
             _bonusPercent,
-            _nftSlotIds[0],
-            _nftSlotIds[1],
-            _nftSlotIds[2]
+            _balance[0].nftId,
+            _balance[1].nftId,
+            _balance[2].nftId
         ));
 
         /// Validation of bonus
-  	    /// @dev 3. verify that signature for message was signed by contract owner
-      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-            _messageNoPrefix));
+	/// @dev 3. verify that signature for message was signed by contract owner
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
       	address _recover = ecrecover(_message, _v, _r, _s);
-      	require(_recover == owner(),
-            "Nft Staking: Seascape points verification failed");
+      	require(_recover == owner(), "NFT Staking: Seascape points verification failed");
 
         return true;
     }
@@ -320,13 +316,14 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @dev calculate total bonus in crowns and send it to player
     /// @notice Returns true if bonus transaction was successful
     function giveBonus(uint256 _sessionId, uint256 _bonusPercent) internal returns(bool) {
-
-        uint256 totalBonus = 0;
+	uint256 _interests = 0;
+	
         for(uint _index = 0; _index < 3; _index++){
-            uint256 _interest = calculateInterest(_sessionId, msg.sender, _index);
-            totalBonus = totalBonus.add(_interest.mul(scaler)
-                .div(100).mul(_bonusPercent).div(scaler));
+	    _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
         }
+
+	uint256 totalBonus = _interests.mul(scaler)	       
+                .div(100).mul(_bonusPercent).div(scaler);
 
         return crowns.transfer(msg.sender, totalBonus);
     }
