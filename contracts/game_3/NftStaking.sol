@@ -222,16 +222,22 @@ contract NftStaking is Ownable, IERC721Receiver {
     )
         external
     {
-  	    require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
+	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
       	/// @dev Check if all three slots are full
         /// and signature is verified, then we will process bonus
-      	if (slots[_sessionId][msg.sender] == 3) {
+      	if (slots[_sessionId][msg.sender] == 3 && _bonusPercent > 0) {
       	    require(verifyBonus(_sessionId, _bonusPercent, _v, _r, _s) == true,
                 "NFT Staking: bonus signature is invalid");
             require(giveBonus(_sessionId, _bonusPercent) == true,
                 "NFT Staking: failed to transfer bonus to player");
       	}
+
+	claimAll(_sessionId);
+    }
+
+    function claimAll(uint256 _sessionId) public {
+	require(slots[_sessionId][msg.sender] > 0, "Nft Staking: all slots are empty");
 
       	for (uint _index=0; _index < slots[_sessionId][msg.sender]; _index++) {
             uint256 _claimed = transfer(_sessionId, _index);
@@ -239,16 +245,19 @@ contract NftStaking is Ownable, IERC721Receiver {
       	    Balance storage _balance = balances[_sessionId][msg.sender][_index];
 
       	    uint256 _nftId = _balance.nftId;
-      	    nft.burn(_nftId);
-      	    sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_balance.sp);
+	    uint256 _sp = _balance.sp;
 
+      	    nft.burn(_nftId);
       	    delete balances[_sessionId][msg.sender][_index];
+	    
+      	    sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_sp);
 
       	    emit Claimed(msg.sender, _sessionId, _claimed, _nftId);
       	}
 
-  	    slots[_sessionId][msg.sender] = 0;
+  	slots[_sessionId][msg.sender] = 0;
     }
+
 
     /// @notice Returns amount of CWS Tokens that _address could claim.
     function claimable(uint256 _sessionId, address _owner, uint256 _index)
