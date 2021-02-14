@@ -14,7 +14,7 @@ The testnet contracts
  * Nft Staking (Third game):  ```0xF357647bb09557DA29ecD0bF24BC681a422C3c5e```
  
  ## Binance Smartchain test network
- * Crowns:                    ```0xB862eaa7b77Dd0e5D8614ADd5999FB8Ce046C8b9```
+ * Crowns:                    ```0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B```
  * Nft:                       ```0x66638F4970C2ae63773946906922c07a583b6069```
  * Factory:                   ```0x3eB88c3F2A719369320D731FbaE062b0f82F22e4```
  * Lp Mining ( First game):   ```0xF821e4eb2214C9489518318664e362309D5e0C98```
