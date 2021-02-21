@@ -23,42 +23,18 @@ module.exports = async function(callback) {
 let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
 
-    let lpMining;
-    let factory;
-    let nft;
-    let crowns;
-    if (networkId != 4) {
-        lpMining = await LpMining.deployed();
-	factory  = await Factory.deployed();
-	nft      = await Nft.deployed();
-	crowns   = await Crowns.deployed();	
-    } else {
-	lpMining = await LpMining.at("0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44");
-	factory = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-	nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
-	crowns  = await Crowns.at("0x168840df293413a930d3d40bab6e1cd8f406719d");	
-    }
+	let lpMining = await LpMining.at("0x38C548F3E1168FC7379360C14e9236C914745650");
+	let factory = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+	//let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
+	let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");	
+    let lpTokenAddress = "0xd57fa6d26adde2645fcd8d58e9dbc52a11161877";
 
-    /// done by first contract deployer
-    //await nft.setFactory(factory.address);
-    //console.log("1/2 Nft factory was linked to Nft");
+    await factory.addStaticUser(lpMining.address);
+    console.log("2/2 Staking contract got a permission");
 
-    //await factory.addStaticUser(lpMining.address);
-    //console.log("2/2 Staking contract got a permission");
-    //return;
-
-    
-    //console.log(lpMining.address);
-    //return;
-
-    //if (networkId != 4) {
-    //let lpToken = await LpToken.deployed();
-    //	lpTokenAddress = lpToken.address;
-    //}
-    
     // should transfer reward amount to contract
-    //await crowns.transfer(lpMining.address, reward, {from: accounts[0]});
-    //console.log("Crowns for session were transferred to the Lp Mining smartcontract");
+    await crowns.transfer(lpMining.address, reward, {from: accounts[0]});
+    console.log("Crowns for session were transferred to the Lp Mining smartcontract");
 
     let startTime = Math.floor(new Date().getTime()/1000) + 80;
     await lpMining.startSession(lpTokenAddress, reward, period, startTime, generation);
