@@ -24,39 +24,27 @@ let grantPermission = async function(factory, address) {
 let init = async function() {
     web3.eth.getAccounts(function(err,res) {accounts = res;});
 
-    let factory = null;
-    const networkId = await web3.eth.net.getId();    
+    let factory = await Factory.at(factoryAddress);
+    let nft = await Nft.at(nftAddress);
     
-    if (networkId == 4) {
-	factory = await Factory.at(factoryAddress);	
-    } else {
-	factory = await Factory.deployed();
-    }
-
-    let nft = null;
-    if (networkId != 4) {
-	nft = await Nft.deployed();
-    } else {
-	nft = await Nft.at(nftAddress);
-    }
-    let nft_granted = await nft.setFactory(factory.address);
-    console.log("Nft has been linked to factory: "+nft_granted.tx);
+    let nftGranted = await nft.setFactory(factory.address);
+    console.log("Nft has been linked to factory: "+nftGranted.tx);
 
     let granted = await factory.isGenerator(accounts[0]);
     if (!granted) {
-	await grantPermission(factory, accounts[0]);
+	    await grantPermission(factory, accounts[0]);
     } else {
-	console.log(`Account ${accounts[0]} was already granted a permission`);
+	    console.log(`Account ${accounts[0]} was already granted a permission`);
     }
 
     let amount = 5;
     let args = process.argv.slice(4);
     if (args.length == 1) {
-	amount = parseInt(args[0]);
-	if (amount < min || amount > max) {
-	    throw "Number of minting NFTs should be between 1 and 5";
-	    process.exit(1);
-	}
+	    amount = parseInt(args[0]);
+	    if (amount < min || amount > max) {
+	        throw "Number of minting NFTs should be between 1 and 5";
+	        process.exit(1);
+	    }
     }
     
     let owner = accounts[0];
