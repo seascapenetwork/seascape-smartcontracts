@@ -22,11 +22,11 @@ It's developed by truffle framework. For more in-depth explanation, please visit
 
 ### Rinkeby test network
  * Crowns:                        [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
- * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
- * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
- * Profit Circus ( First game):   [0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44](https://etherscan.io/address/0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44)
- * Nft Rush (Second game):        [0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488](https://etherscan.io/address/0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488)
- * Nft Staking (Third game):      [0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe](https://etherscan.io/address/0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe)
+ * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
+ * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
+ * Profit Circus ( First game):   [0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44](https://rinkeby.etherscan.io/address/0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44)
+ * Nft Rush (Second game):        [0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488](https://rinkeby.etherscan.io/address/0xA8bB6655bcf28862bb5fC997D25e4AD3aeCa8488)
+ * Nft Staking (Third game):      [0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe](https://rinkeby.etherscan.io/address/0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
