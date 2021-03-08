@@ -37,12 +37,12 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Staking (Third game):      [0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17](https://testnet.bscscan.com/address/0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17)
 
  ### Moonbase Alpha TestNet
- * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989]
- * Seascape Nft:                  [0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37]
- * Factory:                       [0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2]
- * Profit Circus ( First game):   [0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73]
- * Nft Rush (Second game):        [0x548b3589766AB56f2910A76bcFe1421Fe387F528]
- * Nft Staking (Third game):      [0x18B496578793B0bA4502612b4A2E874Fb9213337]
+ * Crowns:                        0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989
+ * Seascape Nft:                  0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37
+ * Factory:                       0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2
+ * Profit Circus ( First game):   0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73
+ * Nft Rush (Second game):        0x548b3589766AB56f2910A76bcFe1421Fe387F528
+ * Nft Staking (Third game):      0x18B496578793B0bA4502612b4A2E874Fb9213337
 
 # Audit
 The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org/).
