@@ -36,7 +36,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Rush (Second game):        [0x56787dAb8A2D207E65667c90400Ac74E368C6b0F](https://testnet.bscscan.com/address/0x56787dAb8A2D207E65667c90400Ac74E368C6b0F)
  * Nft Staking (Third game):      [0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17](https://testnet.bscscan.com/address/0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17)
 
- ### Moonbase Alpha test network
+ ### Moonbeam Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
  * Seascape Nft:                  [0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37](https://moonbeam-explorer.netlify.app/address/0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37)
  * Factory:                       [0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2](https://moonbeam-explorer.netlify.app/address/0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2)
