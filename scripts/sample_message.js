@@ -12,9 +12,9 @@ module.exports = function(callback) {
 
 let init = async function() {
     await web3.eth.getAccounts(function(err,res) { accounts = res; });
-    let addr = accounts[0];
 
     return await simpleMsgSigning("1");
+    //let addr = accounts[0];
     //return await sampleMsgSigning(addr, "12345", 54321, 3);    
 }.bind(this);
 
@@ -22,11 +22,11 @@ let init = async function() {
 let simpleMsgSigning = async function(str) {
     let addr = accounts[0];
 
-    //let keccak = web3.utils.keccak256(str);
-
-    let signature = await web3.eth.sign(str, addr);
+    let keccak = web3.utils.keccak256(str);
+    let signature = await web3.eth.sign(keccak, addr);
 
     console.log(addr + " is signing:");
+    console.log(`(keccak)=${keccak}`);
     console.log(`(string)=${str}`);
     console.log("signature:  "+signature);
 };
