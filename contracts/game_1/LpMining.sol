@@ -28,25 +28,24 @@ contract LpMining is Ownable {
 
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
-	address stakingToken;  // lp token, each session is attached to one lp token
+		address stakingToken;  // lp token, each session is attached to one lp token
         uint256 totalReward;   // amount of CWS to airdrop
-	uint256 period;        // session duration in seconds
-	uint256 startTime;     // session start in unixtimestamp
-	uint256 generation;    // Seascape Nft generation
-	uint256 claimed;       // amount of distributed reward
-	uint256 amount;        // amount of lp token deposited to the session by users
-	uint256 rewardUnit;    // reward per second = totalReward/period
+		uint256 period;        // session duration in seconds
+		uint256 startTime;     // session start in unixtimestamp
+		uint256 generation;    // Seascape Nft generation
+		uint256 claimed;       // amount of distributed reward
+		uint256 amount;        // amount of lp token deposited to the session by users
+		uint256 rewardUnit;    // reward per second = totalReward/period
     }
 
     /// @notice balance of lp token that each player deposited to game session
     struct Balance {
-	uint256 amount;        // amount of deposited lp token
-	uint256 claimed;       // amount of claimed CWS reward
-	uint256 claimedTime;
-	bool minted;           // Seascape Nft is claimed or not,
-	                       // for every session, user can claim one nft only
+		uint256 amount;        // amount of deposited lp token
+		uint256 claimed;       // amount of claimed CWS reward
+		uint256 claimedTime;
+		bool minted;           // Seascape Nft is claimed or not,
+							// for every session, user can claim one nft only
     }
-
 
     mapping(address => uint256) public lastSessionIds;
     mapping(uint256 => Session) public sessions;
@@ -59,14 +58,13 @@ contract LpMining is Ownable {
     event Withdrawn(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event FactorySet(address indexed factoryAddress);	
 
-	
     /// @dev CWS is not changable after contract deployment.
     constructor(IERC20 _cws, address _nftFactory) public {
-	CWS = _cws;
+		CWS = _cws;
 
-	sessionId.increment(); 	// starts at value 1
+		sessionId.increment(); 	// starts at value 1
 
-	nftFactory = NftFactory(_nftFactory);
+		nftFactory = NftFactory(_nftFactory);
     }
     
     //--------------------------------------------------
@@ -130,114 +128,114 @@ contract LpMining is Ownable {
 
     /// @notice deposits _amount of LP token
     function deposit(uint256 _sessionId, uint256 _amount) external {
-	require(_amount > 0,              "Seascape Staking: Amount to deposit should be greater than 0");
-	require(_sessionId > 0,           "Seascape Staking: Session id should be greater than 0!");
-	require(isActive(_sessionId), "Seascape Staking: Session is not active");
+		require(_amount > 0,              "Seascape Staking: Amount to deposit should be greater than 0");
+		require(_sessionId > 0,           "Seascape Staking: Session id should be greater than 0!");
+		require(isActive(_sessionId), "Seascape Staking: Session is not active");
 
-	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
-	
-	require(_token.balanceOf(msg.sender) >= _amount,                         "Seascape Staking: Not enough LP tokens to deposit");
-	require(_token.transferFrom(msg.sender, address(this), _amount), "Seascape Staking: Failed to transfer LP tokens into contract");
-
-	Session storage _session  = sessions[_sessionId];
-	Balance storage _balance  = balances[_sessionId][msg.sender];
-	uint _depositTime = depositTimes[_sessionId][msg.sender];
-
-	bool _minted             = false;
-	if (_depositTime > _session.startTime) {
-	    _minted = _balance.minted;
-	}
+		IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
 		
-	if (_balance.amount > 0) {
-	    claim(_sessionId);
-	    _balance.amount = _amount.add(_balance.amount);
-	    _balance.minted = _minted;
+		require(_token.balanceOf(msg.sender) >= _amount,                         "Seascape Staking: Not enough LP tokens to deposit");
+		require(_token.transferFrom(msg.sender, address(this), _amount), "Seascape Staking: Failed to transfer LP tokens into contract");
 
-	} else {
-	    // If user withdrew all LP tokens, but deposited before for the session
-	    // Means, that player still can't mint more token anymore.
-            balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted);
-	}
+		Session storage _session  = sessions[_sessionId];
+		Balance storage _balance  = balances[_sessionId][msg.sender];
+		uint _depositTime = depositTimes[_sessionId][msg.sender];
+
+		bool _minted             = false;
+		if (_depositTime > _session.startTime) {
+			_minted = _balance.minted;
+		}
+			
+		if (_balance.amount > 0) {
+			claim(_sessionId);
+			_balance.amount = _amount.add(_balance.amount);
+			_balance.minted = _minted;
+
+		} else {
+			// If user withdrew all LP tokens, but deposited before for the session
+			// Means, that player still can't mint more token anymore.
+				balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted);
+		}
 	
-	_session.amount                        = _session.amount.add(_amount);
-	depositTimes[_sessionId][msg.sender]    = block.timestamp;
-       
-        emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
-    }
-
-
-    function claim(uint256 _sessionId) public returns(bool) {
-	Session storage _session = sessions[_sessionId];
-	Balance storage _balance = balances[_sessionId][msg.sender];
-
-	require(_balance.amount > 0, "Seascape Staking: No deposit was found");
-	
-	uint256 _interest = calculateInterest(_sessionId, msg.sender);
-	if (_interest == 0) {
-	    return false;
-	}
-	require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+		_session.amount                        = _session.amount.add(_amount);
+		depositTimes[_sessionId][msg.sender]    = block.timestamp;
 		
-	_session.claimed     = _session.claimed.add(_interest);
-	_balance.claimed     = _balance.claimed.add(_interest);
-	_balance.claimedTime = block.timestamp;
-	rewardSupply         = rewardSupply.sub(_interest);
+			emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
+		}
 
-	require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+
+		function claim(uint256 _sessionId) public returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][msg.sender];
+
+		require(_balance.amount > 0, "Seascape Staking: No deposit was found");
 		
-	emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
-	return true;
+		uint256 _interest = calculateInterest(_sessionId, msg.sender);
+		if (_interest == 0) {
+			return false;
+		}
+		require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+			
+		_session.claimed     = _session.claimed.add(_interest);
+		_balance.claimed     = _balance.claimed.add(_interest);
+		_balance.claimedTime = block.timestamp;
+		rewardSupply         = rewardSupply.sub(_interest);
+
+		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+			
+		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
+		return true;
     }
 
 
     /// @notice Withdraws _amount of LP token
     /// of type _token out of Staking contract.
     function withdraw(uint256 _sessionId, uint256 _amount) external {
-	Session storage _session = sessions[_sessionId];
-	Balance storage _balance  = balances[_sessionId][msg.sender];
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance  = balances[_sessionId][msg.sender];
 
-	require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
+		require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
 
-	IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
-		
-	require(_token.balanceOf(address(this)) >= _amount, "Seascape Staking: Not enough Lp token in player balance");
-	uint256 _interest = calculateInterest(_sessionId, msg.sender);
-	if (_interest > 0) {
-	    require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
-	}
+		IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
+			
+		require(_token.balanceOf(address(this)) >= _amount, "Seascape Staking: Not enough Lp token in player balance");
+		uint256 _interest = calculateInterest(_sessionId, msg.sender);
+		if (_interest > 0) {
+			require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+		}
 
-	_balance.amount = _balance.amount.sub(_amount);
-        _session.amount = _session.amount.sub(_amount);
+		_balance.amount = _balance.amount.sub(_amount);
+			_session.amount = _session.amount.sub(_amount);
 
-	/// CWS claims as in claim method
-	if (_interest > 0) {
-	    _session.claimed     = _session.claimed.add(_interest);	
-	    _balance.claimed     = _balance.claimed.add(_interest);
-	    _balance.claimedTime = block.timestamp;
-	    rewardSupply         = rewardSupply.sub(_interest);
+		/// CWS claims as in claim method
+		if (_interest > 0) {
+			_session.claimed     = _session.claimed.add(_interest);	
+			_balance.claimed     = _balance.claimed.add(_interest);
+			_balance.claimedTime = block.timestamp;
+			rewardSupply         = rewardSupply.sub(_interest);
 
-	    require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
-	    emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
-	}
-	require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
+			require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+			emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
+		}
+		require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
 
 
-	emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
+		emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
     function claimNft(uint256 _sessionId) external {
-	// it also indicates that session exists
-	Balance storage _balance = balances[_sessionId][msg.sender];
-	require(_balance.claimed.add(_balance.amount) > 0, "Seascape Staking: Deposit first");
+		// it also indicates that session exists
+		Balance storage _balance = balances[_sessionId][msg.sender];
+		require(_balance.claimed.add(_balance.amount) > 0, "Seascape Staking: Deposit first");
 
-	// uncomment in a production mode:
-	require(_balance.minted == false, "Seascape Staking: Already minted");
+		// uncomment in a production mode:
+		require(_balance.minted == false, "Seascape Staking: Already minted");
 
-	uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
-	require(_tokenId > 0,                              "Seascape Staking: failed to mint a token");
-	
-	balances[_sessionId][msg.sender].minted = true;
+		uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
+		require(_tokenId > 0,                              "Seascape Staking: failed to mint a token");
+		
+		balances[_sessionId][msg.sender].minted = true;
     }
 
 
@@ -252,8 +250,8 @@ contract LpMining is Ownable {
 
     /// @notice Returns amount of CWS Tokens earned by _address
     function earned(uint256 _sessionId, address _owner) external view returns(uint256) {
-	uint256 _interest = calculateInterest(_sessionId, _owner);
-	return balances[_sessionId][_owner].claimed.add(_interest);
+		uint256 _interest = calculateInterest(_sessionId, _owner);
+		return balances[_sessionId][_owner].claimed.add(_interest);
     }
 
     /// @notice Returns amount of CWS Tokens that _address could claim.
