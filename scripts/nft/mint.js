@@ -2,8 +2,8 @@ let Factory = artifacts.require("NftFactory");
 let Nft = artifacts.require("SeascapeNft");
 
 // rinkeby testnet
-let factoryAddress = '0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0';
-let nftAddress = '0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a';
+let factoryAddress = '0x3eB88c3F2A719369320D731FbaE062b0f82F22e4';
+let nftAddress = '0x66638F4970C2ae63773946906922c07a583b6069';
 
 module.exports = async function(callback) {
     let res = init();
@@ -24,8 +24,8 @@ let grantPermission = async function(factory, address) {
 let init = async function() {
     web3.eth.getAccounts(function(err,res) {accounts = res;});
 
-    let factory = await Factory.at(factoryAddress);
-    let nft = await Nft.at(nftAddress);
+    let factory = await Factory.deployed();
+    let nft = await Nft.deployed();
     
     let nftGranted = await nft.setFactory(factory.address);
     console.log("Nft has been linked to factory: "+nftGranted.tx);
@@ -51,11 +51,11 @@ let init = async function() {
     let generation = 0;
 
     for (var quality = 1; quality <= amount; quality++) {
-	let res = await factory.mintQuality(owner, generation, quality);
-	console.log("-------------------------");
-	console.log(`Quality ${quality} was minted!`);	
-	console.log(`Txid: ${res.tx}`);
-	console.log();
+        let res = await factory.mintQuality(owner, generation, quality);
+        console.log("-------------------------");
+        console.log(`Quality ${quality} was minted!`);	
+        console.log(`Txid: ${res.tx}`);
+        console.log();
     }
 };
 
