@@ -24,7 +24,7 @@ let init = async function(networkId) {
     let lpMining = await LpMining.deployed();
     let lpToken = await LpToken.deployed();
 
-    let lastSessionId = await lpMining.lastSessionIds[lpToken];
+    let lastSessionId = await lpMining.lastSessionIds.call(lpToken.address);
 
     let nft = await Nft.deployed();
     let balance = await nft.balanceOf(accounts[0]);
