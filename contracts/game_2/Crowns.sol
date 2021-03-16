@@ -10,6 +10,7 @@ contract Crowns {
     CrownsToken public crowns;
 
    function setCrowns(address _crowns) internal {
+        require(_crowns != address(0), "Crowns can't be zero address");
        	crowns = CrownsToken(_crowns);	
    }   
 }

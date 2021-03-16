@@ -16,18 +16,17 @@ contract GameSession is Ownable {
     Counters.Counter private sessionId;
 
     struct Session {
-	uint256 interval;      // period between intervals
-	uint256 period;        // duration of session
-	uint256 startTime;     // unix timestamp when session starts
-	uint256 generation;    // nft generation
+        uint256 interval;      // period between intervals
+        uint256 period;        // duration of session
+        uint256 startTime;     // unix timestamp when session starts
+        uint256 generation;    // nft generation
     }
 
     /// @notice Game session. Smartcontract is active during the game session.
     /// Game session is active for a certain period of time only
     mapping(uint256 => Session) public sessions;
 
-    event SessionStarted(uint256 id, uint256 startTime,
-			 uint256 endTime, uint256 generation);
+    event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     
     //--------------------------------------------------
     // Only owner
@@ -45,21 +44,20 @@ contract GameSession is Ownable {
      *  @param _startTime session start time in unix timestamp
      *  @param _generation Seascape Nft generation that is given as a reward
      */
-    function _startSession(uint256 _interval, uint256 _period,
-			   uint256 _startTime, uint256 _generation) internal onlyOwner returns(uint256) {
-	uint256 _lastSessionId = lastSessionId();
-	if (_lastSessionId > 0) {
-	    require(isActive(_lastSessionId) == false, "NFT Rush: previous session should be expired");	
-	}
+    function _startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) internal onlyOwner returns(uint256) {
+	    uint256 _lastSessionId = lastSessionId();
+	    if (_lastSessionId > 0) {
+	        require(!isActive(_lastSessionId), "NFT Rush: previous session should be expired");	
+	    }
 	
-	sessionId.increment();		
-	uint256 _sessionId = sessionId.current();
-	
-	sessions[_sessionId] = Session(_interval, _period, _startTime, _generation);
+        sessionId.increment();		
+        uint256 _sessionId = sessionId.current();
+        
+        sessions[_sessionId] = Session(_interval, _period, _startTime, _generation);
 
-	emit SessionStarted(_sessionId, _startTime, _startTime.add(_period), _generation);
-	
-	return _sessionId;
+        emit SessionStarted(_sessionId, _startTime, _startTime.add(_period), _generation);
+        
+        return _sessionId;
     }
 
     //--------------------------------------------------
@@ -71,11 +69,11 @@ contract GameSession is Ownable {
      *  @notice Whether the given session is active or not
      */
     function isActive(uint256 _sessionId) public view returns(bool) {
-	if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
-	    return false;
-	}
+        if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+            return false;
+        }
 
-	return true;
+        return true;
     }
 
 
@@ -85,6 +83,6 @@ contract GameSession is Ownable {
      * NOTE!!! It returns 0, if no session was started yet.
      */
     function lastSessionId() public view returns(uint256) {
-	return sessionId.current();
+	    return sessionId.current();
     }
 }
