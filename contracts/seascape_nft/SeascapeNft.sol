@@ -41,32 +41,32 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     }
 
     modifier onlyFactory() {
-	require(factory == _msgSender(), "Seascape NFT: Only NFT Factory can call the method");
-	_;
+        require(factory == _msgSender(), "Seascape NFT: Only NFT Factory can call the method");
+        _;
     }
 
     function mint(address _to, uint256 _generation, uint8 _quality) public onlyFactory returns(uint256) {
 	uint256 _tokenId = tokenId.current();
 
-	_safeMint(_to, _tokenId);
+        _safeMint(_to, _tokenId);
 
-	paramsOf[_tokenId] = Params(_generation, _quality);
+        paramsOf[_tokenId] = Params(_generation, _quality);
 
-	tokenId.increment();
+        tokenId.increment();
 
-	emit Minted(_to, _tokenId, _generation, _quality);
-	return _tokenId;
+        emit Minted(_to, _tokenId, _generation, _quality);
+        return _tokenId;
     }
 
     function setOwner(address _owner) public onlyOwner {
-	transferOwnership(_owner);
+	    transferOwnership(_owner);
     }
 
     function setFactory(address _factory) public onlyOwner {
-	factory = _factory;
+	    factory = _factory;
     }
 
     function setBaseUri(string memory _uri) public onlyOwner {
-	_setBaseURI(_uri);
+	    _setBaseURI(_uri);
     }
 }
