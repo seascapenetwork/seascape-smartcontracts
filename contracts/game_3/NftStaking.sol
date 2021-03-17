@@ -323,7 +323,6 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @dev earned CWS tokens are sent to Nft staker
     function transfer(uint256 _sessionId, uint256 _index) internal returns(uint256) {
         Session storage _session = sessions[_sessionId];
-        Balance storage _balance = balances[_sessionId][msg.sender][_index];
 
         uint256 _interest = calculateInterest(_sessionId, msg.sender, _index);
 
