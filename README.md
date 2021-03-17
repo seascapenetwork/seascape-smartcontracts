@@ -33,8 +33,8 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Seascape Nft:                  [0x66638F4970C2ae63773946906922c07a583b6069](https://testnet.bscscan.com/address/0x66638F4970C2ae63773946906922c07a583b6069)
  * Factory:                       [0x3eB88c3F2A719369320D731FbaE062b0f82F22e4](https://testnet.bscscan.com/address/0x3eB88c3F2A719369320D731FbaE062b0f82F22e4)
  * Profit Circus ( First game):   [0x38C548F3E1168FC7379360C14e9236C914745650](https://testnet.bscscan.com/address/0x38C548F3E1168FC7379360C14e9236C914745650)
- * Nft Rush (Second game):        [0x56787dAb8A2D207E65667c90400Ac74E368C6b0F](https://testnet.bscscan.com/address/0x56787dAb8A2D207E65667c90400Ac74E368C6b0F)
- * Nft Staking (Third game):      [0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17](https://testnet.bscscan.com/address/0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17)
+ * Nft Brawl (Second game):       [0xF0211279a3FcC610FCAFCCE6FeDd159e94c66E39](https://testnet.bscscan.com/address/0xF0211279a3FcC610FCAFCCE6FeDd159e94c66E39)
+ * Staking Saloon (Third game):   [0xC0630A06B91b08B4137faA04eF599E4DEEd35b30](https://testnet.bscscan.com/address/0xC0630A06B91b08B4137faA04eF599E4DEEd35b30)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha testet
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
