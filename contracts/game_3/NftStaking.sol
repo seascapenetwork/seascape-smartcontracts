@@ -315,8 +315,9 @@ contract NftStaking is Ownable, IERC721Receiver {
         }
 
 	    uint256 totalBonus = _interests.mul(scaler).div(100).mul(_bonusPercent).div(scaler);
+        require(crowns.allowance(owner(), address(this)) >= totalBonus), "Seascape Staking: Not enough token to spend");
 
-        return crowns.transfer(msg.sender, totalBonus);
+        return crowns.transferFrom(address(this), msg.sender, totalBonus);
     }
 
     /// @dev earned CWS tokens are sent to Nft staker
