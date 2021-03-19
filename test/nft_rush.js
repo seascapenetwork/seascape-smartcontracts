@@ -21,10 +21,8 @@ contract("Game 2: Nft Rush", async accounts => {
     let depositAmount = web3.utils.toWei("5", "ether");
 
     let spentDailyReward = web3.utils.toWei("110", "ether");
-    let spentAlltimeReward = web3.utils.toWei("110", "ether");
-    let mintedDailyReward = web3.utils.toWei("110", "ether");
-    let mintedAlltimsReward = web3.utils.toWei("110", "ether");    
-    let totalReward = parseInt(spentDailyReward) + parseInt(spentAlltimeReward) + parseInt(mintedDailyReward) + parseInt(mintedAlltimsReward);
+    let mintedAllTimeReward = web3.utils.toWei("110", "ether");    
+    let totalReward = parseInt(spentDailyReward) + parseInt(mintedAllTimeReward);
     let rewardsAmounts = [20, 18, 16, 14, 12, 10, 8, 6, 4, 2];    
     
     // following vars used in multiple test units:
