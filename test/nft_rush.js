@@ -39,13 +39,13 @@ contract("Game 2: Nft Rush", async accounts => {
     // before player starts, need a few things prepare.
     // one of things to allow nft to be minted by nft factory
     it("should link nft, nft factory and nft rush contracts", async () => {
-	factory = await Factory.deployed();
-	nftRush    = await NftRush.deployed();
-	nft     = await Nft.deployed();
-	gameOwner = accounts[0];
-	
-	await nft.setFactory(factory.address);
-	await factory.addGenerator(nftRush.address, {from: gameOwner});
+		factory = await Factory.deployed();
+		nftRush    = await NftRush.deployed();
+		nft     = await Nft.deployed();
+		gameOwner = accounts[0];
+		
+		await nft.setFactory(factory.address);
+		await factory.addGenerator(nftRush.address, {from: gameOwner});
     });
 
     //--------------------------------------------------
@@ -53,14 +53,14 @@ contract("Game 2: Nft Rush", async accounts => {
     // before player plays the game,
     // game session should start by the game owner
     it("should start a session", async () => {
-	player = accounts[0];
-	
-	let startTime = Math.floor(Date.now()/1000) + 1;
+		player = accounts[0];
+		
+		let startTime = Math.floor(Date.now()/1000) + 1;
 
-	await nftRush.startSession(interval, period, startTime, generation, {from: player});
+		await nftRush.startSession(interval, period, startTime, generation, {from: player});
 
-	lastSessionId = await nftRush.lastSessionId();
-	assert.equal(lastSessionId, 1, "session id is expected to be 1");
+		lastSessionId = await nftRush.lastSessionId();
+		assert.equal(lastSessionId, 1, "session id is expected to be 1");
     });
 
     //--------------------------------------------------
@@ -68,86 +68,92 @@ contract("Game 2: Nft Rush", async accounts => {
     // before deposit of nft token,
     // player needs to approve the token to be transferred by nft rush contract
     it("should approve nft rush to spend cws of player", async () => {
-	crowns = await Crowns.deployed();	
+		crowns = await Crowns.deployed();	
 
-	await crowns.approve(nftRush.address, depositAmount, {from: player});
+		await crowns.approve(nftRush.address, depositAmount, {from: player});
 
-	let allowance = await crowns.allowance(player, nftRush.address);
-	assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
+		let allowance = await crowns.allowance(player, nftRush.address);
+		assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
     });
 
     //--------------------------------------------------
 
     // player deposits the cws
     it("should spend in nft rush", async () => {
-	await nftRush.spend(lastSessionId, depositAmount, {from: player});
-	
-	let balance = await nftRush.balances(lastSessionId, player);
-	assert.equal(balance.amount, depositAmount, "balance of player after deposit is not what expected");
+		await nftRush.spend(lastSessionId, depositAmount, {from: player});
+		
+		let balance = await nftRush.balances(lastSessionId, player);
+		assert.equal(balance.amount, depositAmount, "balance of player after deposit is not what expected");
     });
 
     //--------------------------------------------------
 
     // player should receive random nft
     it("should claim random nft", async () => {
-	let quality = getRandomInt(5) + 1;
+		let quality = getRandomInt(5) + 1;
 
-	let balance = await nftRush.balances(lastSessionId, player);
-	
-	let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
-						     [web3.utils.toWei(web3.utils.fromWei(balance.amount)),
-						      parseInt(balance.mintedTime.toString())]);
-	let bytes1 = web3.utils.bytesToHex([quality]);
-	let str = player + bytes32.substr(2) + bytes1.substr(2);
-	
-	let data = web3.utils.keccak256(str);
-	let hash = await web3.eth.sign(data, gameOwner);
-	let r = hash.substr(0,66);
-	let s = "0x" + hash.substr(66,64);
-	let v = parseInt(hash.substr(130), 16);
-	if (v < 27) {
-	    v += 27;
-	}
+		let balance = await nftRush.balances(lastSessionId, player);
+		
+		let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
+								[web3.utils.toWei(web3.utils.fromWei(balance.amount)),
+								parseInt(balance.mintedTime.toString())]);
+		let bytes1 = web3.utils.bytesToHex([quality]);
 
-	await nftRush.mint(lastSessionId, v, r, s, quality);
+		let nonce = await nftRush.nonces(player);
+		let nonceBytes32 = web3.eth.abi.encodeParameters(["uint256"], [parseInt(nonce.toString())]);
 
-	let updatedBalance = await nftRush.balances(lastSessionId, accounts[0]);
-	assert.equal(updatedBalance.amount, 0, "deposit should be reset to 0");
-    });
+		let str = player + bytes32.substr(2) + bytes1.substr(2) + nonceBytes32.substr(2);
+		
+		let data = web3.utils.keccak256(str);
+		let hash = await web3.eth.sign(data, gameOwner);
+		let r = hash.substr(0,66);
+		let s = "0x" + hash.substr(66,64);
+		let v = parseInt(hash.substr(130), 16);
+		if (v < 27) {
+			v += 27;
+		}
 
-    it("double claiming should fail as the interval didn't passed", async () => {
-	// approve deposit
-	await crowns.approve(nftRush.address, depositAmount, {from: player});
+		await nftRush.mint(lastSessionId, v, r, s, quality);
 
-	// deposit	
-	await nftRush.spend(lastSessionId, depositAmount, {from: player});
+		let updatedBalance = await nftRush.balances(lastSessionId, accounts[0]);
+		assert.equal(updatedBalance.amount, 0, "deposit should be reset to 0");
+	});
 
-	// claim	
-	let quality = getRandomInt(5) + 1;
+	it("double claiming should fail as the interval didn't passed", async () => {
+		// approve deposit
+		await crowns.approve(nftRush.address, depositAmount, {from: player});
 
-	let balance = await nftRush.balances(lastSessionId, gameOwner);
+		// deposit	
+		await nftRush.spend(lastSessionId, depositAmount, {from: player});
 
-	let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
-						     [web3.utils.toWei(web3.utils.fromWei(balance.amount)),
-						      parseInt(balance.mintedTime.toString())]);
-	let bytes1 = web3.utils.bytesToHex([quality]);
-	let str = player + bytes32.substr(2) + bytes1.substr(2);
-	
-	let data = web3.utils.keccak256(str);
-	let hash = await web3.eth.sign(data, gameOwner);
-	let r = hash.substr(0,66);
-	let s = "0x" + hash.substr(66,64);
-	let v = parseInt(hash.substr(130), 16);
-	if (v < 27) {
-	    v += 27;
-	}
+		// claim	
+		let quality = getRandomInt(5) + 1;
 
-	
-	try {
-	    await nftRush.mint(lastSessionId, v, r, s, quality);
-	} catch(e) {
-	    return assert.equal(e.reason, "NFT Rush: Still in locking period, please try again after locking interval passes");
-	}
+		let balance = await nftRush.balances(lastSessionId, gameOwner);
+		let nonce = await nftRush.nonces(player);
+		let nonceBytes32 = web3.eth.abi.encodeParameters(["uint256"], [parseInt(nonce.toString())]);
+
+		let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
+								[web3.utils.toWei(web3.utils.fromWei(balance.amount)),
+								parseInt(balance.mintedTime.toString())]);
+		let bytes1 = web3.utils.bytesToHex([quality]);
+		let str = player + bytes32.substr(2) + bytes1.substr(2) + nonceBytes32.substr(2);
+		
+		let data = web3.utils.keccak256(str);
+		let hash = await web3.eth.sign(data, gameOwner);
+		let r = hash.substr(0,66);
+		let s = "0x" + hash.substr(66,64);
+		let v = parseInt(hash.substr(130), 16);
+		if (v < 27) {
+			v += 27;
+		}
+
+		
+		try {
+			await nftRush.mint(lastSessionId, v, r, s, quality);
+		} catch(e) {
+			return assert.equal(e.reason, "NFT Rush: Still in locking period, please try again after locking interval passes");
+		}
     });
 
     // ------------------------------------------------------------
@@ -155,36 +161,36 @@ contract("Game 2: Nft Rush", async accounts => {
     // ------------------------------------------------------------
 
     it("set winner's reward amounts", async () => {
-	// used for all leaderboard types
-	rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
+		// used for all leaderboard types
+		rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
 
-	await nftRush.setPrizes(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
-    });
+		await nftRush.setPrizes(rewardsAmounts, rewardsAmounts);
+	});
 
-    it("set the winner list (daily spent)", async () => {
-	let amount = 1;
-	let player = accounts[1];
-	let winners = [player, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner];
+	it("set the winner list (daily spent)", async () => {
+		let amount = 1;
+		let player = accounts[1];
+		let winners = [player, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner, gameOwner];
 
-	let approveAmount = 0;
-	for(var i=0; i<amount; i++) {
-	    approveAmount += rewardsAmounts[0];
-	}
+		let approveAmount = 0;
+		for(var i=0; i<amount; i++) {
+			approveAmount += rewardsAmounts[i];
+		}
 
-	await crowns.approve(nftRush.address, (approveAmount * 2).toString(), {from: gameOwner});
+		await crowns.approve(nftRush.address, (approveAmount * 2).toString(), {from: gameOwner});
 
-	await nftRush.announceDailyWinners(lastSessionId, winners, amount, winners, amount);
+		await nftRush.announceDailySpentWinners(lastSessionId, winners, amount);
 
-	let claimables = await nftRush.spentDailyClaimables(player);
-	assert.equal(claimables > 0, true, "expected 1 daily spent leaderboard reward");
-    });
+		let claimables = await nftRush.spentDailyClaimables(player);
+		assert.equal(claimables > 0, true, "expected 1 daily spent leaderboard reward");
+	});
 
-    it("claim daily spent leaderboard reward", async () => {
-	let player = accounts[1];
-	await nftRush.claimDailySpent({from: player});
-	
-	let claimables = await nftRush.spentDailyClaimables(player);
-	assert.equal(claimables, 0, "expected no reward at all after claiming reward");
+	it("claim daily spent leaderboard reward", async () => {
+		let player = accounts[1];
+		await nftRush.claimDailySpent({from: player});
+		
+		let claimables = await nftRush.spentDailyClaimables(player);
+		assert.equal(claimables, 0, "expected no reward at all after claiming reward");
     });
     
 });
