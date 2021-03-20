@@ -45,7 +45,10 @@ contract GameSession is Ownable {
      *  @param _generation Seascape Nft generation that is given as a reward
      */
     function _startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) internal onlyOwner returns(uint256) {
-	    uint256 _lastSessionId = lastSessionId();
+	    require(_period >= 86400, "NFT Rush: session duration could be minimum for 1 days");
+        require(_startTime >= block.timestamp, "NFT Rush: game time should start in the future");
+
+        uint256 _lastSessionId = lastSessionId();
 	    if (_lastSessionId > 0) {
 	        require(!isActive(_lastSessionId), "NFT Rush: previous session should be expired");	
 	    }
