@@ -8,8 +8,6 @@ import "./Crowns.sol";
 /// @notice There are four types of leaderboards in the game:
 ///
 /// - all time spenders
-/// - top daily spenders
-/// - all time minters
 /// - top daily minters
 /// 
 /// @author Medet Ahmetson
@@ -37,9 +35,9 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      *  - 1st place gets 100K, 
      *  - 2nd place gets 50K...
      */
-    uint256[10] public spentDailyPrizes;        
+    uint256[10] public spentDailyPrizes;
     uint256[10] public mintedAllTimePrizes;
-    
+
     /** 
      *  @notice tracks amount of claimable CWS tokens collected from leaderboards.
      *
@@ -227,7 +225,19 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      *  - since last daily winners list announcement passed more than 1 day.
      */
     function dailySpentWinnersAnnouncable(uint256 _sessionId) internal view returns(bool) {
-	    return block.timestamp < announcement[_sessionId].dailySpentTime.add(1 days);
+        Session storage _session = sessions[_sessionId];
+
+        uint256 dayAfterSession = _session.startTime.add(_session.period).add(1 days);
+
+        uint256 today = announcement[_sessionId].dailySpentTime.add(1 days);
+	    
+        // time should be 24 hours later than last announcement.
+        // as we announce leaders for the previous 24 hours.
+        //
+        // time should be no more than 1 day after session end,
+        // so we could annnounce leaders for the last day of session.
+        // remember, we always announce after 24 hours pass since the last session.
+        return block.timestamp > today && today < dayAfterSession;
     }
 
 
@@ -257,7 +267,7 @@ contract Leaderboard is Ownable, GameSession, Crowns {
      *  that one more day's winners were announced.
      */
     function setDailySpentWinnersTime(uint256 _sessionId) internal {
-	    announcement[_sessionId].dailySpentTime = (block.timestamp).add(1 days);
+	    announcement[_sessionId].dailySpentTime = announcement[_sessionId].dailySpentTime.add(1 days);
     }
 
     /**
