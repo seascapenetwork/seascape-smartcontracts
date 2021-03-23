@@ -17,7 +17,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Seascape Nft:                  [0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8](https://bscscan.com/address/0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8)
  * Nft Factory:                   [0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d](https://bscscan.com/address/0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d)
  * Profit Circus ( First game):   [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
- * Nft Rush (Second game):        ```yet to come...```
+ * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
  * Nft Staking (Third game):      ```yet to come...```
 
 ### Rinkeby test network
@@ -25,7 +25,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
  * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
  * Profit Circus ( First game):   [0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44](https://rinkeby.etherscan.io/address/0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44)
- * Nft Brawl (Second game):        [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
+ * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
  * Nft Staking (Third game):      [0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe](https://rinkeby.etherscan.io/address/0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe)
  
  ### Binance Smartchain test network
