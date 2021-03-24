@@ -9,7 +9,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Seascape Nft:                  [0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad](https://etherscan.io/address/0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad)
  * Nft Factory:                   [0x25F4C38FAF75dF9622FECB17Fa830278cd732091](https://etherscan.io/address/0x25F4C38FAF75dF9622FECB17Fa830278cd732091)
  * Profit Circus ( First game):   [0xbcf39f0edda668c58371e519af37ca705f2bfcbd](https://etherscan.io/address/0xbcf39f0edda668c58371e519af37ca705f2bfcbd)
- * Nft Rush (Second game):        ```yet to come...```
+ * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
  * Nft Staking (Third game):      ```yet to come...```
 
 ### Binance Smart chain network
