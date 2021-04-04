@@ -10,15 +10,16 @@ module.exports = {
 },
     compilers: {
 	solc: {
-	    version: "0.6.7"
+	    version: "0.5.10"
 	}
     },
     networks: {
-       development: {
+  development: {
 	   host: "local-node",
 	   port: 8545,
 	   network_id: "*", // match any network
 	   from: process.env.ADDRESS_1
+
         },
 	rinkeby: {
     provider: function () {
@@ -38,7 +39,12 @@ module.exports = {
   // Moonbase Alpha TestNet
   moonbase: {
   provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://rpc.testnet.moonbeam.network`),
-  network_id: 1287,
-  }
+  network_id: 1287
+},
+  ganache: {
+  host: "localhost",
+  port: 9545,
+  network_id: "*"
+}
 }
 };
