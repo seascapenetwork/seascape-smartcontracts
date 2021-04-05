@@ -20,6 +20,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     // --- Data ---
     bool private initialized; // Flag of initialize data
 
+
     struct SalesObject {
         uint256 id;
         uint256 tokenId;
@@ -44,12 +45,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     mapping(address => bool) public _verifySeller;
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;
-
-    bool public _isRewardSellerDandy;
-    bool public _isRewardBuyerDandy;
-
-    uint256 public _sellerRewardDandy = 1e15;
-    uint256 public _buyerRewardDandy = 1e15;
 
     uint256 public _tipsFeeRate = 20;
     uint256 public _baseRate = 1000;
@@ -87,43 +82,13 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
 
     event GovernanceTransferred(address indexed previousOwner, address indexed newOwner);
 
-    IERC20 crowns;
-    // native token
-
     mapping(uint256 => address) public _saleOnCurrency;
-
-
-    mapping(address => bool) public _supportCurrency;
-
-
-    mapping(address => SupportBuyCurrency) public _supportBuyCurrency;
-
 
     mapping(uint256=>uint256) public deflationBaseRates;
     mapping(uint256=>address) public routers;
     // IUniswapV2Router01[] public routers;
 
-    struct SupportBuyCurrency {
-        bool status;
-        bool isDeflation;
-        uint256 deflationRate;
-    }
 
-
-
-
-
-    event eveSupportCurrency(
-        address currency,
-        bool support
-    );
-
-    event eveSupportBuyCurrency(
-        address currency,
-        bool status,
-        bool isDeflation,
-        uint256 deflationRate
-    );
 
     event eveDeflationBaseRate(
         uint256 deflationBaseRate
@@ -177,6 +142,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         _;
     }
 
+
     modifier checkTime(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
@@ -209,13 +175,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
       routers[0] = router_;
   }
 
-  function setSellerRewardDandy(uint256 rewardDandy) public onlyGovernance {
-      _sellerRewardDandy = rewardDandy;
-  }
-
-  function setBuyerRewardDandy(uint256 rewardDandy) public onlyGovernance {
-      _buyerRewardDandy = rewardDandy;
-  }
 
   function addSupportNft(address nft) public onlyGovernance validAddress(nft) {
       _supportNft[nft] = true;
@@ -232,6 +191,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
   function removeSeller(address seller) public onlyGovernance validAddress(seller) {
       _seller[seller] = false;
   }
+
 
   function setDeflationBaseRate(uint256 deflationRate_) public onlyGovernance {
       deflationBaseRates[0] = deflationRate_;
@@ -251,14 +211,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
       _isStartUserSales = isStartUserSales;
   }
 
-  function setIsRewardSellerDandy(bool isRewardSellerDandy) public onlyGovernance {
-      _isRewardSellerDandy = isRewardSellerDandy;
-  }
-
-  function setIsRewardBuyerDandy(bool isRewardBuyerDandy) public onlyGovernance {
-      _isRewardBuyerDandy = isRewardBuyerDandy;
-  }
-
   function setMinDurationTime(uint256 durationTime) public onlyGovernance {
       _minDurationTime = durationTime;
   }
@@ -266,7 +218,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
   function setTipsFeeWallet(address payable wallet) public onlyGovernance {
       _tipsFeeWallet = wallet;
   }
-
 
   function setBaseRate(uint256 rate) external onlyGovernance {
       _baseRate = rate;
@@ -343,7 +294,6 @@ function startSales(uint256 tokenId,
     require(durationTime >= _minDurationTime, "invalid duration");
     require(maxPrice >= minPrice, "invalid price");
     require(_isStartUserSales || _seller[msg.sender] == true || _supportNft[nft] == true, "cannot sales");
-    require(_supportCurrency[currency] == true, "not support currency");
 
     IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
 
@@ -405,7 +355,6 @@ function onERC721Received(address operator, address from, uint256 tokenId, bytes
 // PROBLEMATIC PART
 //----------------------------------------------
 
-
 function buy(uint index, address currency_)
     public
     nonReentrant
@@ -420,19 +369,42 @@ function buy(uint index, address currency_)
     uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
     uint256 purchase = price.sub(tipsFee);
     if (address(currencyAddr) == currency_){
-
+        /* if (currencyAddr == address(0x0)){
+            require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
+            uint256 returnBack = msg.value.sub(price);
+            if(returnBack > 0) {
+                msg.sender.transfer(returnBack);
+            }
+            if(tipsFee > 0) {
+                _tipsFeeWallet.transfer(tipsFee);
+            }
+            obj.seller.transfer(purchase);
+        }
+        else{
             IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
             IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
-
+        } */
     }
     else{
-      // show error unsupported token
+        /* if (currencyAddr == address(0x0)){
+            uint256 ethAmount = tokenToEth(currency_, price);
+            // uint256 ethAmount = 0;
+            //ethAmount = tokenToExactEth(currency_, price);
 
+            require (ethAmount >= price, "umm.....  your price is too low");
+            uint256 returnBack = ethAmount.sub(price).add(msg.value);
+            if(returnBack > 0) {
+                msg.sender.transfer(returnBack);
+            }
+            if(tipsFee > 0) {
+                _tipsFeeWallet.transfer(tipsFee);
+            }
+            obj.seller.transfer(purchase);
+        }else{
             // transfer
             require(false, "not support token");
+        } */
     }
-
-
 
     obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
 
@@ -461,10 +433,6 @@ function tokenToEth(address erc20Token, uint256 amountOut) private returns(uint2
     uint256[] memory amounts = UniswapV2Library.getAmountsIn(getRouter().factory(), amountOut, path);
     uint256 amountIn = amounts[0];
 
-    SupportBuyCurrency memory supportBuyCurrency = _supportBuyCurrency[erc20Token];
-    if (supportBuyCurrency.isDeflation) {
-        amountIn = amountIn.mul(getDeflationBaseRate()).div(supportBuyCurrency.deflationRate).mul(getDeflationBaseRate()).div(supportBuyCurrency.deflationRate);
-    }
 
     uint256 balanceBefore = IERC20(erc20Token).balanceOf(address(this));
     IERC20(erc20Token).safeTransferFrom(msg.sender, address(this), amountIn);
@@ -473,11 +441,7 @@ function tokenToEth(address erc20Token, uint256 amountOut) private returns(uint2
     IERC20(erc20Token).approve(address(getRouter()), amountIn);
 
     uint256 ethBefore = address(this).balance;
-    if (supportBuyCurrency.isDeflation) {
-        getRouter().swapExactTokensForETHSupportingFeeOnTransferTokens(amountIn, 0, path, address(this), block.timestamp);
-    } else {
-        getRouter().swapTokensForExactETH(amountOut, amountIn, path, address(this), block.timestamp);
-    }
+    getRouter().swapTokensForExactETH(amountOut, amountIn, path, address(this), block.timestamp);
     uint256 ethAfter = address(this).balance;
 
     uint256 balanceLast = IERC20(erc20Token).balanceOf(address(this));
