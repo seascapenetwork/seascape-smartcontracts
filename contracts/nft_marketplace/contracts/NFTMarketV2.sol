@@ -20,8 +20,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     // --- Data ---
     bool private initialized; // Flag of initialize data
 
-    IERC20 public _dandy = IERC20(0x0);
-
     struct SalesObject {
         uint256 id;
         uint256 tokenId;
@@ -36,7 +34,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         IERC721 nft;
     }
 
-    uint256 public _salesAmount = 0;
+    uint256 public _salesAmount;
 
     SalesObject[] _salesObjects;
 
@@ -47,8 +45,8 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;
 
-    bool public _isRewardSellerDandy = false;
-    bool public _isRewardBuyerDandy = false;
+    bool public _isRewardSellerDandy;
+    bool public _isRewardBuyerDandy;
 
     uint256 public _sellerRewardDandy = 1e15;
     uint256 public _buyerRewardDandy = 1e15;
@@ -89,6 +87,9 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
 
     event GovernanceTransferred(address indexed previousOwner, address indexed newOwner);
 
+    IERC20 crowns;
+    // native token
+
     mapping(uint256 => address) public _saleOnCurrency;
 
 
@@ -107,114 +108,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         bool isDeflation;
         uint256 deflationRate;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    /* struct Voter {
-        uint weight; // weight is accumulated by delegation
-        bool voted;  // if true, that person already voted
-        address delegate; // person delegated to
-        uint vote;   // index of the voted proposal
-    }
-
-    // This is a type for a single proposal.
-    struct Proposal {
-        bytes32 name;   // short name (up to 32 bytes)
-        uint voteCount; // number of accumulated votes
-    }
-
-    address public chairperson;
-
-    // This declares a state variable that
-    // stores a `Voter` struct for each possible address.
-    mapping(address => Voter) public voters;
-
-    // A dynamically-sized array of `Proposal` structs.
-    Proposal[] public proposals;
-
-
-
-  function delegate(address to) public {
-          // assigns reference
-          Voter storage sender = voters[msg.sender];
-          require(!sender.voted, "You already voted.");
-
-          require(to != msg.sender, "Self-delegation is disallowed.");
-
-          // Forward the delegation as long as
-          // `to` also delegated.
-          // In general, such loops are very dangerous,
-          // because if they run too long, they might
-          // need more gas than is available in a block.
-          // In this case, the delegation will not be executed,
-          // but in other situations, such loops might
-          // cause a contract to get "stuck" completely.
-          while (voters[to].delegate != address(0)) {
-              to = voters[to].delegate;
-
-              // We found a loop in the delegation, not allowed.
-              require(to != msg.sender, "Found loop in delegation.");
-          }
-
-          // Since `sender` is a reference, this
-          // modifies `voters[msg.sender].voted`
-          sender.voted = true;
-          sender.delegate = to;
-          Voter storage delegate_ = voters[to];
-          if (delegate_.voted) {
-              // If the delegate already voted,
-              // directly add to the number of votes
-              proposals[delegate_.vote].voteCount += sender.weight;
-          } else {
-              // If the delegate did not vote yet,
-              // add to her weight.
-              delegate_.weight += sender.weight;
-          }
-      } */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -284,12 +177,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         _;
     }
 
-    modifier checkSupportBuyCurrendy(address currency) {
-        SupportBuyCurrency memory supportBuyCurrency = _supportBuyCurrency[currency];
-        require(supportBuyCurrency.status == true, "not support currency");
-        _;
-    }
-
     modifier checkTime(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
@@ -346,27 +233,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
       _seller[seller] = false;
   }
 
-  function addSupportCurrency(address erc20) public onlyGovernance {
-      require(_supportCurrency[erc20] == false, "the currency have support");
-      _supportCurrency[erc20] = true;
-      emit eveSupportCurrency(erc20, true);
-  }
-
-  function removeSupportCurrency(address erc20) public onlyGovernance {
-      require(_supportCurrency[erc20], "the currency can not remove");
-      _supportCurrency[erc20] = false;
-      emit eveSupportCurrency(erc20, false);
-  }
-
-
-  function setSupportBuyCurrency(address erc20,bool status,bool isDeflation,uint256 deflationRate ) public onlyGovernance {
-      if (isDeflation) {
-          require(deflationRate >0, "deflationRate 0");
-      }
-      _supportBuyCurrency[erc20] = SupportBuyCurrency(status,isDeflation,deflationRate);
-      emit eveSupportBuyCurrency(erc20,status,isDeflation,deflationRate);
-  }
-
   function setDeflationBaseRate(uint256 deflationRate_) public onlyGovernance {
       deflationBaseRates[0] = deflationRate_;
       emit eveDeflationBaseRate(deflationRate_);
@@ -401,9 +267,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
       _tipsFeeWallet = wallet;
   }
 
-  function setDandyAddress(address addr) external onlyGovernance validAddress(addr) {
-      _dandy = IERC20(addr);
-  }
 
   function setBaseRate(uint256 rate) external onlyGovernance {
       _baseRate = rate;
@@ -518,9 +381,6 @@ function startSales(uint256 tokenId,
 
     _salesObjects.push(obj);
 
-    if(_isRewardSellerDandy || _verifySeller[msg.sender]) {
-        _dandy.mint(msg.sender, _sellerRewardDandy);
-    }
 
     uint256 tmpMaxPrice = maxPrice;
     uint256 tmpMinPrice = minPrice;
@@ -545,12 +405,12 @@ function onERC721Received(address operator, address from, uint256 tokenId, bytes
 // PROBLEMATIC PART
 //----------------------------------------------
 
+
 function buy(uint index, address currency_)
     public
     nonReentrant
     mustNotSellingOut(index)
     checkTime(index)
-    checkSupportBuyCurrendy(currency_)
     payable
 {
     SalesObject storage obj = _salesObjects[index];
@@ -560,48 +420,19 @@ function buy(uint index, address currency_)
     uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
     uint256 purchase = price.sub(tipsFee);
     if (address(currencyAddr) == currency_){
-        if (currencyAddr == address(0x0)){
-            require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
-            uint256 returnBack = msg.value.sub(price);
-            if(returnBack > 0) {
-                msg.sender.transfer(returnBack);
-            }
-            if(tipsFee > 0) {
-                _tipsFeeWallet.transfer(tipsFee);
-            }
-            obj.seller.transfer(purchase);
-        }else{
+
             IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
             IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
-        }
-    }else{
-        if (currencyAddr == address(0x0)){
-            uint256 ethAmount = tokenToEth(currency_, price);
-            // uint256 ethAmount = 0;
-            // SupportBuyCurrency memory supportBuyCurrency = _supportBuyCurrency[currency_];
-            // if (supportBuyCurrency.isDeflation) {
-            //     ethAmount = exactTokenToEth(currency_, price);
-            // } else {
-            //     ethAmount = tokenToExactEth(currency_, price);
-            // }
-            require (ethAmount >= price, "umm.....  your price is too low");
-            uint256 returnBack = ethAmount.sub(price).add(msg.value);
-            if(returnBack > 0) {
-                msg.sender.transfer(returnBack);
-            }
-            if(tipsFee > 0) {
-                _tipsFeeWallet.transfer(tipsFee);
-            }
-            obj.seller.transfer(purchase);
-        }else{
+
+    }
+    else{
+      // show error unsupported token
+
             // transfer
             require(false, "not support token");
-        }
     }
 
-    if(_isRewardBuyerDandy || _verifySeller[obj.seller]) {
-        _dandy.mint(msg.sender, _buyerRewardDandy);
-    }
+
 
     obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
 
