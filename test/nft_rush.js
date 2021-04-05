@@ -181,8 +181,11 @@ contract("Game 2: Nft Rush", async accounts => {
 
 		await nftRush.announceDailySpentWinners(lastSessionId, winners, amount);
 
-		let claimables = await nftRush.spentDailyClaimables(player);
-		assert.equal(claimables > 0, true, "expected 1 daily spent leaderboard reward");
+		try {
+			await nftRush.announceDailySpentWinners(lastSessionId, winners, amount);
+		} catch(e) {
+			return assert.equal(e.reason, "NFT Rush: already set or too early");
+		}
 	});
 
 	it("claim daily spent leaderboard reward", async () => {
