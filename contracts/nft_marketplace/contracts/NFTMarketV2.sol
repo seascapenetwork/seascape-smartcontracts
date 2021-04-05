@@ -16,6 +16,9 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
+    // native token
+    IERC20 public immutable CWS;
+
     // --- Data ---
     bool private initialized; // Flag of initialize data
 
@@ -93,7 +96,8 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         uint256 deflationBaseRate
     );
 
-    constructor() public {
+    constructor(IERC20 _cws) public {
+        CWS = _cws;
         _governance = tx.origin;
     }
     function() external payable {}
@@ -164,9 +168,9 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         _;
     }
 
-  function seize(IERC20 asset) external onlyGovernance returns (uint256 balance) {
-      balance = asset.balanceOf(address(this));
-      asset.safeTransfer(_governance, balance);
+  function seize() external onlyGovernance returns (uint256 balance) {
+      balance = CWS.balanceOf(address(this));
+      CWS.safeTransfer(_governance, balance);
   }
 
 
