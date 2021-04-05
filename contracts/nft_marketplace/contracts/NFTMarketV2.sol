@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 
 import "./../interfaces/IERC20.sol";
-import "./../interfaces/IUniswapV2Router01.sol";
 import "./../libraries/SafeERC20.sol";
 import "./../libraries/SafeMath.sol";
 import "./../contracts/IERC721.sol";
@@ -168,11 +167,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
   function seize(IERC20 asset) external onlyGovernance returns (uint256 balance) {
       balance = asset.balanceOf(address(this));
       asset.safeTransfer(_governance, balance);
-  }
-
-
-  function setIUniswapV2Router01(address router_) public onlyGovernance {
-      routers[0] = router_;
   }
 
 
@@ -351,9 +345,6 @@ function onERC721Received(address operator, address from, uint256 tokenId, bytes
    return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
 }
 
-//----------------------------------------------
-// PROBLEMATIC PART
-//----------------------------------------------
 
 function buy(uint index, address currency_)
     public
@@ -387,7 +378,6 @@ function buy(uint index, address currency_)
     }
     else{
         /* if (currencyAddr == address(0x0)){
-            uint256 ethAmount = tokenToEth(currency_, price);
             // uint256 ethAmount = 0;
             //ethAmount = tokenToExactEth(currency_, price);
 
@@ -420,43 +410,8 @@ function buy(uint index, address currency_)
 
 
 
-
-//-----------------------------------------
-
-
-
-function tokenToEth(address erc20Token, uint256 amountOut) private returns(uint256) {
-    address[] memory path = new address[](2);
-    path[0] = erc20Token;
-    path[1] = getRouter().WETH();
-
-    uint256[] memory amounts = UniswapV2Library.getAmountsIn(getRouter().factory(), amountOut, path);
-    uint256 amountIn = amounts[0];
-
-
-    uint256 balanceBefore = IERC20(erc20Token).balanceOf(address(this));
-    IERC20(erc20Token).safeTransferFrom(msg.sender, address(this), amountIn);
-    uint256 balanceAfter = IERC20(erc20Token).balanceOf(address(this));
-    amountIn = balanceAfter.sub(balanceBefore);
-    IERC20(erc20Token).approve(address(getRouter()), amountIn);
-
-    uint256 ethBefore = address(this).balance;
-    getRouter().swapTokensForExactETH(amountOut, amountIn, path, address(this), block.timestamp);
-    uint256 ethAfter = address(this).balance;
-
-    uint256 balanceLast = IERC20(erc20Token).balanceOf(address(this));
-    uint256 supAmount = balanceLast.sub(balanceBefore);
-    if (supAmount>0){
-        IERC20(erc20Token).safeTransfer(msg.sender, supAmount);
-    }
-    return ethAfter.sub(ethBefore);
-}
-
 function getDeflationBaseRate() public view returns(uint256) {
     return deflationBaseRates[0];
-}
-function getRouter() public view returns(IUniswapV2Router01) {
-    return IUniswapV2Router01(routers[0]);
 }
 
 
