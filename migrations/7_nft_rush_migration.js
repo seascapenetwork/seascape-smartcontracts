@@ -26,5 +26,13 @@ module.exports = function(deployer, network) {
 	    	console.log("Nft Brawl contract was deployed at address: "+NftRush.address);
 			console.log("Don't forget to add Nft Rush in Nft factory into permissioned addresses");
 		});
-    }
+    } else {
+		let crowns = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0"
+		let factory = "0x25F4C38FAF75dF9622FECB17Fa830278cd732091";
+
+        deployer.deploy(NftRush, crowns, factory, minDeposit, maxDeposit).then(function(){
+	    	console.log("Nft Brawl contract was deployed at address: "+NftRush.address);
+			console.log("Don't forget to add Nft Rush in Nft factory into permissioned addresses");
+		});
+	}
 };

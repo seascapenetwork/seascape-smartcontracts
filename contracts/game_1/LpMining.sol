@@ -76,49 +76,49 @@ contract LpMining is Ownable {
     /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
     function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation) external onlyOwner {
-	require(_lpToken != address(0),
-		"Seascape Staking: Staking token should not be equal to 0");
-	require(_startTime > block.timestamp,
-		"Seascape Staking: Seassion should start in the future");
-	require(_period > 0,
-		"Seascape Staking: Session duration should be greater than 0");
-	require(_totalReward > 0,
-		"Seascape Staking: Total reward of tokens should be greater than 0");
+		require(_lpToken != address(0),
+			"Seascape Staking: Staking token should not be equal to 0");
+		require(_startTime > block.timestamp,
+			"Seascape Staking: Seassion should start in the future");
+		require(_period > 0,
+			"Seascape Staking: Session duration should be greater than 0");
+		require(_totalReward > 0,
+			"Seascape Staking: Total reward of tokens should be greater than 0");
 
-	// game session for the lp token was already created, then:
-	uint256 _lastId = lastSessionIds[_lpToken];
-	if (_lastId > 0) {
-	    require(isActive(_lastId)==false,     "Seascape Staking: Can't start when session is already active");
-	}
+		// game session for the lp token was already created, then:
+		uint256 _lastId = lastSessionIds[_lpToken];
+		if (_lastId > 0) {
+			require(isActive(_lastId)==false,     "Seascape Staking: Can't start when session is already active");
+		}
 
-	// required CWS balance of this contract
-	uint256 newSupply = rewardSupply.add(_totalReward);
-	require(CWS.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
+		// required CWS balance of this contract
+		uint256 newSupply = rewardSupply.add(_totalReward);
+		require(CWS.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
 
-	//--------------------------------------------------------------------
-	// creating the session
-	//--------------------------------------------------------------------
-	uint256 _sessionId = sessionId.current();
-	uint256 _rewardUnit = _totalReward.div(_period);	
-	sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
+		//--------------------------------------------------------------------
+		// creating the session
+		//--------------------------------------------------------------------
+		uint256 _sessionId = sessionId.current();
+		uint256 _rewardUnit = _totalReward.div(_period);	
+		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
 
-	//--------------------------------------------------------------------
+		//--------------------------------------------------------------------
         // updating rest of session related data
-	//--------------------------------------------------------------------
-	sessionId.increment();
-	rewardSupply = newSupply;
-	lastSessionIds[_lpToken] = _sessionId;
+		//--------------------------------------------------------------------
+		sessionId.increment();
+		rewardSupply = newSupply;
+		lastSessionIds[_lpToken] = _sessionId;
 
-	emit SessionStarted(_lpToken, _sessionId, _totalReward, _startTime, _startTime + _period, _generation);
+		emit SessionStarted(_lpToken, _sessionId, _totalReward, _startTime, _startTime + _period, _generation);
     }
      
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
     function setNftFactory(address _address) external onlyOwner {
-	require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
-	nftFactory = NftFactory(_address);
+		require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
+		nftFactory = NftFactory(_address);
 
-	emit FactorySet(_address);	    
+		emit FactorySet(_address);	    
     }
 
 
@@ -205,7 +205,7 @@ contract LpMining is Ownable {
 		}
 
 		_balance.amount = _balance.amount.sub(_amount);
-			_session.amount = _session.amount.sub(_amount);
+		_session.amount = _session.amount.sub(_amount);
 
 		/// CWS claims as in claim method
 		if (_interest > 0) {
@@ -256,12 +256,12 @@ contract LpMining is Ownable {
 
     /// @notice Returns amount of CWS Tokens that _address could claim.
     function claimable(uint256 _sessionId, address _owner) external view returns(uint256) {
-	return calculateInterest(_sessionId, _owner);
+		return calculateInterest(_sessionId, _owner);
     }
 
     /// @notice Returns total amount of Staked LP Tokens
     function stakedBalance(uint256 _sessionId) external view returns(uint256) {
-	return sessions[_sessionId].amount;
+		return sessions[_sessionId].amount;
     }
 
     //---------------------------------------------------
@@ -281,33 +281,33 @@ contract LpMining is Ownable {
     }
 
     function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {	    
-	Session storage _session = sessions[_sessionId];
-	Balance storage _balance = balances[_sessionId][_owner];
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][_owner];
 
-	// How much of total deposit is belong to player as a floating number
-	if (_balance.amount == 0 || _session.amount == 0) {
-	    return 0;
-	}
+		// How much of total deposit is belong to player as a floating number
+		if (_balance.amount == 0 || _session.amount == 0) {
+			return 0;
+		}
 
-	uint256 _sessionCap = block.timestamp;
-	if (isActive(_sessionId) == false) {
-	    _sessionCap = _session.startTime.add(_session.period);
+		uint256 _sessionCap = block.timestamp;
+		if (isActive(_sessionId) == false) {
+			_sessionCap = _session.startTime.add(_session.period);
 
-	    // claimed after session expire, means no any claimables
-	    if (_balance.claimedTime > _sessionCap) {
-                return 0;
-	    }
-	}
+			// claimed after session expire, means no any claimables
+			if (_balance.claimedTime > _sessionCap) {
+				return 0;
+			}
+		}
 
-	uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
-	
+		uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
+		
        	uint256 _interest = _session.rewardUnit.mul(_portion).div(scaler);
 
-	// _balance.startTime is misleading.
-	// Because, it's updated in every deposit time or claim time.
-	uint256 _earnPeriod = _sessionCap.sub(_balance.claimedTime);
-	
-	return _interest.mul(_earnPeriod);
+		// _balance.startTime is misleading.
+		// Because, it's updated in every deposit time or claim time.
+		uint256 _earnPeriod = _sessionCap.sub(_balance.claimedTime);
+		
+		return _interest.mul(_earnPeriod);
     }
 }
 

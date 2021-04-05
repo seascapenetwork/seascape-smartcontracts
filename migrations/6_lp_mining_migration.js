@@ -15,8 +15,11 @@ module.exports = function(deployer, network) {
 	    	console.log("Lp Mining contract was deployed at address: "+LpMining.address);
 		});
     } else {
-		deployer.deploy(LpMining, "0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd", "0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d").then(function(){
-	    	console.log("Lp Mining contract was deployed at address: "+LpMining.address);
+		let crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
+		let factory = "0x3eB88c3F2A719369320D731FbaE062b0f82F22e4";
+
+		deployer.deploy(LpMining, crowns, factory).then(function(){
+	    	console.log("Profit Circus contract was deployed at address: "+LpMining.address);
 		});
     }
 };
