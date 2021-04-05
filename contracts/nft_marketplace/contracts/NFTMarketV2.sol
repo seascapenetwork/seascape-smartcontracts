@@ -360,40 +360,13 @@ function buy(uint index, address currency_)
     uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
     uint256 purchase = price.sub(tipsFee);
     if (address(currencyAddr) == currency_){
-        /* if (currencyAddr == address(0x0)){
-            require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
-            uint256 returnBack = msg.value.sub(price);
-            if(returnBack > 0) {
-                msg.sender.transfer(returnBack);
-            }
-            if(tipsFee > 0) {
-                _tipsFeeWallet.transfer(tipsFee);
-            }
-            obj.seller.transfer(purchase);
-        }
-        else{
-            IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-            IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
-        } */
+        IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+        IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+
     }
     else{
-        /* if (currencyAddr == address(0x0)){
-            // uint256 ethAmount = 0;
-            //ethAmount = tokenToExactEth(currency_, price);
-
-            require (ethAmount >= price, "umm.....  your price is too low");
-            uint256 returnBack = ethAmount.sub(price).add(msg.value);
-            if(returnBack > 0) {
-                msg.sender.transfer(returnBack);
-            }
-            if(tipsFee > 0) {
-                _tipsFeeWallet.transfer(tipsFee);
-            }
-            obj.seller.transfer(purchase);
-        }else{
-            // transfer
-            require(false, "not support token");
-        } */
+        // show error unsupported token
+        require(false, "not support token");
     }
 
     obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
