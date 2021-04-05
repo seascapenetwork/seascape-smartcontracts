@@ -4,8 +4,8 @@ let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
 let accounts;
-let interval = 10;  // seconds
-let period = 3600 * 60 * 5;   // 1 week 
+let interval = 120;  // 0.5 minutes
+let period = 3600 * 24 * 7;   // 1 day 
 let generation = 0;
 let rewardPrize = 10; // first winner gets 10 CWS
 let winnersAmount = 10; // ten winners are tracked
@@ -15,8 +15,7 @@ let winnersAmount = 10; // ten winners are tracked
  */
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
-    let res = init(networkId);
-    console.log("Session started successfully");
+    let res = await init(networkId);
     
     callback(null, res);
 };
@@ -24,40 +23,26 @@ module.exports = async function(callback) {
 let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
 
-    let nftRush = await NftRush.deployed();
-    let factory = await Factory.deployed();
-    let nft     = await Nft.deployed();
+    let nftRush = await NftRush.at("0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2");    
 
-    let crowns  = await Crowns.deployed();
-	
-    /*if (networkId == 4) {
-	crowns = await Crowns.at(process.env.CROWNS_RINKEBY);
-    } else {
-	crowns = await Crowns.deployed();
-	}*/
+    //await setAllRewards(nftRush);
+    //console.log("Nft Rush set the reward sizes");
 
-    console.log("Total prize to pay: "+calculateTotalPrize());
+    //let factory = await Factory.at("0x25F4C38FAF75dF9622FECB17Fa830278cd732091");
+    //await factory.addGenerator(nftRush.address);
+    //console.log("Nft Rush was granted a permission by factory to mint Seascape NFT!");
 
-    //await announceDailySpentWinners(nftRush, 1);
-    //return;
-    await setAllRewards(nftRush);
-        
-    //should add nft rush as generator role in nft factory
-    await factory.addGenerator(nftRush.address, {from: accounts[0]});
-    console.log("nft rush was granted permission to mint nft");
 
-    //should set nft factory in nft
-    await nft.setFactory(factory.address);
-
-    
     //should start a session
-    let startTime = Math.floor(Date.now()/1000) + 1;
+    let startTime = Math.floor(Date.now()/1000) + 180;
     await nftRush.startSession(interval,
 				      period,
 				      startTime,
 				      generation,
-				      {from: accounts[0]});
-    console.log("Started a nft rush session");
+				      {from: accounts[0], gasPrice: 136000000000});
+
+    let sessionId = await nftRush.lastSessionId();
+    console.log(sessionId +" session id started");
 }.bind(this);
 
 
@@ -65,89 +50,15 @@ let init = async function(networkId) {
 // Leaderboard related data
 // ------------------------------------------------------------
 let setAllRewards = async function(nftRush) {
-    let winners = [];
-    for(var i=1; i<=winnersAmount; i++) {
-	let amount = Math.round(rewardPrize / i);
-	let wei = web3.utils.toWei(amount.toString());
-	winners.push(wei);
+
+    let dailyWinners = ["120", "50", "30", "15", "10", "5", "5", "5", "5", "5"];
+    let allTimeWinners = ["2000", "1000", "500", "300", "300", "300", "200", "200", "100", "100"];
+    for (var i = 0; i<10; i++) {
+        allTimeWinners[i] = web3.utils.toWei(allTimeWinners[i]);
+        dailyWinners[i] = web3.utils.toWei(dailyWinners[i]);
     }
 
-    await nftRush.setPrizes(winners, winners, winners, winners);
+    await nftRush.setPrizes(dailyWinners, allTimeWinners, {gasPrice: 136000000000});
 
     console.log("Set all reward prizes");
-};
-
-let calculateTotalPrize = function() {
-    let total = 0;
-    for(var i=1; i<=winnersAmount; i++) {
-	let amount = Math.round(rewardPrize / i);
-	total += amount;
-	console.log(total+" for "+i+" users");
-    }
-
-    return total;
-};
-
-let announceDailySpentWinners = async function(nftRush, lastSessionId) {
-    // in nftrush.sol contract, at the method claimDailyNft
-    // comment requirement of isDailWinnersAddress against false checking
-
-    let winners = [];
-    for(var i=0; i<10; i++) {
-	if (i%2 == 0) {
-	    winners.push(accounts[0]);
-	} else {
-	    winners.push(accounts[1]);
-	}
-    }
-
-    let winnersAmount = 10;
-
-    // contract deployer. only it can add winners list into the contract
-    let owner = accounts[0];
-
-    try {
-	let res = await nftRush.announceDailySpentWinners(lastSessionId, winners, winnersAmount);
-	console.log(res);
-    } catch(e) {
-	if (e.reason == "NFT Rush: already set or too early") {
-	    console.log("announcement failed");
-	    return true;
-	} else {
-	    console.error(e);
-	}
-    }
-
-    console.log ("announced");
-};
-
-let claimDailyNft = async function(nftRush, lastSessionId) {
-    let nftAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-    nftAmount = parseInt(nftAmount.toString());
-
-    if (!nftAmount) {
-	return true;
-    }
-
-    for(var i=0; i<nftAmount; i++) {
-	await nftRush.claimDailyNft();
-
-	let updatedAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-	updatedAmount = parseInt(updatedAmount.toString());
-
-	//daily claimable amount didn't updated after nft claiming
-	if (updatedAmount != nftAmount - (i+1)) {
-	    return false;
-	}
-    }
-
-    let zeroAmount = await nftRush.dailyClaimablesAmount(accounts[0]);
-    zeroAmount = parseInt(zeroAmount.toString());
-
-    // daily claimables after all claims should be equal to 0
-    if (zeroAmount != 0) {
-	return false;
-    }
-
-    await nftRush.claimDailyNft();
 };

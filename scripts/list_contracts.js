@@ -7,16 +7,12 @@ let Staking = artifacts.require("LpMining");
 let NftStaking = artifacts.require("NftStaking");
 
 module.exports = async function(callback) {
-    let res;
-    res = await init();
-
-    //let accounts = await web3.eth.getAccounts();
-    //console.log(accounts);
-    return;
+    let accounts = await web3.eth.getAccounts();
+    console.log(accounts);
 
     // cancel pending transactions
     console.log("canceling transactions...");
-    res = await web3.eth.sendTransaction({from: accounts[0], to: accounts[0], value: 0, nonce: 3})
+    res = await web3.eth.sendTransaction({from: accounts[0], to: accounts[0], value: 0, nonce: 19, gasPrice: 136000000000})
     
     console.log(res);
 };

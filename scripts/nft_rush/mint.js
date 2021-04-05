@@ -21,24 +21,22 @@ let init = async function() {
     
     let lastSessionId = await nftRush.lastSessionId();
 
-    let nft = await Nft.deployed();
-    let balance = await nft.balanceOf(accounts[0]);
-
-    let crowns = await Crowns.deployed();
-    let factory = await Factory.deployed();
-    
     return await claimNft(nftRush, lastSessionId);
 }.bind(this);
 
 //should claim random nft
 let claimNft = async function(nftRush, lastSessionId) {
-    let quality = getRandomInt(5) + 1;
+    //let quality = getRandomInt(5) + 1;
+    let quality = 2;
 
     let addr = accounts[0];
     
     let balance = await nftRush.balances(lastSessionId, addr);
     let amountWei = web3.utils.toWei(web3.utils.fromWei(balance.amount));
     let mintedTime = parseInt(balance.mintedTime.toString());
+
+    console.log("Parameters: addr, amount, minted time, quality:  ", addr, amountWei, mintedTime, quality);
+    console.log("Signer: "+addr);
 
     let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256"],
 						[amountWei, mintedTime]);
@@ -51,8 +49,10 @@ let claimNft = async function(nftRush, lastSessionId) {
     let s = "0x" + hash.substr(66,64);
     let v = parseInt(hash.substr(130), 16);
     if (v < 27) {
-	v += 27;
+    	v += 27;
     }
+
+    console.log("Signature: "+hash);
 
     let res = await nftRush.mint(lastSessionId, v, r, s, quality);
     console.log(res);
