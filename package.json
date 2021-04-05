@@ -14,12 +14,14 @@
   "license": "GPLv3",
   "devDependencies": {
     "solium": "1.1.3",
-    "truffle-plugin-verify": "^0.5.5"
+    "truffle-plugin-verify": "^0.5.7"
   },
   "dependencies": {
-    "@truffle/hdwallet-provider": "^1.2.2",
-    "chai": "^4.3.0",
+    "@truffle/hdwallet-provider": "^1.2.4",
+    "bignumber.js": "^9.0.1",
+    "chai": "^4.3.4",
     "dotenv": "^8.2.0",
+    "mysql": "^2.18.1",
     "truffle-hdwallet-provider": "^1.0.17",
     "truffle-privatekey-provider": "^1.5.0"
   }
