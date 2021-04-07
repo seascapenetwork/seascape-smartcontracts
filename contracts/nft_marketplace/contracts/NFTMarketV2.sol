@@ -3,12 +3,13 @@ pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
 
-import "./../interfaces/IERC20.sol";
-import "./../libraries/SafeERC20.sol";
-import "./../libraries/SafeMath.sol";
-import "./../contracts/IERC721.sol";
-import "./../contracts/IERC721Receiver.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../contracts/ReentrancyGuard.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
 
 contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
@@ -17,7 +18,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     using SafeMath for uint256;
 
     // native token
-    //IERC20 public CWS;
+    CrownsToken public crowns;
 
     // --- Data ---
     bool private initialized; // Flag of initialize data
@@ -95,8 +96,8 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         uint256 deflationBaseRate
     );
 
-    constructor(/*IERC20 _cws*/) public {
-        //CWS = _cws;
+    constructor(address _crowns) public {
+        crowns = CrownsToken(_crowns);
         _governance = tx.origin;
     }
 
@@ -171,9 +172,9 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         _;
     }
 
-  function seize() external onlyGovernance returns (uint256 balance) {
-      //balance = CWS.balanceOf(address(this));
-      //CWS.safeTransfer(_governance, balance);
+  function seize(IERC20 crowns) external onlyGovernance returns (uint256 balance) {
+      balance = crowns.balanceOf(address(this));
+      crowns.safeTransfer(_governance, balance);
   }
 
 
