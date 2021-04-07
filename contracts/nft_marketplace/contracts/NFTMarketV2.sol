@@ -7,9 +7,9 @@ import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../../openzeppelin/contracts/math/SafeMath.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../contracts/ReentrancyGuard.sol";
 import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./../contracts/ReentrancyGuard.sol";
 
 
 contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
