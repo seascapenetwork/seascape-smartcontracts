@@ -1,6 +1,6 @@
 // File: contracts/library/UniswapV2Library.sol
 
-pragma solidity >=0.5.0;
+pragma solidity >=0.6.7;
 
 import "./../interfaces/IUniswapV2Pair.sol";
 import "./../libraries/SafeMath.sol";

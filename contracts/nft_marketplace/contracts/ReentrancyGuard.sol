@@ -1,6 +1,6 @@
 // File: contracts/library/ReentrancyGuard.sol
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.7;
 
 contract ReentrancyGuard {
     // Booleans are more expensive than uint256 or any type that takes up a full

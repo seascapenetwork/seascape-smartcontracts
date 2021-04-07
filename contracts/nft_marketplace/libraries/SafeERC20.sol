@@ -1,6 +1,6 @@
 // File: contracts/library/SafeERC20.sol
 
-pragma solidity ^0.5.5;
+pragma solidity ^0.6.7;
 
 import "./../libraries/Address.sol";
 import "./../libraries/UniswapV2Library.sol";

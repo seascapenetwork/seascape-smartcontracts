@@ -1,6 +1,6 @@
 // File: contracts/interface/IUniswapV2Router01.sol
 
-pragma solidity ^0.5.5;
+pragma solidity ^0.6.7;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);

@@ -1,6 +1,6 @@
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
-pragma solidity ^0.5.5;
+pragma solidity ^0.6.7;
 
 /**
  * @title ERC721 token receiver interface
@@ -8,7 +8,7 @@ pragma solidity ^0.5.5;
  * from ERC721 asset contracts.
  */
 
-contract IERC721Receiver {
+abstract contract IERC721Receiver {
     /**
      * @notice Handle the receipt of an NFT
      * @dev The ERC721 smart contract calls this function on the recipient
@@ -24,5 +24,5 @@ contract IERC721Receiver {
      * @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
      */
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
-    public returns (bytes4);
+    public virtual returns (bytes4);
 }

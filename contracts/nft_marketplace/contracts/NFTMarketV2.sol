@@ -1,4 +1,4 @@
-pragma solidity ^0.5.5;
+pragma solidity ^0.6.7;
 
 pragma experimental ABIEncoderV2;
 
@@ -17,7 +17,7 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     using SafeMath for uint256;
 
     // native token
-    IERC20 public immutable CWS;
+    //IERC20 public CWS;
 
     // --- Data ---
     bool private initialized; // Flag of initialize data
@@ -88,7 +88,6 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
 
     mapping(uint256=>uint256) public deflationBaseRates;
     mapping(uint256=>address) public routers;
-    // IUniswapV2Router01[] public routers;
 
 
 
@@ -96,11 +95,15 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
         uint256 deflationBaseRate
     );
 
-    constructor(IERC20 _cws) public {
-        CWS = _cws;
+    constructor(/*IERC20 _cws*/) public {
+        //CWS = _cws;
         _governance = tx.origin;
     }
-    function() external payable {}
+
+    receive() external payable { }
+    //@note Prefer using a receive function only, whenever possible
+    //fallback() external [payable] { }
+
     // --- Init ---
     function initialize(
         address payable tipsFeeWallet,
@@ -169,8 +172,8 @@ contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
     }
 
   function seize() external onlyGovernance returns (uint256 balance) {
-      balance = CWS.balanceOf(address(this));
-      CWS.safeTransfer(_governance, balance);
+      //balance = CWS.balanceOf(address(this));
+      //CWS.safeTransfer(_governance, balance);
   }
 
 
@@ -337,7 +340,7 @@ function startSales(uint256 tokenId,
 }
 
 
-function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data) public returns (bytes4) {
+function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data) public override returns (bytes4) {
    //only receive the _nft staff
    if(address(this) != operator) {
        //invalid from nft

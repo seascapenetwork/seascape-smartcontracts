@@ -1,6 +1,6 @@
 // File: contracts/interface/IERC20.sol
 
-pragma solidity ^0.5.5;
+pragma solidity ^0.6.7;
 
 
 
