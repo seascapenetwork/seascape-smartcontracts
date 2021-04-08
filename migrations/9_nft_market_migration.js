@@ -1,4 +1,4 @@
-var NFTMarketV2 = artifacts.require("./NFTMarketV2.sol");
+var NftMarket = artifacts.require("./NftMarket.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 
 
@@ -11,7 +11,7 @@ module.exports = function(deployer, network) {
 
 	await deployer.deploy(Crowns);
 	console.log("It is used with Crowns (CWS) Token at address: "+Crowns.address);
-	await deployer.deploy(NFTMarketV2, Crowns.address);
-	console.log("NFTMarketV2 contract was deployed at address: "+NFTMarketV2.address);
+	await deployer.deploy(NftMarket, Crowns.address);
+	console.log("NftMarket contract was deployed at address: "+NftMarket.address);
 	});
 };

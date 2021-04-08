@@ -3,16 +3,16 @@ pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
 
-import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
-import "./../contracts/ReentrancyGuard.sol";
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./ReentrancyGuard.sol";
 
 
-contract NFTMarketV2 is IERC721Receiver,  ReentrancyGuard {
+contract NftMarket is IERC721Receiver,  ReentrancyGuard {
 
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
