@@ -10,6 +10,9 @@ module.exports = async function(callback) {
     let accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
+    await init();
+    return;
+
     // cancel pending transactions
     console.log("canceling transactions...");
     res = await web3.eth.sendTransaction({from: accounts[0], to: accounts[0], value: 0, nonce: 19, gasPrice: 136000000000})
