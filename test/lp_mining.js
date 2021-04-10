@@ -1,3 +1,5 @@
+const { assert } = require("chai");
+
 let LpMining = artifacts.require("LpMining");
 let LpToken = artifacts.require("LpToken");
 let Crowns = artifacts.require("CrownsToken");
@@ -116,28 +118,55 @@ contract("Game 1: Lp Mining", async accounts => {
     //--------------------------------------------------
     
     it("should deposit a staking token by a player", async() => {
-	let from = accounts[1];
+        let from = accounts[1];
 
-	await lpMining.deposit(sessionId, depositAmount, {from: from});
+        await lpMining.deposit(sessionId, depositAmount, {from: from});
 
-	let balance = await lpMining.stakedBalanceOf.call(sessionId, from);
+        let session = await lpMining.sessions.call(sessionId);
 
-	assert.equal(balance, depositAmount, "Player Balance in Lp Mining expected to be deposit amount");
+        let balance = await lpMining.stakedBalanceOf.call(sessionId, from);
+        console.log(JSON.parse(JSON.stringify(session)));
+        console.log(JSON.parse(JSON.stringify(balance)));
+        console.log(`balance deosited to ${balance}`);
+
+        assert.equal(balance, depositAmount, "Player Balance in Lp Mining expected to be deposit amount");
     });
 
     //--------------------------------------------------
 
     // After deposit, wait for some time to produce staking result.
     it("should produce some Crowns for staked Lp token", async() => {
-	let player = accounts[1];
-	let cwsBalance = await lpMining.claimable.call(sessionId, player);
-	
-	let wait = 2 * 1000; // milliseconds	
-        await new Promise(resolve => setTimeout(resolve, wait));
+        let player = accounts[1];
 
-	let stakedBalance = await lpMining.claimable.call(sessionId, player);
-	
-	assert.equal(stakedBalance > cwsBalance, true, "Claimables after some time should be increased");
+        let session = await lpMining.sessions.call(sessionId);
+        let balance = await lpMining.balances.call(sessionId, player);
+        let time1 = parseInt(new Date()/1000);
+
+        console.log(JSON.parse(JSON.stringify(session)));
+        console.log(JSON.parse(JSON.stringify(balance)));
+        console.log('Calculating all time sum of reward per token:');
+        console.log(`  previously claimed per token: ${session.claimedPerToken}`);
+        console.log(`  previous time: ${time1}`);
+        console.log(`  previous update of interest: ${session.lastInterestUpdate}`);
+        console.log(`  interest per token: ${session.interestPerToken}`)
+		let claimedPerToken = parseInt(session.claimedPerToken) +
+			(time1 - (session.lastInterestUpdate) * session.interestPerToken);
+
+    	let interest = (balance.amount * claimedPerToken - balance.claimedPerToken)/1e18;
+        console.log(`Claimed per Token: ${claimedPerToken} and interest ${interest}`)
+
+
+
+        let cwsBalance = await lpMining.claimable.call(sessionId, player);
+        console.log(`Earnable balance of the user in 1 second: ${cwsBalance}`);
+        
+        let wait = 2 * 1000; // milliseconds	
+            await new Promise(resolve => setTimeout(resolve, wait));
+
+        let stakedBalance = await lpMining.claimable.call(sessionId, player);
+        console.log(`Earnable balance of the user: ${stakedBalance/1e18}`);
+
+        assert.equal(stakedBalance > cwsBalance, true, "Claimables after some time should be increased");
     });
 
     //--------------------------------------------------
@@ -157,23 +186,23 @@ contract("Game 1: Lp Mining", async accounts => {
 
     
     it("should withdraw all Lp Tokens", async() => {
-	let player = accounts[1];
-	await lpMining.withdraw(sessionId, depositAmount, {from: player});
+        let player = accounts[1];
+        await lpMining.withdraw(sessionId, depositAmount, {from: player});
 
-	balance = await lpMining.stakedBalanceOf.call(sessionId, player);
-	assert.equal(balance, 0, "Withdrawn Lp Token amount should be 0");
-    });
+        balance = await lpMining.stakedBalanceOf.call(sessionId, player);
+        assert.equal(balance, 0, "Withdrawn Lp Token amount should be 0");
+        });
 
-    it("should fail to claim any token without LP token", async() => {
-	let player = accounts[1];
-	
-	try {
-	    await lpMining.claim(sessionId, {from: player});
-	} catch(e) {
-	    return assert.equal(e.reason, "Seascape Staking: No deposit was found");
-	}
+        it("should fail to claim any token without LP token", async() => {
+        let player = accounts[1];
+        
+        try {
+            await lpMining.claim(sessionId, {from: player});
+        } catch(e) {
+            return assert.equal(e.reason, "Seascape Staking: No deposit was found");
+        }
 
-	assert.fail();
+        assert.fail();
     });
 
 
@@ -182,29 +211,28 @@ contract("Game 1: Lp Mining", async accounts => {
     // Claiming Seascape Nft.
     // First, we need to link Smartcontracts between each other.
     it("should link nft, factory and lp mining contracts", async() => {
-	nft = await Nft.deployed();
-	factory = await Factory.deployed();
+        nft = await Nft.deployed();
+        factory = await Factory.deployed();
 
-	await nft.setFactory(factory.address);
-	await factory.addStaticUser(lpMining.address);
+        await nft.setFactory(factory.address);
+        await factory.addStaticUser(lpMining.address);
     });
 
     // Claiming Seascape Nft.
     // First, we need to link Smartcontracts between each other.
     it("should link nft, factory and lp mining contracts", async() => {
-	nft = await Nft.deployed();
-	factory = await Factory.deployed();
+        nft = await Nft.deployed();
+        factory = await Factory.deployed();
 
-	await nft.setFactory(factory.address);
-	await factory.addStaticUser(lpMining.address);
+        await nft.setFactory(factory.address);
+        await factory.addStaticUser(lpMining.address);
     });
 
     // Claiming Seascape Nft.
     it("should claim Nft", async() => {
-	let player = accounts[1];
-	
-
-	await lpMining.claimNft(sessionId, {from: player});
+        let player = accounts[1];
+        
+        await lpMining.claimNft(sessionId, {from: player});
     });
 
     it("should throw an exception if you claim Nft second time", async() => {
