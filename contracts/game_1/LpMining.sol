@@ -28,24 +28,29 @@ contract LpMining is Ownable {
 
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
-		address stakingToken;  // lp token, each session is attached to one lp token
-        uint256 totalReward;   // amount of CWS to airdrop
-		uint256 period;        // session duration in seconds
-		uint256 startTime;     // session start in unixtimestamp
-		uint256 generation;    // Seascape Nft generation
-		uint256 claimed;       // amount of distributed reward
-		uint256 amount;        // amount of lp token deposited to the session by users
-		uint256 rewardUnit;    // reward per second = totalReward/period
-    }
+		address stakingToken;  		// lp token, each session is attached to one lp token
+        uint256 totalReward;   		// amount of CWS to airdrop
+		uint256 period;        		// session duration in seconds
+		uint256 startTime;     		// session start in unixtimestamp
+		uint256 generation;    		// Seascape Nft generation
+		uint256 claimed;       		// amount of distributed reward
+		uint256 amount;        		// amount of lp token deposited to the session by users
+		uint256 rewardUnit;    		// reward per second = totalReward/period
+		uint256 interestPerToken; 	// total earned interest per token since the beginning
+									// of the session
+		uint256 claimedPerToken;
+		uint256 lastInterestUpdate;
+	}
 
     /// @notice balance of lp token that each player deposited to game session
     struct Balance {
-		uint256 amount;        // amount of deposited lp token
-		uint256 claimed;       // amount of claimed CWS reward
+		uint256 amount;        		// amount of deposited lp token
+		uint256 claimed;       		// amount of claimed CWS reward
 		uint256 claimedTime;
-		bool minted;           // Seascape Nft is claimed or not,
-							// for every session, user can claim one nft only
-    }
+		bool minted;           		// Seascape Nft is claimed or not,
+									// for every session, user can claim one nft only
+		uint256 claimedPerToken;
+	}
 
     mapping(address => uint256) public lastSessionIds;
     mapping(uint256 => Session) public sessions;
@@ -100,7 +105,8 @@ contract LpMining is Ownable {
 		//--------------------------------------------------------------------
 		uint256 _sessionId = sessionId.current();
 		uint256 _rewardUnit = _totalReward.div(_period);	
-		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit);
+		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
+			0, 0, block.timestamp);
 
 		//--------------------------------------------------------------------
         // updating rest of session related data
@@ -154,17 +160,20 @@ contract LpMining is Ownable {
 		} else {
 			// If user withdrew all LP tokens, but deposited before for the session
 			// Means, that player still can't mint more token anymore.
-				balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted);
+			balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted, 0);
 		}
 	
-		_session.amount                        = _session.amount.add(_amount);
+	    // I add amount of deposits to session.amount
+		_session.amount = _session.amount.add(_amount); // 10
+		updateInterestPerToken(_sessionId, msg.sender);
+		
 		depositTimes[_sessionId][msg.sender]    = block.timestamp;
 		
-			emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
-		}
+		emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
+	}
 
 
-		function claim(uint256 _sessionId) public returns(bool) {
+	function claim(uint256 _sessionId) public returns(bool) {
 		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
 
@@ -176,9 +185,15 @@ contract LpMining is Ownable {
 		}
 		require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
 			
+		// we avoid sub. underflow, for calulating session.claimedPerToken
+		if (isActive(_sessionId) == false) {
+			_balance.claimedTime = _session.startTime.add(_session.period);
+		} else {
+			_balance.claimedTime = block.timestamp;
+		}
 		_session.claimed     = _session.claimed.add(_interest);
 		_balance.claimed     = _balance.claimed.add(_interest);
-		_balance.claimedTime = block.timestamp;
+		
 		rewardSupply         = rewardSupply.sub(_interest);
 
 		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
@@ -186,7 +201,6 @@ contract LpMining is Ownable {
 		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
 		return true;
     }
-
 
     /// @notice Withdraws _amount of LP token
     /// of type _token out of Staking contract.
@@ -204,6 +218,7 @@ contract LpMining is Ownable {
 			require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
 		}
 
+		updateInterestPerToken(_sessionId, msg.sender);
 		_balance.amount = _balance.amount.sub(_amount);
 		_session.amount = _session.amount.sub(_amount);
 
@@ -211,7 +226,11 @@ contract LpMining is Ownable {
 		if (_interest > 0) {
 			_session.claimed     = _session.claimed.add(_interest);	
 			_balance.claimed     = _balance.claimed.add(_interest);
-			_balance.claimedTime = block.timestamp;
+			if (isActive(_sessionId) == false) {
+				_balance.claimedTime = _session.startTime.add(_session.period);
+			} else {
+				_balance.claimedTime = block.timestamp;
+			}
 			rewardSupply         = rewardSupply.sub(_interest);
 
 			require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
@@ -245,7 +264,7 @@ contract LpMining is Ownable {
 
     /// @notice Returns amount of Token staked by _owner
     function stakedBalanceOf(uint256 _sessionId, address _owner) external view returns(uint256) {
-	return balances[_sessionId][_owner].amount;
+		return balances[_sessionId][_owner].amount;
     }
 
     /// @notice Returns amount of CWS Tokens earned by _address
@@ -270,15 +289,19 @@ contract LpMining is Ownable {
 
     /// @dev check whether the session is active or not
     function isActive(uint256 _sessionId) internal view returns(bool) {
-	uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
+		uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
 
-	// _endTime will be 0 if session never started.
-	if (now > _endTime) {
-	    return false;
-	}
+		// _endTime will be 0 if session never started.
+		if (now > _endTime) {
+	    	return false;
+		}
 
-	return true;
+		return true;
     }
+
+	function getTime() public view returns (uint256) {
+		return block.timestamp;
+	}
 
     function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {	    
 		Session storage _session = sessions[_sessionId];
@@ -294,21 +317,55 @@ contract LpMining is Ownable {
 			_sessionCap = _session.startTime.add(_session.period);
 
 			// claimed after session expire, means no any claimables
-			if (_balance.claimedTime > _sessionCap) {
+			if (_balance.claimedTime >= _sessionCap) {
 				return 0;
 			}
 		}
 
-		uint256 _portion = _balance.amount.mul(scaler).div(_session.amount);
+		uint256 claimedPerToken = _session.claimedPerToken.add( 
+			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken)); // += 0.5
 		
-       	uint256 _interest = _session.rewardUnit.mul(_portion).div(scaler);
+		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
+    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedPerToken).sub(_balance.claimed);
 
-		// _balance.startTime is misleading.
-		// Because, it's updated in every deposit time or claim time.
-		uint256 _earnPeriod = _sessionCap.sub(_balance.claimedTime);
-		
-		return _interest.mul(_earnPeriod);
+		return _interest;
     }
+
+	
+	/// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
+	/// of the session to 1 token. It also updates the portion of it for the user.
+	/// @param _sessionId is a session id
+	/// @param _owner balance should be updated for this person.
+	function updateInterestPerToken(uint256 _sessionId, address _owner) internal returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][_owner];
+
+		uint256 _sessionCap = block.timestamp;
+		if (isActive(_sessionId) == false) {
+			_sessionCap = _session.startTime.add(_session.period);
+		}
+
+        // I calculate previous claimed rewards
+        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
+		_session.claimedPerToken = _session.claimedPerToken.add(
+			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken));
+
+        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
+        // I update the session.lastInterestUpdate to now
+		_session.interestPerToken = _session.rewardUnit.mul(scaler).div(_session.amount); // 0.1
+		
+		// we avoid sub. underflow, for calulating session.claimedPerToken
+		if (isActive(_sessionId)) {
+			_session.lastInterestUpdate = block.timestamp;
+		} else {
+			_session.lastInterestUpdate = _sessionCap;
+		}
+
+		// also, need to attach to alex, 
+		// that previous earning (session.claimedPerToken) is 0.
+		_balance.claimedPerToken = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
+	}
+
 }
 
 
