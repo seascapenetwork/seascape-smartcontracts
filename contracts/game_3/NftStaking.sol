@@ -39,7 +39,10 @@ contract NftStaking is Ownable, IERC721Receiver {
         uint256 startTime;     // session start in unixtimestamp
         uint256 claimed;       // amount of distributed reward
         uint256 totalSp;       // amount of seascape points of all NFTs deposited to the session by users
-    	  uint256 rewardUnit;  // reward per second = totalReward/period
+    	uint256 rewardUnit;  // reward per second = totalReward/period
+        uint256 interestPerPoint;
+        uint256 claimedPerPoint;
+        uint256 lastInterestUpdate;
     }
 
     /// @notice balance of lp token that each player deposited to game session
@@ -47,6 +50,7 @@ contract NftStaking is Ownable, IERC721Receiver {
         uint256 claimedTime;       // amount of claimed CWS reward
     	  uint256 nftId;
     	  uint256 sp;                // seascape points
+          uint256 claimedPerPoint;
     }
 
     /// @dev keep track of the current session
@@ -125,7 +129,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	//--------------------------------------------------------------------
       	uint256 _sessionId = sessionId.current();
       	uint256 _rewardUnit = _totalReward.div(_period);
-      	sessions[_sessionId] = Session(_totalReward, _period, _startTime, 0, 0, _rewardUnit);
+      	sessions[_sessionId] = Session(_totalReward, _period, _startTime, 0, 0, _rewardUnit, 0, 0, _startTime);
 
       	//--------------------------------------------------------------------
         // updating rest of session related data
@@ -156,6 +160,8 @@ contract NftStaking is Ownable, IERC721Receiver {
         require(nft.ownerOf(_nftId) == msg.sender, "Nft Staking: Nft is not owned by method caller");
         require(balances[_sessionId][msg.sender][_index].nftId == 0, "Nft Staking: slot is used already");
 
+        updateInterestPerPoint(_sessionId);
+
       	/// Verify the Seascape Points signature.
       	/// @dev message is generated as owner + amount + last time stamp + quality
       	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
@@ -168,11 +174,16 @@ contract NftStaking is Ownable, IERC721Receiver {
       	Session storage _session  = sessions[_sessionId];
       	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
 
-        _balances[_index] = Balance(block.timestamp, _nftId, _sp);
-
       	_session.totalSp = _session.totalSp.add(_sp);
+
+        // update the interestPerPoint variable of the session
+        updateInterestPerPoint(_sessionId);
+
       	depositTimes[_sessionId][msg.sender] = block.timestamp;
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].add(1);
+
+        _balances[_index] = Balance(block.timestamp, _nftId, _sp, 0);
+		_balance.claimedPerToken = _session.claimedPerPoint.mul(_balance.sp).div(scaler); // 0
 
         emit Deposited(msg.sender, _sessionId, _nftId, _index + 1);
     }
@@ -182,6 +193,8 @@ contract NftStaking is Ownable, IERC721Receiver {
     function claim(uint256 _sessionId, uint256 _index) external {
         require(_index <= 2, "Nft Staking: slot index is invalid");
         require(balances[_sessionId][msg.sender][_index].nftId > 0, "Nft Staking: Slot at index is empty");
+
+        updateInterestPerPoint(_sessionId);
 
       	Balance storage _balance = balances[_sessionId][msg.sender][_index];
       	uint256 _nftId = _balance.nftId;
@@ -199,6 +212,8 @@ contract NftStaking is Ownable, IERC721Receiver {
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].sub(1);
 
       	delete balances[_sessionId][msg.sender][_index];
+
+        updateInterestPerPoint(_sessionId);
 
       	emit Claimed(msg.sender, _sessionId, _claimed, _nftId);
     }
@@ -233,6 +248,8 @@ contract NftStaking is Ownable, IERC721Receiver {
       	for (uint _index=0; _index < slots[_sessionId][msg.sender]; _index++) {
             uint256 _claimed = transfer(_sessionId, _index);
 
+            updateInterestPerPoint(_sessionId);
+
       	    Balance storage _balance = balances[_sessionId][msg.sender][_index];
 
       	    uint256 _nftId = _balance.nftId;
@@ -243,6 +260,8 @@ contract NftStaking is Ownable, IERC721Receiver {
       	    delete balances[_sessionId][msg.sender][_index];
 	    
       	    sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_sp);
+
+            updateInterestPerPoint(_sessionId);
 
       	    emit Claimed(msg.sender, _sessionId, _claimed, _nftId);
       	}
@@ -347,15 +366,11 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        _sessionCap = _session.startTime.add(_session.period);
 	    }
 
-	    uint256 _portion = _balance.sp.mul(scaler).div(_session.totalSp);
+        uint256 claimedPerPoint = _session.claimedPerPoint;
 
-       	uint256 _interest = _session.rewardUnit.mul(_portion).div(scaler);
+        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(scaler).sub(_balance.claimedPerPoint);
 
-	    /// @notice  _balance.startTime is misleading.
-	    /// Because, it's updated in every deposit time or claim time.
-	    uint256 _earnPeriod = _sessionCap.sub(_balance.claimedTime);
-
-	    return _interest.mul(_earnPeriod);
+	    return _interest;
     }
 
     /// @notice Returns true if session is active
@@ -371,4 +386,33 @@ contract NftStaking is Ownable, IERC721Receiver {
 	    return true;
     }
 
+    	
+    /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
+	/// of the session to 1 token. It also updates the portion of it for the user.
+	/// @param _sessionId is a session id
+	/// @param _owner balance should be updated for this person.
+	function updateInterestPerPoint(uint256 _sessionId) internal returns(bool) {
+		Session storage _session = sessions[_sessionId];
+
+		uint256 _sessionCap = block.timestamp;
+		if (isActive(_sessionId) == false) {
+			_sessionCap = _session.startTime.add(_session.period);
+		}
+
+        // I calculate previous claimed rewards
+        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
+		_session.claimedPerToken = _session.claimedPerToken.add(
+			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
+
+        // I record that interestPerPoint is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
+        // I update the session.lastInterestUpdate to now
+		if (_session.amount == 0) {
+			_session.interestPerPoint = 0;
+		} else {
+			_session.interestPerPoint = _session.rewardUnit.mul(scaler).div(_session.totalSp); // 0.1
+		}
+
+		// we avoid sub. underflow, for calulating session.claimedPerToken
+		_session.lastInterestUpdate = _sessionCap;
+	}
 }
