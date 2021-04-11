@@ -106,7 +106,7 @@ contract LpMining is Ownable {
 		uint256 _sessionId = sessionId.current();
 		uint256 _rewardUnit = _totalReward.div(_period);	
 		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
-			0, 0, block.timestamp);
+			0, 0, _startTime);
 
 		//--------------------------------------------------------------------
         // updating rest of session related data
@@ -138,6 +138,8 @@ contract LpMining is Ownable {
 		require(_sessionId > 0,           "Seascape Staking: Session id should be greater than 0!");
 		require(isActive(_sessionId), "Seascape Staking: Session is not active");
 
+		updateInterestPerToken(_sessionId);
+
 		IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
 		
 		require(_token.balanceOf(msg.sender) >= _amount,                         "Seascape Staking: Not enough LP tokens to deposit");
@@ -147,28 +149,25 @@ contract LpMining is Ownable {
 		Balance storage _balance  = balances[_sessionId][msg.sender];
 		uint _depositTime = depositTimes[_sessionId][msg.sender];
 
-		bool _minted             = false;
-		if (_depositTime > _session.startTime) {
-			_minted = _balance.minted;
-		}
-			
+		// claim tokens if any
 		if (_balance.amount > 0) {
-			claim(_sessionId);
-			_balance.amount = _amount.add(_balance.amount);
-			_balance.minted = _minted;
-
-		} else {
-			// If user withdrew all LP tokens, but deposited before for the session
-			// Means, that player still can't mint more token anymore.
-			balances[_sessionId][msg.sender] = Balance(_amount, 0, block.timestamp, _minted, 0);
+			_claim(_sessionId);
 		}
-	
-	    // I add amount of deposits to session.amount
+
+		// I add amount of deposits to session.amount
 		_session.amount = _session.amount.add(_amount); // 10
-		updateInterestPerToken(_sessionId, msg.sender);
+
+		// interest per token is updated. maybe need to withdraw out?
+		updateInterestPerToken(_sessionId);
 		
+		_balance.amount = _amount.add(_balance.amount);
+		_balance.claimedTime = block.timestamp;
+		//_balance.claimedPerToken = _session.claimedPerToken.mul(_amount);
+
 		depositTimes[_sessionId][msg.sender]    = block.timestamp;
-		
+
+		updateBalanceInterestPerToken(_sessionId, msg.sender);
+
 		emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
 	}
 
@@ -179,26 +178,12 @@ contract LpMining is Ownable {
 
 		require(_balance.amount > 0, "Seascape Staking: No deposit was found");
 		
-		uint256 _interest = calculateInterest(_sessionId, msg.sender);
-		if (_interest == 0) {
-			return false;
-		}
-		require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
-			
-		// we avoid sub. underflow, for calulating session.claimedPerToken
-		if (isActive(_sessionId) == false) {
-			_balance.claimedTime = _session.startTime.add(_session.period);
-		} else {
-			_balance.claimedTime = block.timestamp;
-		}
-		_session.claimed     = _session.claimed.add(_interest);
-		_balance.claimed     = _balance.claimed.add(_interest);
-		
-		rewardSupply         = rewardSupply.sub(_interest);
+		updateInterestPerToken(_sessionId);
 
-		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
-			
-		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
+		_claim(_sessionId);
+
+		updateBalanceInterestPerToken(_sessionId, msg.sender);
+
 		return true;
     }
 
@@ -210,6 +195,8 @@ contract LpMining is Ownable {
 
 		require(_balance.amount >= _amount, "Seascape Staking: Exceeds the balance that user has");
 
+		updateInterestPerToken(_sessionId);
+
 		IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
 			
 		require(_token.balanceOf(address(this)) >= _amount, "Seascape Staking: Not enough Lp token in player balance");
@@ -218,7 +205,6 @@ contract LpMining is Ownable {
 			require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
 		}
 
-		updateInterestPerToken(_sessionId, msg.sender);
 		_balance.amount = _balance.amount.sub(_amount);
 		_session.amount = _session.amount.sub(_amount);
 
@@ -238,6 +224,9 @@ contract LpMining is Ownable {
 		}
 		require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
 
+		// change the session.interestPerToken
+		updateInterestPerToken(_sessionId);
+		updateBalanceInterestPerToken(_sessionId, msg.sender);
 
 		emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
     }
@@ -322,11 +311,10 @@ contract LpMining is Ownable {
 			}
 		}
 
-		uint256 claimedPerToken = _session.claimedPerToken.add( 
-			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken)); // += 0.5
+		uint256 claimedPerToken = _session.claimedPerToken; // += 0.5
 		
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
-    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedPerToken).sub(_balance.claimed);
+    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedPerToken);
 
 		return _interest;
     }
@@ -336,9 +324,8 @@ contract LpMining is Ownable {
 	/// of the session to 1 token. It also updates the portion of it for the user.
 	/// @param _sessionId is a session id
 	/// @param _owner balance should be updated for this person.
-	function updateInterestPerToken(uint256 _sessionId, address _owner) internal returns(bool) {
+	function updateInterestPerToken(uint256 _sessionId) internal returns(bool) {
 		Session storage _session = sessions[_sessionId];
-		Balance storage _balance = balances[_sessionId][_owner];
 
 		uint256 _sessionCap = block.timestamp;
 		if (isActive(_sessionId) == false) {
@@ -352,19 +339,54 @@ contract LpMining is Ownable {
 
         // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
         // I update the session.lastInterestUpdate to now
-		_session.interestPerToken = _session.rewardUnit.mul(scaler).div(_session.amount); // 0.1
+		if (_session.amount == 0) {
+			_session.interestPerToken = 0;
+		} else {
+			_session.interestPerToken = _session.rewardUnit.mul(scaler).div(_session.amount); // 0.1
+		}
 		
 		// we avoid sub. underflow, for calulating session.claimedPerToken
-		if (isActive(_sessionId)) {
-			_session.lastInterestUpdate = block.timestamp;
-		} else {
-			_session.lastInterestUpdate = _sessionCap;
-		}
+		_session.lastInterestUpdate = _sessionCap;
+}
+
+	function updateBalanceInterestPerToken(uint256 _sessionId, address _owner) internal returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][_owner];
 
 		// also, need to attach to alex, 
 		// that previous earning (session.claimedPerToken) is 0.
 		_balance.claimedPerToken = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
+
 	}
+
+	function _claim(uint256 _sessionId) internal returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][msg.sender];
+
+		require(_balance.amount > 0, "Seascape Staking: No deposit was found");
+		
+		uint256 _interest = calculateInterest(_sessionId, msg.sender);
+		if (_interest == 0) {
+			return false;
+		}
+		require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+			
+		// we avoid sub. underflow, for calulating session.claimedPerToken
+		if (isActive(_sessionId) == false) {
+			_balance.claimedTime = _session.startTime.add(_session.period);
+		} else {
+			_balance.claimedTime = block.timestamp;
+		}
+		_session.claimed     = _session.claimed.add(_interest);
+		_balance.claimed     = _balance.claimed.add(_interest);
+		
+		rewardSupply         = rewardSupply.sub(_interest);
+
+		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+			
+		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
+		return true;
+    }
 
 }
 
