@@ -24,7 +24,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Crowns:                        [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
  * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
  * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
- * Profit Circus ( First game):   [0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44](https://rinkeby.etherscan.io/address/0x848A660cD3A2b9dbfFf8AE70c8b59bAAd70F0a44)
+ * Profit Circus ( First game):   [0x8285da17bf2a18369cc2a15e4f4db68b9e7c0622](https://rinkeby.etherscan.io/address/0x8285da17bf2a18369cc2a15e4f4db68b9e7c0622)
  * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
  * Nft Staking (Third game):      [0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe](https://rinkeby.etherscan.io/address/0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe)
  
