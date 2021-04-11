@@ -344,10 +344,10 @@ contract LpMining is Ownable {
 		} else {
 			_session.interestPerToken = _session.rewardUnit.mul(scaler).div(_session.amount); // 0.1
 		}
-		
+
 		// we avoid sub. underflow, for calulating session.claimedPerToken
 		_session.lastInterestUpdate = _sessionCap;
-}
+	}
 
 	function updateBalanceInterestPerToken(uint256 _sessionId, address _owner) internal returns(bool) {
 		Session storage _session = sessions[_sessionId];
@@ -356,7 +356,6 @@ contract LpMining is Ownable {
 		// also, need to attach to alex, 
 		// that previous earning (session.claimedPerToken) is 0.
 		_balance.claimedPerToken = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
-
 	}
 
 	function _claim(uint256 _sessionId) internal returns(bool) {
