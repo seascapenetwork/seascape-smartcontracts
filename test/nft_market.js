@@ -9,21 +9,20 @@ contract("Contract: Nft Market", async accounts => {
 
     //input for buy
     let index = 0;
-    let currency //= crowns.address;
+    let currency; //= crowns.address;
 
     //struct SalesObject
     let id = 0;
-    let tokenId; // ?
-    let startTime = 0;
-    let durationTime; // ?
+    let tokenId = 1; // aka nftId
+    let startTime;  //declared inside tests
+    let durationTime = 604800 //nft will be available for 7 days
     let maxPrice = web3.utils.toWei("10", "ether");
     let minPrice = web3.utils.toWei("5", "ether");
     let finalPrice = web3.utils.toWei("10", "ether");
     let status = 0;
     let seller = null;
     let buyer = null;
-    //already declared
-    //let nft = null;
+    let nft;  //set to seascape nft
 
     //used by buy
     let _isStartUserSales = true;
@@ -37,7 +36,7 @@ contract("Contract: Nft Market", async accounts => {
     let depositAmount = web3.utils.toWei("5", "ether");
 
     // following vars used in multiple test units:
-    let nft = null;
+    nft = null;
     let factory = null;
     let nftMarket = null;
     let crowns = null;
@@ -53,6 +52,8 @@ contract("Contract: Nft Market", async accounts => {
 	     nftMarket = await NftMarket.deployed();
 	     nft     = await Nft.deployed();
        crowns = await Crowns.deployed();
+
+       currency = crowns;
 
 	     gameOwner = accounts[0];
        player = accounts[1];
@@ -73,6 +74,48 @@ contract("Contract: Nft Market", async accounts => {
     	assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
     });
 
-    
+
+
+    it("should mint 5 nft tokens", async () => {
+      //check nft user balance before
+      let balanceBefore = await nft.balanceOf(player);
+
+      //mint.js
+      web3.eth.getAccounts(function(err,res) {accounts = res;});
+      let granted = await factory.isGenerator(accounts[0]);
+      if (!granted) {
+          let res = await factory.addGenerator(accounts[0]);
+      } else {
+        //replace with throw errror
+         console.log(`Account ${accounts[0]} was already granted a permission`);
+      }
+      let owner = player;
+      let generation = 0;
+      let quality = 1;
+      //mint 2 tokens of each quality
+      for(var i = 0; i < 5; i++){
+        await factory.mintQuality(owner, generation, quality + i);
+      }
+
+      //check nft user balance after
+      let balanceAfter = await nft.balanceOf(player);
+      assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+5, "5 Nft tokens should be minted");
+    });
+
+    it("should put nft for sale", async() => {
+
+      startTime = Math.floor(Date.now()/1000) + 5;
+
+      //ERC721 approve and deposit token to contract
+      await nft.approve(nftMarket.address, tokenId);
+      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, durationTime, nft, currency, {from: player});
+
+      //check nft user balance after
+      let balanceAfter = await nft.balanceOf(player);
+      assert.equal(4, "Player should have 4 Nft tokens");
+    });
+
+
+
 
 });
