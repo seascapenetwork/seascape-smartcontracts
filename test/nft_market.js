@@ -1,10 +1,10 @@
-let NftMarket = artifacts.require("NftMarket");
-let Crowns = artifacts.require("CrownsToken");
-let Nft = artifacts.require("SeascapeNft");
-let Factory = artifacts.require("NftFactory");
+let NftMarket = artifacts.require("./NftMarket.sol");
+let Crowns = artifacts.require("./CrownsToken.sol");
+let Nft = artifacts.require("./SeascapeNft.sol");
+let Factory = artifacts.require("./NftFactory.sol");
 
 
-contract("Contract: Nft Market", async accounts => {
+contract("Nft Market", async accounts => {
 
 
     //input for buy
@@ -15,14 +15,13 @@ contract("Contract: Nft Market", async accounts => {
     let id = 0;
     let tokenId = 1; // aka nftId
     let startTime;  //declared inside tests
-    let durationTime = 604800 //nft will be available for 7 days
-    let maxPrice = web3.utils.toWei("10", "ether");
-    let minPrice = web3.utils.toWei("5", "ether");
-    let finalPrice = web3.utils.toWei("10", "ether");
+    let durationTime = 604800; //nft will be available for 7 days
+    let maxPrice = web3.utils.toWei("2", "ether");
+    let minPrice = web3.utils.toWei("1", "ether");
+    let finalPrice = web3.utils.toWei("2", "ether");
     let status = 0;
     let seller = null;
     let buyer = null;
-    let nft;  //set to seascape nft
 
     //used by buy
     let _isStartUserSales = true;
@@ -36,7 +35,7 @@ contract("Contract: Nft Market", async accounts => {
     let depositAmount = web3.utils.toWei("5", "ether");
 
     // following vars used in multiple test units:
-    nft = null;
+    let nft = null;
     let factory = null;
     let nftMarket = null;
     let crowns = null;
@@ -53,7 +52,6 @@ contract("Contract: Nft Market", async accounts => {
 	     nft     = await Nft.deployed();
        crowns = await Crowns.deployed();
 
-       currency = crowns;
 
 	     gameOwner = accounts[0];
        player = accounts[1];
@@ -89,12 +87,12 @@ contract("Contract: Nft Market", async accounts => {
         //replace with throw errror
          console.log(`Account ${accounts[0]} was already granted a permission`);
       }
-      let owner = player;
+
       let generation = 0;
       let quality = 1;
       //mint 2 tokens of each quality
       for(var i = 0; i < 5; i++){
-        await factory.mintQuality(owner, generation, quality + i);
+        await factory.mintQuality(player, generation, quality + i);
       }
 
       //check nft user balance after
@@ -104,17 +102,63 @@ contract("Contract: Nft Market", async accounts => {
 
     it("should put nft for sale", async() => {
 
-      startTime = Math.floor(Date.now()/1000) + 5;
+      //check nft user balance before
+      let balanceBefore = await nft.balanceOf(player);
+
+      currency = crowns;
+      startTime = Math.floor(Date.now()/1000) + 2;
+
 
       //ERC721 approve and deposit token to contract
-      await nft.approve(nftMarket.address, tokenId);
-      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, durationTime, nft, currency, {from: player});
+      await nft.setApprovalForAll(nftMarket.address, true, {from: player});
+
+      await nftMarket.addSeller(player);
+
+      await nftMarket.setIsStartUserSales(true);
+
+      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, durationTime, currency.address, {from: player});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(player);
-      assert.equal(4, "Player should have 4 Nft tokens");
+      assert.equal(parseInt(balanceBefore), parseInt(balanceAfter)+1, "5 Nft tokens should be minted");
     });
 
+    it("should approve nft market to spend cws of player", async () => {
+
+       let crownsDeposit = web3.utils.toWei("5", "ether");
+
+	     await crowns.approve(nftMarket.address, crownsDeposit, {from: accounts[2]});
+
+	     let allowance = await crowns.allowance(accounts[2], nftMarket.address);
+	     assert.equal(parseInt(allowance), parseInt(depositAmount), "expected deposit sum to be allowed for nft rush");
+    });
+
+
+
+    it("should buy nft", async() => {
+
+      //check nft user balance before
+      let balanceBefore = await nft.balanceOf(accounts[2]);
+      console.log("balance before deposit: " ,parseInt(balanceBefore));
+
+      currency = crowns;
+
+      //get some Crowns
+      //await crowns.transfer(accounts[2], crownsDeposit, {from: gameOwner});
+
+      let assets = await crowns.balanceOf(accounts[2]);
+      console.log("assets: ", parseInt(assets));
+
+
+      //approve to spend the crowns
+      //await crowns.approve(nftMarket.address, crownsDeposit, {from: accounts[2]});
+
+      await nftMarket.buy(tokenId, currency.address, {from: accounts[2]});
+
+      //check nft user balance after
+      let balanceAfter = await nft.balanceOf(accounts[2]);
+      assert.equal(parseInt(balanceBefore)+1, parseInt(balanceAfter), "5 Nft tokens should be minted");
+    });
 
 
 
