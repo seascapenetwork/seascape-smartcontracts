@@ -123,6 +123,16 @@ contract LpMining is Ownable {
 		emit FactorySet(_address);	    
     }
 
+	function payDebt(uint256 _sessionId, address _address) external onlyOwner {
+		Balance storage _balance = balances[_sessionId][_address];
+		if (_balance.unpaidReward > 0) {
+			uint256 crownsBalance = CWS.balanceOf(address(this));
+			require(crownsBalance >= _balance.unpaidReward, "Seascape Staking: Not enough Crowns to transfer!");
+
+			_safeTransfer(_address, _balance.unpaidReward);
+			_balance.unpaidReward = 0;
+		}
+	}
 
     //--------------------------------------------------
     // Only game users
@@ -194,8 +204,10 @@ contract LpMining is Ownable {
 			
 		require(_token.balanceOf(address(this)) >= _amount, "Seascape Staking: Not enough Lp token in player balance");
 		uint256 _interest = calculateInterest(_sessionId, msg.sender);
-		if (_interest > 0) {
-			require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
+
+		uint256 _contractBalance = CWS.balanceOf(address(this));
+		if (_interest > 0 && _contractBalance < _interest) {
+			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
 		}
 
 		_balance.amount = _balance.amount.sub(_amount);
@@ -211,7 +223,7 @@ contract LpMining is Ownable {
 				_balance.claimedTime = block.timestamp;
 			}
 
-			require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+			_safeTransfer(msg.sender, _interest);
 			emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
 		}
 		require(_token.transfer(msg.sender, _amount), "Seascape Staking: Failed to transfer token from contract to user");
@@ -301,7 +313,7 @@ contract LpMining is Ownable {
 		uint256 claimedPerToken = _session.claimedPerToken; // += 0.5
 		
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
-    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedPerToken);
+    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedReward);
 
 		return _interest;
     }
@@ -310,7 +322,6 @@ contract LpMining is Ownable {
 	/// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
 	/// @param _sessionId is a session id
-	/// @param _owner balance should be updated for this person.
 	function updateInterestPerToken(uint256 _sessionId) internal returns(bool) {
 		Session storage _session = sessions[_sessionId];
 
@@ -342,7 +353,7 @@ contract LpMining is Ownable {
 
 		// also, need to attach to alex, 
 		// that previous earning (session.claimedPerToken) is 0.
-		_balance.claimedPerToken = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
+		_balance.claimedReward = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
 	}
 
 	function _claim(uint256 _sessionId) internal returns(bool) {
@@ -355,8 +366,11 @@ contract LpMining is Ownable {
 		if (_interest == 0) {
 			return false;
 		}
-		require(CWS.balanceOf(address(this)) >= _interest, "Seascape Staking: Not enough CWS in Game Contract balance");
-			
+		uint256 _contractBalance = CWS.balanceOf(address(this));
+		if (_interest > 0 && _contractBalance < _interest) {
+			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
+		}
+
 		// we avoid sub. underflow, for calulating session.claimedPerToken
 		if (isActive(_sessionId) == false) {
 			_balance.claimedTime = _session.startTime.add(_session.period);
@@ -366,13 +380,20 @@ contract LpMining is Ownable {
 		_session.claimed     = _session.claimed.add(_interest);
 		_balance.claimed     = _balance.claimed.add(_interest);
 		
-
-		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
+		_safeTransfer(msg.sender, _interest);
 			
 		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
 		return true;
     }
 
+	function _safeTransfer(address _to, uint256 _amount) internal {
+		uint256 _crownsBalance = CWS.balanceOf(address(this));
+        if (_amount > _crownsBalance) {
+            CWS.transfer(_to, _crownsBalance);
+        } else {
+            CWS.transfer(_to, _amount);
+        }
+	}
 }
 
 
