@@ -29,9 +29,6 @@ contract NftStaking is Ownable, IERC721Receiver {
 
     Counters.Counter private sessionId;
 
-    /// @dev Total amount of Crowns stored for all sessions
-    uint256 rewardSupply = 0;
-
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
         uint256 totalReward;   // amount of CWS to give as a reward during the session.
@@ -135,7 +132,6 @@ contract NftStaking is Ownable, IERC721Receiver {
         // updating rest of session related data
       	//--------------------------------------------------------------------
       	sessionId.increment();
-      	rewardSupply = newSupply;
       	lastSessionId = _sessionId;
 
       	emit SessionStarted(_sessionId, _totalReward, _startTime, _startTime + _period);
@@ -349,7 +345,6 @@ contract NftStaking is Ownable, IERC721Receiver {
             "Seascape Staking: Failed to transfer reward CWS token");
 
         _session.claimed = _session.claimed.add(_interest);
-        rewardSupply = rewardSupply.sub(_interest);
 
         return _interest;
     }
@@ -390,7 +385,6 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
 	/// @param _sessionId is a session id
-	/// @param _owner balance should be updated for this person.
 	function updateInterestPerPoint(uint256 _sessionId) internal returns(bool) {
 		Session storage _session = sessions[_sessionId];
 
