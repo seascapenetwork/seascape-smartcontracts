@@ -310,7 +310,8 @@ contract LpMining is Ownable {
 			}
 		}
 
-		uint256 claimedPerToken = _session.claimedPerToken; // += 0.5
+		uint256 claimedPerToken = _session.claimedPerToken.add(
+			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken));
 		
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
     	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedReward);
