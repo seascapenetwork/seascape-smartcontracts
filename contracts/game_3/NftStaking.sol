@@ -98,8 +98,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     function startSession(
         uint256 _totalReward,
         uint256 _period,
-        uint256 _startTime,
-        uint256 _generation
+        uint256 _startTime
     )
         external
         onlyOwner
