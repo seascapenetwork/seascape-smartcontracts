@@ -50,6 +50,8 @@ contract NftStaking is Ownable, IERC721Receiver {
           uint256 claimedPerPoint;
     }
 
+    mapping(address => uint256) debts;
+
     /// @dev keep track of the current session
     uint256 public lastSessionId;
     mapping(uint256 => Session) public sessions;
@@ -144,6 +146,17 @@ contract NftStaking is Ownable, IERC721Receiver {
 
         emit NftFactorySet(_address);
     }
+
+    function payDebt(address _address) external onlyOwner {
+		uint256 _debt = debts[_address];
+        if (_debt > 0) {
+			uint256 crownsBalance = crowns.balanceOf(address(this));
+			require(crownsBalance >= _debt, "Nft Staking: Not enough Crowns to transfer!");
+
+			crowns.transfer(address(this), _debt);
+			debts[_address] = 0;
+		}
+	}
 
     /// @notice deposits nft to stake along with it's SP
     function deposit(uint256 _sessionId, uint8 _index, uint256 _nftId, uint256 _sp, uint8 _v, bytes32 _r, bytes32 _s) external {
@@ -342,7 +355,8 @@ contract NftStaking is Ownable, IERC721Receiver {
         uint256 _interest = calculateInterest(_sessionId, msg.sender, _index);
 
         uint256 _crownsBalance = crowns.balanceOf(address(this));
-        if (_amount > _crownsBalance) {
+        if (_interest > 0 && _interest > _crownsBalance) {
+            debts[msg.sender] = _interest.sub(_crownsBalance).add(debts[msg.sender]);
             crowns.transfer(msg.sender, _crownsBalance);
         } else {
             crowns.transfer(msg.sender, _interest);
