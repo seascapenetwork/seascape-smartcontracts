@@ -23,9 +23,6 @@ contract LpMining is Ownable {
 
     Counters.Counter private sessionId;
 
-    /// @dev Total amount of Crowns stored for all sessions
-    uint256 rewardSupply = 0;
-
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
 		address stakingToken;  		// lp token, each session is attached to one lp token
@@ -97,8 +94,7 @@ contract LpMining is Ownable {
 		}
 
 		// required CWS balance of this contract
-		uint256 newSupply = rewardSupply.add(_totalReward);
-		require(CWS.balanceOf(address(this)) >= newSupply, "Seascape Staking: Not enough balance of Crowns for reward");
+		require(CWS.balanceOf(address(this)) >= _totalReward, "Seascape Staking: Not enough balance of Crowns for reward");
 
 		//--------------------------------------------------------------------
 		// creating the session
@@ -112,7 +108,6 @@ contract LpMining is Ownable {
         // updating rest of session related data
 		//--------------------------------------------------------------------
 		sessionId.increment();
-		rewardSupply = newSupply;
 		lastSessionIds[_lpToken] = _sessionId;
 
 		emit SessionStarted(_lpToken, _sessionId, _totalReward, _startTime, _startTime + _period, _generation);
@@ -379,7 +374,6 @@ contract LpMining is Ownable {
 		_session.claimed     = _session.claimed.add(_interest);
 		_balance.claimed     = _balance.claimed.add(_interest);
 		
-		rewardSupply         = rewardSupply.sub(_interest);
 
 		require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
 			
