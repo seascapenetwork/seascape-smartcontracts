@@ -46,7 +46,8 @@ contract LpMining is Ownable {
 		uint256 claimedTime;
 		bool minted;           		// Seascape Nft is claimed or not,
 									// for every session, user can claim one nft only
-		uint256 claimedPerToken;
+		uint256 claimedReward;
+		uint256 unpaidReward;       // Amount of CWS that contract should pay to user
 	}
 
     mapping(address => uint256) public lastSessionIds;
@@ -142,7 +143,6 @@ contract LpMining is Ownable {
 
 		Session storage _session  = sessions[_sessionId];
 		Balance storage _balance  = balances[_sessionId][msg.sender];
-		uint _depositTime = depositTimes[_sessionId][msg.sender];
 
 		// claim tokens if any
 		if (_balance.amount > 0) {
@@ -157,7 +157,6 @@ contract LpMining is Ownable {
 		
 		_balance.amount = _amount.add(_balance.amount);
 		_balance.claimedTime = block.timestamp;
-		//_balance.claimedPerToken = _session.claimedPerToken.mul(_amount);
 
 		depositTimes[_sessionId][msg.sender]    = block.timestamp;
 
@@ -168,7 +167,6 @@ contract LpMining is Ownable {
 
 
 	function claim(uint256 _sessionId) public returns(bool) {
-		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
 
 		require(_balance.amount > 0, "Seascape Staking: No deposit was found");
@@ -212,7 +210,6 @@ contract LpMining is Ownable {
 			} else {
 				_balance.claimedTime = block.timestamp;
 			}
-			rewardSupply         = rewardSupply.sub(_interest);
 
 			require(CWS.transfer(msg.sender, _interest), "Seascape Staking: Failed to transfer reward CWS token");
 			emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
@@ -240,7 +237,6 @@ contract LpMining is Ownable {
 		
 		balances[_sessionId][msg.sender].minted = true;
     }
-
 
     //--------------------------------------------------
     // Public methods
@@ -282,10 +278,6 @@ contract LpMining is Ownable {
 
 		return true;
     }
-
-	function getTime() public view returns (uint256) {
-		return block.timestamp;
-	}
 
     function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {	    
 		Session storage _session = sessions[_sessionId];
