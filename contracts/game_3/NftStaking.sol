@@ -116,7 +116,6 @@ contract NftStaking is Ownable, IERC721Receiver {
       	}
 
       	/// @dev required CWS balance of this contract
-      	uint256 newSupply = rewardSupply.add(_totalReward);
       	require(crowns.balanceOf(address(this)) >= newSupply,
             "Seascape Staking: Not enough balance of Crowns for reward");
 
