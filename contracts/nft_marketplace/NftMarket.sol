@@ -9,7 +9,11 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
+
+
+
 
 
 contract NftMarket is IERC721Receiver,  ReentrancyGuard {
@@ -18,7 +22,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
     using SafeMath for uint256;
 
     // native token
-    CrownsToken public crowns;
+    IERC20 public crowns;
+    SeascapeNft private nft;
 
     // --- Data ---
     bool private initialized; // Flag of initialize data
@@ -35,7 +40,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint8 status;
         address payable seller;
         address payable buyer;
-        IERC721 nft;
     }
 
     uint256 public _salesAmount;
@@ -65,7 +69,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint256 indexed id,
         uint256 tokenId,
         address seller,
-        address nft,
         address buyer,
         uint256 startTime,
         uint256 durationTime,
@@ -96,9 +99,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint256 deflationBaseRate
     );
 
-    constructor(address _crowns) public {
-        crowns = CrownsToken(_crowns);
-        _governance = tx.origin;
+    constructor(address _crowns, address _nft) public {
+      crowns = IERC20(_crowns);
+      nft = SeascapeNft(_nft);
+      _governance = tx.origin;
     }
 
     receive() external payable { }
@@ -274,7 +278,7 @@ function cancelSales(uint index) external checkindex(index) onlySalesOwner(index
     require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
     SalesObject storage obj = _salesObjects[index];
     obj.status = 2;
-    obj.nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
+    nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
 
     emit eveCancelSales(index, obj.tokenId);
 }
@@ -284,20 +288,18 @@ function startSales(uint256 tokenId,
                     uint256 minPrice,
                     uint256 startTime,
                     uint256 durationTime,
-                    address nft,
                     address currency)
     external
     nonReentrant
-    validAddress(nft)
     returns(uint)
 {
     require(tokenId != 0, "invalid token");
     require(startTime.add(durationTime) > now, "invalid start time");
     require(durationTime >= _minDurationTime, "invalid duration");
     require(maxPrice >= minPrice, "invalid price");
-    require(_isStartUserSales || _seller[msg.sender] == true || _supportNft[nft] == true, "cannot sales");
+    require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
 
-    IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
+    nft.safeTransferFrom(msg.sender, address(this), tokenId);
 
     _salesAmount++;
     SalesObject memory obj;
@@ -305,7 +307,6 @@ function startSales(uint256 tokenId,
     obj.id = _salesAmount;
     obj.tokenId = tokenId;
     obj.seller = msg.sender;
-    obj.nft = IERC721(nft);
     obj.buyer = address(0x0);
     obj.startTime = startTime;
     obj.durationTime = durationTime;
@@ -320,7 +321,6 @@ function startSales(uint256 tokenId,
         SalesObject memory zeroObj;
         zeroObj.tokenId = 0;
         zeroObj.seller = address(0x0);
-        zeroObj.nft = IERC721(0x0);
         zeroObj.buyer = address(0x0);
         zeroObj.startTime = 0;
         zeroObj.durationTime = 0;
@@ -336,7 +336,7 @@ function startSales(uint256 tokenId,
 
     uint256 tmpMaxPrice = maxPrice;
     uint256 tmpMinPrice = minPrice;
-    emit eveNewSales(obj.id, tokenId, msg.sender, nft, address(0x0), startTime, durationTime, tmpMaxPrice, tmpMinPrice, 0);
+    emit eveNewSales(obj.id, tokenId, msg.sender, address(0x0), startTime, durationTime, tmpMaxPrice, tmpMinPrice, 0);
     return _salesAmount;
 }
 
@@ -361,23 +361,57 @@ function buy(uint index, address currency_)
     checkTime(index)
     payable
 {
-    SalesObject storage obj = _salesObjects[index];
-    require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
-    address currencyAddr = _saleOnCurrency[obj.id];
-    uint256 price = this.getSalesPrice(index);
-    uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
-    uint256 purchase = price.sub(tipsFee);
-    if (address(currencyAddr) == currency_){
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+  SalesObject storage obj = _salesObjects[index];
+  require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
 
-    }
-    else{
-        // show error unsupported token
-        require(false, "not support token");
-    }
+  address currencyAddr = _saleOnCurrency[obj.id];
+  uint256 price = this.getSalesPrice(index);
+  uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
+  uint256 purchase = price.sub(tipsFee);
 
-    obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
+  if (address(currencyAddr) == currency_){
+      if (currencyAddr == address(0x0)){
+          require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
+          uint256 returnBack = msg.value.sub(price);
+          if(returnBack > 0) {
+              msg.sender.transfer(returnBack);
+          }
+          if(tipsFee > 0) {
+              _tipsFeeWallet.transfer(tipsFee);
+          }
+          obj.seller.transfer(purchase);
+      }else{
+          SafeERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+          SafeERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+      }
+  }
+
+  /* else{
+      if (currencyAddr == address(0x0)){
+          uint256 ethAmount = tokenToEth(currency_, price);
+          // uint256 ethAmount = 0;
+          // SupportBuyCurrency memory supportBuyCurrency = _supportBuyCurrency[currency_];
+          // if (supportBuyCurrency.isDeflation) {
+          //     ethAmount = exactTokenToEth(currency_, price);
+          // } else {
+          //     ethAmount = tokenToExactEth(currency_, price);
+          // }
+          require (ethAmount >= price, "umm.....  your price is too low");
+          uint256 returnBack = ethAmount.sub(price).add(msg.value);
+          if(returnBack > 0) {
+              msg.sender.transfer(returnBack);
+          }
+          if(tipsFee > 0) {
+              _tipsFeeWallet.transfer(tipsFee);
+          }
+          obj.seller.transfer(purchase);
+      }else{
+          // transfer
+          require(false, "not support token");
+      }
+  } */
+
+    nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
 
     obj.buyer = msg.sender;
     obj.finalPrice = price;

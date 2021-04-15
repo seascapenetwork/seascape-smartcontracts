@@ -1,9 +1,7 @@
 let NftRush = artifacts.require("NftRush");
-let LpToken = artifacts.require("LP_Token");
 let Crowns = artifacts.require("CrownsToken");
-let Nft = artifacts.require("SeascapeNFT");
-let Factory = artifacts.require("NFTFactory");
-let Staking = artifacts.require("Staking");
+let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("NftFactory");
 
 var accounts;
 
@@ -28,8 +26,6 @@ let init = async function() {
 
     let crowns = await Crowns.deployed();
     let factory = await Factory.deployed();
-    let staking = await Staking.deployed();
-
     
     return await claimNft(nftRush, lastSessionId);
 }.bind(this);
@@ -58,7 +54,7 @@ let claimNft = async function(nftRush, lastSessionId) {
 	v += 27;
     }
 
-    let res = await nftRush.claim(lastSessionId, v, r, s, quality);
+    let res = await nftRush.mint(lastSessionId, v, r, s, quality);
     console.log(res);
     return res;
 }.bind(this);
@@ -80,7 +76,7 @@ let sampleMsgSigning = async function() {
     console.log("Quality:    "+quality);
     console.log("as hex:     "+bytes1);
     console.log("hashed:     "+keccak);
-    console.log("signature:  "+signature;
+    console.log("signature:  "+signature);
 };
 
 function getRandomInt(max) {

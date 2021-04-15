@@ -148,7 +148,7 @@ contract("Game 2: Nft Rush", async accounts => {
 	try {
 	    await nftRush.mint(lastSessionId, v, r, s, quality);
 	} catch(e) {
-	    return assert.equal(e.reason, "NFT Rush: not enough interval since last minted time");
+	    return assert.equal(e.reason, "NFT Rush: The locking interval were not passed since the last minted time");
 	}
     });
 
@@ -160,7 +160,7 @@ contract("Game 2: Nft Rush", async accounts => {
 	// used for all leaderboard types
 	rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
 
-	await nftRush.setAllRewards(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
+	await nftRush.setPrizes(rewardsAmounts, rewardsAmounts, rewardsAmounts, rewardsAmounts);
     });
 
     it("set the winner list (daily spent)", async () => {
@@ -175,10 +175,10 @@ contract("Game 2: Nft Rush", async accounts => {
 
 	await crowns.approve(nftRush.address, approveAmount, {from: gameOwner});
 
-	await nftRush.addDailySpentWinners(lastSessionId, winners, amount);
+	await nftRush.announceDailySpentWinners(lastSessionId, winners, amount);
 
 	let claimables = await nftRush.spentDailyClaimables(player);
-	assert.equal(claimables, 1, "expected 1 daily spent leaderboard reward");
+	assert.equal(claimables > 0, true, "expected 1 daily spent leaderboard reward");
     });
 
     it("claim daily spent leaderboard reward", async () => {
