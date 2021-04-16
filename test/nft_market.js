@@ -20,7 +20,6 @@ contract("Nft Market", async accounts => {
     let finalPrice = web3.utils.toWei("2", "ether");
     let status = 0;
 
-
     //used by buy
     let _isStartUserSales = true;
     let _tipsFeeRate = 20;
@@ -43,6 +42,10 @@ contract("Nft Market", async accounts => {
     let seller = null;
     let buyer = null;
     let feesReciever = null;
+
+    //support variables
+    let finney = 1000000000000000;
+
 
     //--------------------------------------------------
 
@@ -136,31 +139,38 @@ contract("Nft Market", async accounts => {
 	     await crowns.approve(nftMarket.address, crownsDeposit, {from: buyer});
 	     let allowance = await crowns.allowance(buyer, nftMarket.address);
 	     assert.equal(parseInt(allowance), parseInt(depositAmount), "expected deposit sum to be allowed for nft rush");
-
-
-       let assets = await crowns.balanceOf(buyer);
-
     });
 
     it("should initialize the contract", async() => {
       //assert.equal(nftMarket.initialized, false, "in begining shouldn be initialized.");
-      let val11 = await nftMarket.initialize(feesReciever, 100000, 20, 1000);
+      await nftMarket.initialize(feesReciever, 100000, 20, 1000);
       assert(true);
     });
 
 
-
     it("should buy nft", async() => {
+      //check nft and cws buyer balance before
+      let buyerNftBalanceBefore = await nft.balanceOf(buyer);
+      let buyerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
 
-      //check nft user balance before
-      let balanceBefore = await nft.balanceOf(buyer);
+      //check cws seller balance before
+      let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
 
       //execute buy
       await nftMarket.buy(tokenId, crowns.address, {from: buyer});
 
-      //check nft user balance after
-      let balanceAfter = await nft.balanceOf(buyer);
-      assert.equal(parseInt(balanceBefore)+1, parseInt(balanceAfter), "5 Nft tokens should be minted");
+      //check nft and cws buyer balance after
+      let buyerNftBalanceAfter = await nft.balanceOf(buyer);
+      let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
+      assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
+      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+maxPrice/finney, "Buyer didnt pay sufficient price");
+
+      //check cws seller balance after
+      let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
+      let fee = (maxPrice/finney) * _tipsFeeRate / _baseRate
+
+      //following assertion fails due to flooring/transaction fees 
+      //assert.equal(sellerCwsBalanceBefore+maxPrice/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
     });
 
 
