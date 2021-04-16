@@ -15,7 +15,6 @@ contract("Nft Market", async accounts => {
     let tokenId = 1; // aka nftId
     let startTime;  //declared inside tests
     let maxPrice = web3.utils.toWei("2", "ether");
-    let minPrice = web3.utils.toWei("1", "ether");
     let finalPrice = web3.utils.toWei("2", "ether");
     let status = 0;
 
@@ -111,7 +110,7 @@ contract("Nft Market", async accounts => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
 
-      startTime = Math.floor(Date.now()/1000) + 5;
+      startTime = Math.floor(Date.now()/1000) + 2;
 
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
@@ -120,7 +119,7 @@ contract("Nft Market", async accounts => {
 
       await nftMarket.setIsStartUserSales(true);
 
-      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, crowns.address, {from: seller});
+      await nftMarket.startSales(tokenId, maxPrice, startTime, crowns.address, {from: seller});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(seller);

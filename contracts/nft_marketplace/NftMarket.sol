@@ -34,7 +34,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint256 tokenId;
         uint256 startTime;
         uint256 maxPrice;
-        uint256 minPrice;
         uint256 finalPrice;
         uint8 status;
         address payable seller;
@@ -69,7 +68,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         address buyer,
         uint256 startTime,
         uint256 maxPrice,
-        uint256 minPrice,
         uint256 finalPrice
     );
 
@@ -234,13 +232,7 @@ function getSalesPrice(uint index)
     returns (uint256)
 {
     SalesObject storage obj = _salesObjects[index];
-    //if(obj.buyer != address(0x0) || obj.status == 1) {
     return obj.maxPrice;
-    /* } else {
-        if (obj.startTime >= now) {
-            return obj.maxPrice;
-        }
-    } */
 }
 
 function isVerifySeller(uint index) public view checkindex(index) returns(bool) {
@@ -259,7 +251,6 @@ function cancelSales(uint index) external checkindex(index) onlySalesOwner(index
 
 function startSales(uint256 tokenId,
                     uint256 maxPrice,
-                    uint256 minPrice,
                     uint256 startTime,
                     address currency)
     external
@@ -268,7 +259,6 @@ function startSales(uint256 tokenId,
 {
     require(tokenId != 0, "invalid token");
     require(startTime > now, "invalid start time");
-    require(maxPrice >= minPrice, "invalid price");
     require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
 
     nft.safeTransferFrom(msg.sender, address(this), tokenId);
@@ -282,7 +272,6 @@ function startSales(uint256 tokenId,
     obj.buyer = address(0x0);
     obj.startTime = startTime;
     obj.maxPrice = maxPrice;
-    obj.minPrice = minPrice;
     obj.finalPrice = 0;
     obj.status = 0;
 
@@ -295,7 +284,6 @@ function startSales(uint256 tokenId,
         zeroObj.buyer = address(0x0);
         zeroObj.startTime = 0;
         zeroObj.maxPrice = 0;
-        zeroObj.minPrice = 0;
         zeroObj.finalPrice = 0;
         zeroObj.status = 2;
         _salesObjects.push(zeroObj);
@@ -305,8 +293,7 @@ function startSales(uint256 tokenId,
 
 
     uint256 tmpMaxPrice = maxPrice;
-    uint256 tmpMinPrice = minPrice;
-    emit eveNewSales(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice, tmpMinPrice, 0);
+    emit eveNewSales(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice, 0);
     return _salesAmount;
 }
 
