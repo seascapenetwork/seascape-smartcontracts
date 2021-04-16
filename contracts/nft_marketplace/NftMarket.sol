@@ -84,14 +84,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
 
     mapping(uint256 => address) public _saleOnCurrency;
 
-    mapping(uint256=>uint256) public deflationBaseRates;
     mapping(uint256=>address) public routers;
 
 
 
-    event eveDeflationBaseRate(
-        uint256 deflationBaseRate
-    );
 
     constructor(address _crowns, address _nft) public {
       crowns = IERC20(_crowns);
@@ -190,11 +186,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
       _seller[seller] = false;
   }
 
-
-  function setDeflationBaseRate(uint256 deflationRate_) public onlyGovernance {
-      deflationBaseRates[0] = deflationRate_;
-      emit eveDeflationBaseRate(deflationRate_);
-  }
 
 
   function addVerifySeller(address seller) public onlyGovernance validAddress(seller) {
@@ -356,10 +347,6 @@ function buy(uint index, address currency_)
 
 
 
-
-function getDeflationBaseRate() public view returns(uint256) {
-    return deflationBaseRates[0];
-}
 
 
 
