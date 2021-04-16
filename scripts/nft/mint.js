@@ -27,12 +27,12 @@ let init = async function() {
     let factory = await Factory.deployed();
     let nft = await Nft.deployed();
     
-    let nftGranted = await nft.setFactory(factory.address);
+    let nftGranted = await nft.setFactory(factory.address, {from: accounts[0], gasPrice: 136000000000});
     console.log("Nft has been linked to factory: "+nftGranted.tx);
 
-    let granted = await factory.isGenerator(accounts[0]);
+    let granted = await factory.isGenerator(accounts[0], {from: accounts[0], gasPrice: 136000000000});
     if (!granted) {
-	    await grantPermission(factory, accounts[0]);
+	    await factory.grantPermission(factory, accounts[0], {from: accounts[0], gasPrice: 136000000000});
     } else {
 	    console.log(`Account ${accounts[0]} was already granted a permission`);
     }
@@ -51,7 +51,7 @@ let init = async function() {
     let generation = 0;
 
     for (var quality = 1; quality <= amount; quality++) {
-        let res = await factory.mintQuality(owner, generation, quality);
+        let res = await factory.mintQuality(owner, generation, quality, {from: accounts[0], gasPrice: 136000000000});
         console.log("-------------------------");
         console.log(`Quality ${quality} was minted!`);	
         console.log(`Txid: ${res.tx}`);

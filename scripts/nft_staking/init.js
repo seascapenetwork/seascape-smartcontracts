@@ -4,7 +4,7 @@ let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
 let accounts;
-let totalReward = 200;
+let totalReward = 250;
 let period = 3600 * 24 * 2;   // 2 week 
 let generation = 0;
 
@@ -28,7 +28,7 @@ let init = async function(networkId) {
     let crowns  = null;
 	
     if (networkId == 4) {
-        nftStaking = await NftStaking.at("0xf16C8594d2723b9c3058ad0c8d7331a2db96B1fe");	
+        nftStaking = await NftStaking.at("0xf01AB6f972f987Ad9262466F955dF979A1d6F93F");	
         factory = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
         nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
 
@@ -44,23 +44,18 @@ let init = async function(networkId) {
     let gasPrice = await web3.eth.getGasPrice();
     let gasValue = 4700000;
 
-    console.log("Gas price calculated, now starting a new session...")
-    
-    //await crowns.transfer(nftStaking.address, web3.utils.toWei(totalReward.toString()), {from: accounts[0], gas: gasValue, gasPrice: gasPrice});    
-    //console.log(`Transfered ${totalReward} CWS`);
-    //return;
+    await crowns.transfer(nftStaking.address, web3.utils.toWei(totalReward.toString()), {from: accounts[0], gas: gasValue, gasPrice: gasPrice});    
+    console.log(`Transfered ${totalReward} CWS`);
 
     //should add nft rush as generator role in nft factory
-    //await factory.addGenerator(nftStaking.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
-
-    //should set nft factory in nft
+    await factory.addGenerator(nftStaking.address, {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
+    console.log("Allow staking saloon to burn nfts");
 
     //should start a session
-    let startTime = Math.floor(Date.now()/1000) + 3000;
+    let startTime = Math.floor(Date.now()/1000) + 30;
     await nftStaking.startSession(web3.utils.toWei(totalReward.toString()),
-				      period,
-				      startTime,
-				      generation,
-			       {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
+        period,
+        startTime,
+	    {from: accounts[0], gas: gasValue, gasPrice: gasPrice});
     console.log("Started a nft staking session");
 }.bind(this);
