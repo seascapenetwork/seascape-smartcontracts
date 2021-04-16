@@ -369,21 +369,21 @@ function buy(uint index, address currency_)
   uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
   uint256 purchase = price.sub(tipsFee);
 
-  if (address(currencyAddr) == currency_){
-      if (currencyAddr == address(0x0)){
-          require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
-          uint256 returnBack = msg.value.sub(price);
-          if(returnBack > 0) {
-              msg.sender.transfer(returnBack);
-          }
-          if(tipsFee > 0) {
-              _tipsFeeWallet.transfer(tipsFee);
-          }
-          obj.seller.transfer(purchase);
-      }else{
-          IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-          IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+  require(address(currencyAddr) == currency_, "must use same currency as seller");
+  if (currencyAddr == address(0x0)){
+      require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
+      uint256 returnBack = msg.value.sub(price);
+      if(returnBack > 0) {
+          msg.sender.transfer(returnBack);
       }
+      if(tipsFee > 0) {
+          _tipsFeeWallet.transfer(tipsFee);
+      }
+      obj.seller.transfer(purchase);
+  }
+  else{
+      IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+      IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
   }
 
     nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
