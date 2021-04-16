@@ -234,13 +234,13 @@ function getSalesPrice(uint index)
     returns (uint256)
 {
     SalesObject storage obj = _salesObjects[index];
-    if(obj.buyer != address(0x0) || obj.status == 1) {
-        return obj.finalPrice;
-    } else {
+    //if(obj.buyer != address(0x0) || obj.status == 1) {
+    return obj.maxPrice;
+    /* } else {
         if (obj.startTime >= now) {
             return obj.maxPrice;
         }
-    }
+    } */
 }
 
 function isVerifySeller(uint index) public view checkindex(index) returns(bool) {

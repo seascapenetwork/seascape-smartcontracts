@@ -111,7 +111,7 @@ contract("Nft Market", async accounts => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
 
-      startTime = Math.floor(Date.now()/1000) + 2;
+      startTime = Math.floor(Date.now()/1000) + 5;
 
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
@@ -156,17 +156,17 @@ contract("Nft Market", async accounts => {
       let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
 
       //execute buy
-      // await nftMarket.buy(tokenId, crowns.address, {from: buyer});
+      await nftMarket.buy(tokenId, crowns.address, {from: buyer});
 
       //check nft and cws buyer balance after
-      // let buyerNftBalanceAfter = await nft.balanceOf(buyer);
-      // let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
-      // assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
-      // assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+maxPrice/finney, "Buyer didnt pay sufficient price");
-      //
-      // //check cws seller balance after
-      // let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      // let fee = (maxPrice/finney) * _tipsFeeRate / _baseRate
+      let buyerNftBalanceAfter = await nft.balanceOf(buyer);
+      let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
+      assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
+      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+maxPrice/finney, "Buyer didnt pay sufficient price");
+
+      //check cws seller balance after
+      let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
+      let fee = (maxPrice/finney) * _tipsFeeRate / _baseRate
 
       //following assertion fails due to flooring/transaction fees
       //assert.equal(sellerCwsBalanceBefore+maxPrice/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
