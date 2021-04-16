@@ -381,35 +381,10 @@ function buy(uint index, address currency_)
           }
           obj.seller.transfer(purchase);
       }else{
-          SafeERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-          SafeERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+          IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+          IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
       }
   }
-
-  /* else{
-      if (currencyAddr == address(0x0)){
-          uint256 ethAmount = tokenToEth(currency_, price);
-          // uint256 ethAmount = 0;
-          // SupportBuyCurrency memory supportBuyCurrency = _supportBuyCurrency[currency_];
-          // if (supportBuyCurrency.isDeflation) {
-          //     ethAmount = exactTokenToEth(currency_, price);
-          // } else {
-          //     ethAmount = tokenToExactEth(currency_, price);
-          // }
-          require (ethAmount >= price, "umm.....  your price is too low");
-          uint256 returnBack = ethAmount.sub(price).add(msg.value);
-          if(returnBack > 0) {
-              msg.sender.transfer(returnBack);
-          }
-          if(tipsFee > 0) {
-              _tipsFeeWallet.transfer(tipsFee);
-          }
-          obj.seller.transfer(purchase);
-      }else{
-          // transfer
-          require(false, "not support token");
-      }
-  } */
 
     nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
 
