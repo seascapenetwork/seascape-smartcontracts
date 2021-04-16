@@ -53,7 +53,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
     uint256 public _baseRate = 1000;
     address payable _tipsFeeWallet;
 
-    event eveSales(
+    event Buy(
         uint256 indexed id,
         uint256 tokenId,
         address buyer,
@@ -61,7 +61,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint256 tipsFee
     );
 
-    event eveNewSales(
+    event Sell(
         uint256 indexed id,
         uint256 tokenId,
         address seller,
@@ -293,7 +293,7 @@ function startSales(uint256 tokenId,
 
 
     uint256 tmpMaxPrice = maxPrice;
-    emit eveNewSales(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice, 0);
+    emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice, 0);
     return _salesAmount;
 }
 
@@ -351,7 +351,7 @@ function buy(uint index, address currency_)
     obj.status = 1;
 
     // fire event
-    emit eveSales(index, obj.tokenId, msg.sender, price, tipsFee);
+    emit Buy(index, obj.tokenId, msg.sender, price, tipsFee);
 }
 
 
