@@ -9,7 +9,6 @@ contract("Nft Market", async accounts => {
 
     //input for buy
     let index = 0;
-    let currency; //= crowns.address;
 
     //struct SalesObject
     let id = 0;
@@ -33,7 +32,7 @@ contract("Nft Market", async accounts => {
     //used by crowns and other contracts
     let depositAmount = web3.utils.toWei("5", "ether");
 
-    // following vars used in multiple test units:
+    // following vars present contracts
     let nft = null;
     let factory = null;
     let nftMarket = null;
@@ -42,7 +41,9 @@ contract("Nft Market", async accounts => {
     //accounts
     let gameOwner = null;
     let seller = null;
-    let buyer = null
+    let buyer = null;
+    let feesReciever = null;
+
     //--------------------------------------------------
 
     // before seller starts, need to prepare a few things.
@@ -53,10 +54,11 @@ contract("Nft Market", async accounts => {
 	     nft     = await Nft.deployed();
        crowns = await Crowns.deployed();
 
-
+       //initialize accounts
 	     gameOwner = accounts[0];
        seller = accounts[1];
        buyer = accounts[2];
+       feesReciever = accounts[3];
 
 	     await nft.setFactory(factory.address);
 	     await factory.addGenerator(nftMarket.address, {from: gameOwner});
@@ -107,9 +109,7 @@ contract("Nft Market", async accounts => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
 
-      currency = crowns;
       startTime = Math.floor(Date.now()/1000) + 2;
-
 
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
@@ -118,7 +118,7 @@ contract("Nft Market", async accounts => {
 
       await nftMarket.setIsStartUserSales(true);
 
-      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, durationTime, currency.address, {from: seller});
+      await nftMarket.startSales(tokenId, maxPrice, minPrice, startTime, durationTime, crowns.address, {from: seller});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(seller);
@@ -139,8 +139,13 @@ contract("Nft Market", async accounts => {
 
 
        let assets = await crowns.balanceOf(buyer);
-       console.log("assets: ", parseInt(assets));
 
+    });
+
+    it("should initialize the contract", async() => {
+      //assert.equal(nftMarket.initialized, false, "in begining shouldn be initialized.");
+      let val11 = await nftMarket.initialize(feesReciever, 100000, 20, 1000);
+      assert(true);
     });
 
 
@@ -149,15 +154,9 @@ contract("Nft Market", async accounts => {
 
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(buyer);
-      console.log("balance before deposit: " ,parseInt(balanceBefore));
 
-      currency = crowns;
-
-
-      //approve to spend the crowns
-      //await crowns.approve(nftMarket.address, crownsDeposit, {from: buyer});
-
-      await nftMarket.buy(tokenId, currency.address, {from: buyer});
+      //execute buy
+      await nftMarket.buy(tokenId, crowns.address, {from: buyer});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(buyer);
