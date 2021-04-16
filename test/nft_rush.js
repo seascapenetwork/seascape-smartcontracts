@@ -16,7 +16,7 @@ console.log(eventRes);
 contract("Game 2: Nft Rush", async accounts => {
     // Samples
     let interval = 5;  // seconds
-    let period = 180;   // 3 min
+    let period = 3600 * 24;   // 3 min
     let generation = 0;
     let depositAmount = web3.utils.toWei("5", "ether");
 
@@ -160,6 +160,7 @@ contract("Game 2: Nft Rush", async accounts => {
     // Leaderboard related data
     // ------------------------------------------------------------
 
+	/*
     it("set winner's reward amounts", async () => {
 		// used for all leaderboard types
 		rewardsAmounts = rewardsAmounts.map(function(amount) {return web3.utils.toWei(amount.toString())});
@@ -194,6 +195,6 @@ contract("Game 2: Nft Rush", async accounts => {
 		
 		let claimables = await nftRush.spentDailyClaimables(player);
 		assert.equal(claimables, 0, "expected no reward at all after claiming reward");
-    });
+    });*/
     
 });

@@ -29,13 +29,13 @@ contract("Game 1: Lp Mining", async accounts => {
     // Before starting game session we should transfer CWS token to contract balance.
     // CWS in contract balance is required for game session award.
     it("should transfer the CWS into contract", async () => {
-	crowns = await Crowns.deployed();
-	lpMining = await LpMining.deployed();
+        crowns = await Crowns.deployed();
+        lpMining = await LpMining.deployed();
 
-	await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
+        await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
 
-	let balance = await crowns.balanceOf.call(lpMining.address);
-	assert.equal(balance, totalReward, "Lp Mining contract balance should match to total reward");
+        let balance = await crowns.balanceOf.call(lpMining.address);
+        assert.equal(balance, totalReward, "Lp Mining contract balance should match to total reward");
     });
     
 
@@ -43,48 +43,48 @@ contract("Game 1: Lp Mining", async accounts => {
     
     // Before using the game contract, we should start the game session.
     it("should start a session that lasts "+period+" seconds", async () => {
-	lpToken = await LpToken.deployed();
-	startTime = Math.floor(Date.now()/1000) + 2;
-	
+        lpToken = await LpToken.deployed();
+        startTime = Math.floor(Date.now()/1000) + 2;
+        
         await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
-				      {from: accounts[0]})
+                        {from: accounts[0]})
 
-	sessionId = await lpMining.lastSessionIds.call(lpToken.address);
-	
-	assert.equal(sessionId, 1, "Started session id expected to be 1");
+        sessionId = await lpMining.lastSessionIds.call(lpToken.address);
+        
+        assert.equal(sessionId, 1, "Started session id expected to be 1");
     });
 
     //---------------------------------------------------
 
     it("should not overwrite a session before time expiration", async () => {
-	startTime = Math.floor(Date.now()/1000) + 2;
-	
-	try {
-	    await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
-				       {from: accounts[0]});
-	} catch(e) {
-	    return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is already active');
-	}
+        startTime = Math.floor(Date.now()/1000) + 2;
+        
+        try {
+            await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
+                        {from: accounts[0]});
+        } catch(e) {
+            return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is already active');
+        }
 
-	assert.fail();
+        assert.fail();
     });
 
     //------------------------------------------------------------
     
     it("should overwrite a session after time expiration", async() => {
-	// wait until passes 2 second after session period
-	let wait = (period + 2) * 1000; // milliseconds
-        await new Promise(resolve => setTimeout(resolve, wait));
+        // wait until passes 2 second after session period
+        let wait = (period + 2) * 1000; // milliseconds
+            await new Promise(resolve => setTimeout(resolve, wait));
 
-	
-	await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
-	
-	startTime = Math.floor(Date.now()/1000) + 2;	
-	await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
-				   {from: accounts[0]});
+        
+        await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
+        
+        startTime = Math.floor(Date.now()/1000) + 2;	
+        await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
+                    {from: accounts[0]});
 
-	sessionId = await lpMining.lastSessionIds.call(lpToken.address);
-	assert.equal(sessionId, 2, "Session after period expiration should return inserted ID of 2");
+        sessionId = await lpMining.lastSessionIds.call(lpToken.address);
+        assert.equal(sessionId, 2, "Session after period expiration should return inserted ID of 2");
     });
 
     //---------------------------------------------------
@@ -93,13 +93,13 @@ contract("Game 1: Lp Mining", async accounts => {
     // before playing, player should have some LP token.
     // Sending from LP minter to player
     it("should transfer some fake LP CWS-ETH token to player", async () => {
-	let from = accounts[0];
-	let to = accounts[1];
+        let from = accounts[0];
+        let to = accounts[1];
 
-	await lpToken.transfer(to, depositAmount, {from: from});
+        await lpToken.transfer(to, depositAmount, {from: from});
 
-	let balance = await lpToken.balanceOf.call(to);
-	assert.equal(balance, depositAmount, "Lp Token balance of player is not what expected");
+        let balance = await lpToken.balanceOf.call(to);
+        assert.equal(balance, depositAmount, "Lp Token balance of player is not what expected");
     });
 
     //--------------------------------------------------
@@ -107,12 +107,12 @@ contract("Game 1: Lp Mining", async accounts => {
     // Depositing LP token to Smartcontract.
     // However, before deposit, it should be approved to Smartcontract
     it("should approve to deposit some token", async() => {
-	let from = accounts[1];
+        let from = accounts[1];
 
-	await lpToken.approve(lpMining.address, depositAmount, {from: from});
+        await lpToken.approve(lpMining.address, depositAmount, {from: from});
 
-	let allowance = await lpToken.allowance.call(from, lpMining.address);
-	assert.equal(allowance, depositAmount, "Deposit amount of Lp Tokens were not allowed to be transferred");
+        let allowance = await lpToken.allowance.call(from, lpMining.address);
+        assert.equal(allowance, depositAmount, "Deposit amount of Lp Tokens were not allowed to be transferred");
     });
 
     //--------------------------------------------------
@@ -125,9 +125,6 @@ contract("Game 1: Lp Mining", async accounts => {
         let session = await lpMining.sessions.call(sessionId);
 
         let balance = await lpMining.stakedBalanceOf.call(sessionId, from);
-        console.log(JSON.parse(JSON.stringify(session)));
-        console.log(JSON.parse(JSON.stringify(balance)));
-        console.log(`balance deosited to ${balance}`);
 
         assert.equal(balance, depositAmount, "Player Balance in Lp Mining expected to be deposit amount");
     });
@@ -140,21 +137,23 @@ contract("Game 1: Lp Mining", async accounts => {
 
         let session = await lpMining.sessions.call(sessionId);
         let balance = await lpMining.balances.call(sessionId, player);
+
         let time1 = parseInt(new Date()/1000);
 
         console.log(JSON.parse(JSON.stringify(session)));
         console.log(JSON.parse(JSON.stringify(balance)));
+        console.log(balance);
+        console.log(`Session ID: ${sessionId}`);
         console.log('Calculating all time sum of reward per token:');
-        console.log(`  previously claimed per token: ${session.claimedPerToken}`);
+        console.log(`  previously claimed per token: ${session.claimedPerToken.toString()}`);
         console.log(`  previous time: ${time1}`);
-        console.log(`  previous update of interest: ${session.lastInterestUpdate}`);
-        console.log(`  interest per token: ${session.interestPerToken}`)
-		let claimedPerToken = parseInt(session.claimedPerToken) +
-			(time1 - (session.lastInterestUpdate) * session.interestPerToken);
+        console.log(`  previous update of interest: ${session.lastInterestUpdate.toString()}`);
+        console.log(`  interest per token: ${session.interestPerToken.toString()}`)
+		let claimedPerToken = parseInt(session.claimedPerToken.toString()) +
+			(time1 - parseInt(session.lastInterestUpdate.toString()) * parseInt(session.interestPerToken.toString()));
 
-    	let interest = (balance.amount * claimedPerToken - balance.claimedPerToken)/1e18;
+    	let interest = (parseInt(balance.amount.toString()) * claimedPerToken - parseInt(balance.claimedReward.toString()))/1e18;
         console.log(`Claimed per Token: ${claimedPerToken} and interest ${interest}`)
-
 
 
         let cwsBalance = await lpMining.claimable.call(sessionId, player);

@@ -53,8 +53,6 @@ contract("Game 3: Nft Staking Bonus", async accounts => {
   }
 
   async function signBonus(bonusPercent, nftIdSlot1, nftIdSlot2, nftIdSlot3) {
-
-    let quality = getRandomInt(5) + 1;
     //v, r, s related stuff
     let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256", "uint256", "uint256"],
       [bonusPercent, nftIdSlot1, nftIdSlot2, nftIdSlot3]);
@@ -91,7 +89,7 @@ contract("Game 3: Nft Staking Bonus", async accounts => {
     crowns = await Crowns.deployed();
     await crowns.transfer(nftStaking.address, depositAmount, {from: player});
 
-    await nftStaking.startSession(totalReward, period,  startTime, generation, {from: player});
+    await nftStaking.startSession(totalReward, period,  startTime, {from: player});
 
     lastSessionId = await nftStaking.lastSessionId();
     assert.equal(lastSessionId, 1, "session id is expected to be 1");
@@ -160,15 +158,16 @@ contract("Game 3: Nft Staking Bonus", async accounts => {
         nftId++;
         signature = await signNft(nftId,sp);
         await nft.approve(nftStaking.address, nftId);
-            await nftStaking.deposit(lastSessionId, index, nftId, sp, signature[0], signature[1], signature[2],
-          {from: player});
+        await nftStaking.deposit(lastSessionId, index, nftId, sp, signature[0], signature[1], signature[2], {from: player});
         balanceAfter = await nftStaking.balances(lastSessionId, player, index);
         nftIdSlot[index] = parseInt(balanceAfter.nftId);
       }
     }
 
+    // approve max possible money to spend for bonus.
+    await crowns.approve(nftStaking.address, (parseInt(totalReward) * 10).toString(), {from: gameOwner});
+
     //sign bonus as non-game owner
-    let quality = getRandomInt(5) + 1;
     //v, r, s related stuff
     let bytes32 = web3.eth.abi.encodeParameters(["uint256", "uint256", "uint256", "uint256"],
       [bonusPercent, nftIdSlot[0], nftIdSlot[1], nftIdSlot[2]]);
