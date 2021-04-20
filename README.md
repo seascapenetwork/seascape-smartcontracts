@@ -30,7 +30,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Market:                    [0x02acB12EF7bafE2909707556673755bEff1eC15E](https://rinkeby.etherscan.io/address/0x02acb12ef7bafe2909707556673755beff1ec15e)
  
  ### Binance Smartchain test network
- * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
+ * Crowns:                        [0xF4B95AbDf040c79DC18b45Ce2BD73E4925b84461](https://testnet.bscscan.com/token/0xF4B95AbDf040c79DC18b45Ce2BD73E4925b84461)
  * Seascape Nft:                  [0x66638F4970C2ae63773946906922c07a583b6069](https://testnet.bscscan.com/address/0x66638F4970C2ae63773946906922c07a583b6069)
  * Factory:                       [0x3eB88c3F2A719369320D731FbaE062b0f82F22e4](https://testnet.bscscan.com/address/0x3eB88c3F2A719369320D731FbaE062b0f82F22e4)
  * Profit Circus ( First game):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
