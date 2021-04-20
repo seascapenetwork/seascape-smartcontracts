@@ -63,6 +63,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     event SessionStarted(uint256 sessionIdd, uint256 reward, uint256 startTime, uint256 endTime);
     event Deposited(address indexed owner, uint256 sessionId, uint256 nftId, uint256 slotId);
     event Claimed(address indexed owner, uint256 sessionId, uint256 amount, uint256 nftId);
+    event BonusClaimed(address indexed owner, uint256 sessionId, uint256 baseAmount, uint256 amountWithBonus, uint256 percents);
     event NftFactorySet(address factory);
 
     /// @dev instantinate contracts, start session
@@ -342,10 +343,17 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
         }
 
-	    uint256 totalBonus = _interests.mul(scaler).div(100).mul(_bonusPercent).div(scaler);
-        require(crowns.allowance(owner(), address(this)) >= totalBonus, "Seascape Staking: Not enough bonus balance");
+	    uint256 _totalBonus = _interests.mul(scaler).div(100).mul(_bonusPercent).div(scaler);
+        require(crowns.allowance(owner(), address(this)) >= _totalBonus, "Seascape Staking: Not enough bonus balance");
 
-        return crowns.transferFrom(owner(), msg.sender, totalBonus);
+        bool res = crowns.transferFrom(owner(), msg.sender, _totalBonus);
+        if (!res) {
+            return false;
+        }
+
+        emit BonusClaimed(msg.sender, _sessionId, _interests, _totalBonus, _bonusPercent);
+
+        return true;
     }
 
     /// @dev earned CWS tokens are sent to Nft staker
