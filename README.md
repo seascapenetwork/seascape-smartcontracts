@@ -27,6 +27,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus ( First game):   [0xC159318769A275aCB43B956e85a582894cE00837](https://rinkeby.etherscan.io/address/0xC159318769A275aCB43B956e85a582894cE00837)
  * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
  * Nft Staking (Third game):      [0xf01AB6f972f987Ad9262466F955dF979A1d6F93F](https://rinkeby.etherscan.io/address/0xf01AB6f972f987Ad9262466F955dF979A1d6F93F)
+ * Nft Market:                    [0x02acB12EF7bafE2909707556673755bEff1eC15E](https://rinkeby.etherscan.io/address/0x02acb12ef7bafe2909707556673755beff1ec15e)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
@@ -34,7 +35,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Factory:                       [0x3eB88c3F2A719369320D731FbaE062b0f82F22e4](https://testnet.bscscan.com/address/0x3eB88c3F2A719369320D731FbaE062b0f82F22e4)
  * Profit Circus ( First game):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
- * Staking Saloon (Third game):   [0xC0630A06B91b08B4137faA04eF599E4DEEd35b30](https://testnet.bscscan.com/address/0xC0630A06B91b08B4137faA04eF599E4DEEd35b30)
+ * Staking Saloon (Third game):   [0xF4B95AbDf040c79DC18b45Ce2BD73E4925b84461](https://testnet.bscscan.com/address/0xF4B95AbDf040c79DC18b45Ce2BD73E4925b84461)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
