@@ -47,7 +47,7 @@ contract NftStaking is Ownable, IERC721Receiver {
         uint256 claimedTime;       // amount of claimed CWS reward
     	  uint256 nftId;
     	  uint256 sp;                // seascape points
-          uint256 claimedPerPoint;
+          uint256 claimedAmount;
     }
 
     mapping(address => uint256) debts;
@@ -192,7 +192,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].add(1);
 
         _balances[_index] = Balance(block.timestamp, _nftId, _sp, 0);
-		_balances[_index].claimedPerPoint = _session.claimedPerPoint.mul(_balances[_index].sp).div(scaler); // 0
+		_balances[_index].claimedAmount = _session.claimedPerPoint.mul(_balances[_index].sp).div(scaler); // 0
 
         emit Deposited(msg.sender, _sessionId, _nftId, _index + 1);
     }
@@ -388,9 +388,9 @@ contract NftStaking is Ownable, IERC721Receiver {
 	    }
 
         uint256 claimedPerPoint = _session.claimedPerPoint.add(
-			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
+            _sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
 
-        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(scaler).sub(_balance.claimedPerPoint);
+        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(scaler).sub(_balance.claimedAmount);
 
 	    return _interest;
     }
