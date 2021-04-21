@@ -253,6 +253,8 @@ contract NftStaking is Ownable, IERC721Receiver {
       	for (uint _index=0; _index < slots[_sessionId][msg.sender]; _index++) {
             uint256 _claimed = transfer(_sessionId, _index);
 
+            earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
+
             updateInterestPerPoint(_sessionId);
 
       	    Balance storage _balance = balances[_sessionId][msg.sender][_index];
@@ -346,6 +348,8 @@ contract NftStaking is Ownable, IERC721Receiver {
         if (!res) {
             return false;
         }
+
+        earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_totalBonus);
 
         emit BonusClaimed(msg.sender, _sessionId, _interests, _totalBonus, _bonusPercent);
 
