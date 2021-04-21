@@ -40,6 +40,11 @@ contract NftBurning is Ownable, IERC721Receiver{
   uint256 public lastSessionId;
   mapping(uint256 => Session) public sessions;
 
+  //track minted time per address
+  mapping(address => uint256) public mintedTime;
+
+
+
 
   //sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
   event Minted(uint256 indexed sessionId, address indexed owner, uint256 burnt_nft_1,
@@ -73,21 +78,17 @@ contract NftBurning is Ownable, IERC721Receiver{
 
       //cant start new session when another is active
       if (lastSessionId > 0) {
-          require(!isActive(lastSessionId,
-          "Seascape Burning: Can't start when session is active");
+          require(!isActive(lastSessionId, "Another session is already active");
       }
       //startTime should be greater than current time
-      require(_startTime > block.timestamp,
-        "Seascape Burning: Seassion should start in the future");
+      require(_startTime > block.timestamp, "Seassion should start in the future");
       //period should be greater than 0
-      require(_period > 0,
-        "Seascape Burning: Session duration should be greater than 0");
+      require(_period > 0, "Session duration should be greater than 0");
       //interval should be greater than 0 and less or equal to period
       require(_interval > 0 && _interval <= _period,
-        "Seascape Burning: Interval should be greater than 0 and lower than period");
+        "Interval should be greater than 0 and lower than period");
       //fee should be greater than 0
-      require(_fee > 0,
-        "Seascape Burning: Fee should be greater than 0");
+      require(_fee > 0, "Fee should be greater than 0");
 
   		//--------------------------------------------------------------------
   		// updating session related data
@@ -102,9 +103,60 @@ contract NftBurning is Ownable, IERC721Receiver{
   		emit SessionStarted(_sessionId, _generation, _fee, _interval, _startTime, _startTime + _period);
     }
 
-    function mint(uint256 sessionId, uint256[5] nfts, uint256 quality,
-      uint8 _v, bytes32 _r, bytes32 _s)
-      ......
+
+
+    //spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
+    function mint(uint256 _sessionId, uint256[5] _nfts, uint256 _quality,
+      uint8 _v, bytes32 _r, bytes32 _s) external {
+
+        Session storage _session = sessions[_sessionId];
+        Balance storage _mintedTime = mintedTime[msg.sender];
+
+        require(_sessionId > 0, "Session has not started yet");
+        require(_quality >= 1 && _quality <= 5,
+            "Seascape Burning: Incorrect quality");
+        require(isActive(_sessionId), "Game session is already finished");
+        require(_mintedTime[msg.sender] == 0 ||
+          (_mintedTime[msg.sender].add(_session.interval) < block.timestamp),
+          "Still in locking period, please try again after locking interval passes");
+        require(crowns.balanceOf(msg.sender) >= sessions[_sessionId].fee,
+            "Not enough CWS, please check your CWS balance");
+        require(checkAllSlots(_nfts));
+
+
+
+        //--------------------------------------------------------------------
+    		// burn nfts, spend crowns, mint nft
+    		//--------------------------------------------------------------------
+
+
+        nft.safeTransferFrom(msg.sender, address(this), _nftId);
+        nft.burn(_nftId);
+        require(crowns.spendFrom(sessions[_sessionId].fee),
+            "Failed to spend CWS");
+
+        uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
+        require(_tokenId > 0, "failed to mint a token");
+
+
+        mintedTime[msg.sender] = block.timestamp;
+        emit Minted(sessionId, owner, burnt_nft_1, burnt_nft_2, burnt_nft_3,burnt_nft_4,
+          burt_nft_5, time, minted_nft);
+    }
+
+
+
+    function checkAllSlots(uint256[5] _nfts) internal {
+      //TODO: check that all slots are full
+      require(_nftId > 0, "Nft Staking: Nft id must be greater than 0");
+      require(nft.ownerOf(_nftId) == msg.sender, "Nft is not owned by caller");
+
+      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
+      bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+      address _recover = ecrecover(_message, _v, _r, _s);
+      require(_recover == owner(),  "Nft Staking: Seascape points verification failed");
+    }
+
 
 
 
