@@ -211,11 +211,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
 	    uint256 _claimed = transfer(_sessionId, _index);
 	
-        if(earning[_sessionId][msg.sender] > 0){
-            earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
-        } else{
-            earning[_sessionId][msg.sender] = _claimed;
-        }
+        earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
 
       	sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_balance.sp);
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].sub(1);
