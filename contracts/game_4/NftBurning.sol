@@ -56,7 +56,7 @@ contract NftBurning is Ownable, IERC721Receiver{
       uint256 interval, uint256 start_time, uint256 end_time);
 
   //new nft factory address
-  event FactoryUpdated(address address);
+  event FactorySet(address indexed factoryAddress);
 
 
   //instantinate contracts, start session
@@ -158,6 +158,13 @@ contract NftBurning is Ownable, IERC721Receiver{
     }
 
 
+
+    function setNftFactory(address _address) external onlyOwner {
+    require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
+    nftFactory = NftFactory(_address);
+
+    emit FactorySet(_address);
+    }
 
 
 }
