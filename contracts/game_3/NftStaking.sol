@@ -401,11 +401,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        return false;
 	    }
 
-	    if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
-	        return false;
-	    }
+        bool notActive = (now < sessions[_sessionId].startTime || 
+                          now > sessions[_sessionId].startTime + sessions[_sessionId].period);
 
-	    return true;
+        return !notActive;
     }
 
     	
