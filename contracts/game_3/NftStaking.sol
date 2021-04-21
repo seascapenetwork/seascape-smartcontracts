@@ -20,7 +20,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
-    uint256 scaler = 10**18;
+    uint256 constant MULTIPLIER = 10**18;
 
     NftFactory nftFactory;
 
@@ -192,7 +192,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].add(1);
 
         _balances[_index] = Balance(block.timestamp, _nftId, _sp, 0);
-		_balances[_index].claimedAmount = _session.claimedPerPoint.mul(_balances[_index].sp).div(scaler); // 0
+		_balances[_index].claimedAmount = _session.claimedPerPoint.mul(_balances[_index].sp).div(MULTIPLIER); // 0
 
         emit Deposited(msg.sender, _sessionId, _nftId, _index + 1);
     }
@@ -343,7 +343,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
         }
 
-	    uint256 _totalBonus = _interests.mul(scaler).div(100).mul(_bonusPercent).div(scaler);
+	    uint256 _totalBonus = _interests.mul(MULTIPLIER).div(100).mul(_bonusPercent).div(MULTIPLIER);
         require(crowns.allowance(owner(), address(this)) >= _totalBonus, "Seascape Staking: Not enough bonus balance");
 
         bool res = crowns.transferFrom(owner(), msg.sender, _totalBonus);
@@ -390,7 +390,7 @@ contract NftStaking is Ownable, IERC721Receiver {
         uint256 claimedPerPoint = _session.claimedPerPoint.add(
             _sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
 
-        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(scaler).sub(_balance.claimedAmount);
+        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(MULTIPLIER).sub(_balance.claimedAmount);
 
 	    return _interest;
     }
@@ -430,7 +430,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 		if (_session.totalSp == 0) {
 			_session.interestPerPoint = 0;
 		} else {
-			_session.interestPerPoint = _session.rewardUnit.mul(scaler).div(_session.totalSp); // 0.1
+			_session.interestPerPoint = _session.rewardUnit.mul(MULTIPLIER).div(_session.totalSp); // 0.1
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerPoint
