@@ -40,6 +40,7 @@ contract NftBurning is Ownable, IERC721Receiver{
   uint256 public lastSessionId;
   mapping(uint256 => Session) public sessions;
 
+
   //sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
   event Minted(uint256 indexed sessionId, address indexed owner, uint256 burnt_nft_1,
      uint256 burnt_nft_2, uint256 burnt_nft_3, uint256 burnt_nft_4, uint256 burt_nft_5,
@@ -52,6 +53,7 @@ contract NftBurning is Ownable, IERC721Receiver{
   //new nft factory address
   event FactoryUpdated(address address);
 
+
   //instantinate contracts, start session
   constructor(address _crowns, address _nftFactory, address _nft)  public {
 
@@ -63,6 +65,7 @@ contract NftBurning is Ownable, IERC721Receiver{
     nftFactory = NftFactory(_nftFactory);
     nft = SeascapeNft(_nft);
 }
+
 
   //starts a new session, during which game would allow players to mint nfts
   function startSession(uint256 _startTime, uint256 _period, uint256 _generation,
@@ -90,7 +93,7 @@ contract NftBurning is Ownable, IERC721Receiver{
   		// updating session related data
   		//--------------------------------------------------------------------
   		uint256 _sessionId = sessionId.current();
-  		sessions[_sessionId] = Session(_period, _startTime, _endTime, _generation, 
+  		sessions[_sessionId] = Session(_period, _startTime, _endTime, _generation,
         _interval, _fee);
 
   		sessionId.increment();
@@ -98,6 +101,10 @@ contract NftBurning is Ownable, IERC721Receiver{
 
   		emit SessionStarted(_sessionId, _generation, _fee, _interval, _startTime, _startTime + _period);
     }
+
+    function mint(uint256 sessionId, uint256[5] nfts, uint256 quality,
+      uint8 _v, bytes32 _r, bytes32 _s)
+      ......
 
 
 
