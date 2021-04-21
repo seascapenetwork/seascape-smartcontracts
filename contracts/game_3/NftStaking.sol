@@ -127,7 +127,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	// creating the session
       	//--------------------------------------------------------------------
       	uint256 _sessionId = sessionId.current();
-      	uint256 _rewardUnit = _totalReward.div(_period);
+      	uint256 _rewardUnit = _totalReward.mul(MULTIPLIER).div(_period);
       	sessions[_sessionId] = Session(_totalReward, _period, _startTime, 0, 0, _rewardUnit, 0, 0, _startTime);
 
       	//--------------------------------------------------------------------
@@ -343,7 +343,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
         }
 
-	    uint256 _totalBonus = _interests.mul(MULTIPLIER).div(100).mul(_bonusPercent).div(MULTIPLIER);
+	    uint256 _totalBonus = _interests.mul(MULTIPLIER).mul(_bonusPercent).div(100).div(MULTIPLIER);
         require(crowns.allowance(owner(), address(this)) >= _totalBonus, "Seascape Staking: Not enough bonus balance");
 
         bool res = crowns.transferFrom(owner(), msg.sender, _totalBonus);
@@ -430,7 +430,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 		if (_session.totalSp == 0) {
 			_session.interestPerPoint = 0;
 		} else {
-			_session.interestPerPoint = _session.rewardUnit.mul(MULTIPLIER).div(_session.totalSp); // 0.1
+			_session.interestPerPoint = _session.rewardUnit.div(_session.totalSp); // 0.1
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerPoint
