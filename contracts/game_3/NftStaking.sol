@@ -426,7 +426,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 		_session.claimedPerPoint = _session.claimedPerPoint.add(
 			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
 
-		// we avoid sub. underflow, for calculating session.claimedPerPoint
+		/// @notice we avoid sub. underflow, for calculating session.claimedPerPoint
+        /// @dev interest per point is updated in other function, so this variable 
+        /// should be set in updateInterestPerPoint function.
+        /// We don't do it, as because updateInterestPerPoint will be called after updateCalculation 
 		_session.lastInterestUpdate = _sessionCap;
 	}
 
