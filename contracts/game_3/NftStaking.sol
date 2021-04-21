@@ -366,11 +366,13 @@ contract NftStaking is Ownable, IERC721Receiver {
         if (_interest > 0 && _interest > _crownsBalance) {
             debts[msg.sender] = _interest.sub(_crownsBalance).add(debts[msg.sender]);
             crowns.transfer(msg.sender, _crownsBalance);
+            _session.claimed = _session.claimed.add(_crownsBalance);
+
+            return _crownsBalance;
         } else {
             crowns.transfer(msg.sender, _interest);
+            _session.claimed = _session.claimed.add(_interest);
         }
-
-        _session.claimed = _session.claimed.add(_interest);
 
         return _interest;
     }
