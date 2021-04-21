@@ -284,7 +284,7 @@ contract LpMining is Ownable {
 		uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
 
 		// _endTime will be 0 if session never started.
-		if (now > _endTime) {
+		if (now < sessions[_sessionId].startTime || now > _endTime) {
 	    	return false;
 		}
 
