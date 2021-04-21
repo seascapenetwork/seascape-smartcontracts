@@ -158,12 +158,24 @@ contract NftBurning is Ownable, IERC721Receiver{
     }
 
 
-
     function setNftFactory(address _address) external onlyOwner {
     require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
     nftFactory = NftFactory(_address);
 
     emit FactorySet(_address);
+    }
+
+
+    /// @dev check whether the session is active or not
+    function isActive(uint256 _sessionId) internal view returns(bool) {
+    uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
+
+    // _endTime will be 0 if session never started.
+    if (now > _endTime) {
+        return false;
+    }
+
+    return true;
     }
 
 
