@@ -415,7 +415,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 		Session storage _session = sessions[_sessionId];
 
 		uint256 _sessionCap = block.timestamp;
-		if (isActive(_sessionId) == false) {
+		if (!isActive(_sessionId)) {
 			_sessionCap = _session.startTime.add(_session.period);
 		}
 
