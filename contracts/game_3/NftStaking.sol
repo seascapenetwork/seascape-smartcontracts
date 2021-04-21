@@ -154,7 +154,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 			uint256 crownsBalance = crowns.balanceOf(address(this));
 			require(crownsBalance >= _debt, "Nft Staking: Not enough Crowns to transfer!");
 
-			crowns.transfer(address(this), _debt);
+			crowns.transfer(msg.sender, _debt);
 			debts[_address] = 0;
 		}
 	}
