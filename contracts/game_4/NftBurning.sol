@@ -43,9 +43,6 @@ contract NftBurning is Ownable, IERC721Receiver{
   //track minted time per address
   mapping(address => uint256) public mintedTime;
 
-
-
-
   //sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
   event Minted(uint256 indexed sessionId, address indexed owner, uint256 burnt_nft_1,
      uint256 burnt_nft_2, uint256 burnt_nft_3, uint256 burnt_nft_4, uint256 burt_nft_5,
@@ -70,6 +67,7 @@ contract NftBurning is Ownable, IERC721Receiver{
     nftFactory = NftFactory(_nftFactory);
     nft = SeascapeNft(_nft);
 }
+
 
 
   //starts a new session, during which game would allow players to mint nfts
@@ -104,7 +102,6 @@ contract NftBurning is Ownable, IERC721Receiver{
     }
 
 
-
     //spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
     function mint(uint256 _sessionId, uint256[5] _nfts, uint256 _quality,
       uint8 _v, bytes32 _r, bytes32 _s) external {
@@ -122,7 +119,6 @@ contract NftBurning is Ownable, IERC721Receiver{
         require(crowns.balanceOf(msg.sender) >= sessions[_sessionId].fee,
             "Not enough CWS, please check your CWS balance");
         require(checkAllSlots(_nfts));
-
 
 
         //--------------------------------------------------------------------
@@ -145,7 +141,6 @@ contract NftBurning is Ownable, IERC721Receiver{
     }
 
 
-
     function checkAllSlots(uint256[5] _nfts) internal {
       //TODO: check that all slots are full
       require(_nftId > 0, "Nft Staking: Nft id must be greater than 0");
@@ -157,7 +152,8 @@ contract NftBurning is Ownable, IERC721Receiver{
       require(_recover == owner(),  "Nft Staking: Seascape points verification failed");
     }
 
-
+    /// @dev sets an nft factory, a smartcontract that mints tokens.
+    /// the nft factory should give a permission on it's own side to this contract too.
     function setNftFactory(address _address) external onlyOwner {
     require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
     nftFactory = NftFactory(_address);
