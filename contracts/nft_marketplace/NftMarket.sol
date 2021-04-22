@@ -123,7 +123,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         _;
     }
 
-
+    //only used in buy
     modifier checkTime(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
@@ -139,17 +139,13 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         _;
     }
 
+    //only used in cancelSales
     modifier onlySalesOwner(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
         require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
         _;
     }
-
-  function seize(IERC20 crowns) external onlyOwner returns (uint256 balance) {
-      balance = crowns.balanceOf(address(this));
-      crowns.safeTransfer(owner(), balance);
-  }
 
 
   function addSupportNft(address nft) public onlyOwner validAddress(nft) {
