@@ -45,7 +45,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     SalesObject[] _salesObjects;
 
-    mapping(address => bool) public _verifySeller;
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;
 
@@ -147,14 +146,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     }
 
 
-  function addVerifySeller(address seller) public onlyOwner validAddress(seller) {
-      _verifySeller[seller] = true;
-  }
-
-  function removeVerifySeller(address seller) public onlyOwner validAddress(seller) {
-      _verifySeller[seller] = false;
-  }
-
   function setIsStartUserSales(bool isStartUserSales) public onlyOwner {
       _isStartUserSales = isStartUserSales;
   }
@@ -183,11 +174,6 @@ function getSalesPrice(uint index)
 {
     SalesObject storage obj = _salesObjects[index];
     return obj.maxPrice;
-}
-
-function isVerifySeller(uint index) public view checkindex(index) returns(bool) {
-    SalesObject storage obj = _salesObjects[index];
-    return _verifySeller[obj.seller];
 }
 
 function cancelSales(uint index) external checkindex(index) onlySalesOwner(index) mustNotSellingOut(index) nonReentrant {
@@ -303,11 +289,5 @@ function buy(uint index, address currency_)
     // fire event
     emit Buy(index, obj.tokenId, msg.sender, price, tipsFee);
 }
-
-
-
-
-
-
 
 }
