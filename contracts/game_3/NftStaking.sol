@@ -45,9 +45,9 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @notice balance of lp token that each player deposited to game session
     struct Balance {
         uint256 claimedTime;       // amount of claimed CWS reward
-    	  uint256 nftId;
-    	  uint256 sp;                // seascape points
-          uint256 claimedAmount;
+    	uint256 nftId;
+        uint256 sp;                // seascape points
+        uint256 claimedAmount;
     }
 
     mapping(address => uint256) debts;
@@ -154,8 +154,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 			uint256 crownsBalance = crowns.balanceOf(address(this));
 			require(crownsBalance >= _debt, "Nft Staking: Not enough Crowns to transfer!");
 
-			crowns.transfer(msg.sender, _debt);
+			crowns.transfer(_address, _debt);
 			debts[_address] = 0;
+
+            earning[_sessionId][_address] = earning[_sessionId][_address].add(_debt);
 		}
 	}
 
