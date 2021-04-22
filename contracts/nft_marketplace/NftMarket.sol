@@ -147,15 +147,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         _;
     }
 
-
-  function addSupportNft(address nft) public onlyOwner validAddress(nft) {
-      _supportNft[nft] = true;
-  }
-
-  function removeSupportNft(address nft) public onlyOwner validAddress(nft) {
-      _supportNft[nft] = false;
-  }
-
   function addSeller(address seller) public onlyOwner validAddress(seller) {
       _seller[seller] = true;
   }
