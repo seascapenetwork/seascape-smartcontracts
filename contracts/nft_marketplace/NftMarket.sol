@@ -9,6 +9,7 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
 
@@ -16,7 +17,7 @@ import "./ReentrancyGuard.sol";
 
 
 
-contract NftMarket is IERC721Receiver,  ReentrancyGuard {
+contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -78,10 +79,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
 
     event eveNFTReceived(address operator, address from, uint256 tokenId, bytes data);
 
-    address public _governance;
-
-    event GovernanceTransferred(address indexed previousOwner, address indexed newOwner);
-
     mapping(uint256 => address) public _saleOnCurrency;
 
     mapping(uint256=>address) public routers;
@@ -92,7 +89,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
     constructor(address _crowns, address _nft) public {
       crowns = IERC20(_crowns);
       nft = SeascapeNft(_nft);
-      _governance = tx.origin;
     }
 
     receive() external payable { }
@@ -106,25 +102,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
         uint256 baseRate
     ) public {
         require(!initialized, "initialize: Already initialized!");
-        _governance = msg.sender;
         _tipsFeeWallet = tipsFeeWallet;
         _tipsFeeRate = tipsFeeRate;
         _baseRate = baseRate;
         initReentrancyStatus();
         initialized = true;
-    }
-
-
-    modifier onlyGovernance {
-        require(msg.sender == _governance, "not governance");
-        _;
-    }
-
-    function setGovernance(address governance)  public  onlyGovernance
-    {
-        require(governance != address(0), "new governance the zero address");
-        emit GovernanceTransferred(_governance, governance);
-        _governance = governance;
     }
 
 
@@ -160,55 +142,55 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard {
     modifier onlySalesOwner(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
-        require(obj.seller == msg.sender || msg.sender == _governance, "author & governance");
+        require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
         _;
     }
 
-  function seize(IERC20 crowns) external onlyGovernance returns (uint256 balance) {
+  function seize(IERC20 crowns) external onlyOwner returns (uint256 balance) {
       balance = crowns.balanceOf(address(this));
-      crowns.safeTransfer(_governance, balance);
+      crowns.safeTransfer(owner(), balance);
   }
 
 
-  function addSupportNft(address nft) public onlyGovernance validAddress(nft) {
+  function addSupportNft(address nft) public onlyOwner validAddress(nft) {
       _supportNft[nft] = true;
   }
 
-  function removeSupportNft(address nft) public onlyGovernance validAddress(nft) {
+  function removeSupportNft(address nft) public onlyOwner validAddress(nft) {
       _supportNft[nft] = false;
   }
 
-  function addSeller(address seller) public onlyGovernance validAddress(seller) {
+  function addSeller(address seller) public onlyOwner validAddress(seller) {
       _seller[seller] = true;
   }
 
-  function removeSeller(address seller) public onlyGovernance validAddress(seller) {
+  function removeSeller(address seller) public onlyOwner validAddress(seller) {
       _seller[seller] = false;
   }
 
 
 
-  function addVerifySeller(address seller) public onlyGovernance validAddress(seller) {
+  function addVerifySeller(address seller) public onlyOwner validAddress(seller) {
       _verifySeller[seller] = true;
   }
 
-  function removeVerifySeller(address seller) public onlyGovernance validAddress(seller) {
+  function removeVerifySeller(address seller) public onlyOwner validAddress(seller) {
       _verifySeller[seller] = false;
   }
 
-  function setIsStartUserSales(bool isStartUserSales) public onlyGovernance {
+  function setIsStartUserSales(bool isStartUserSales) public onlyOwner {
       _isStartUserSales = isStartUserSales;
   }
 
-  function setTipsFeeWallet(address payable wallet) public onlyGovernance {
+  function setTipsFeeWallet(address payable wallet) public onlyOwner {
       _tipsFeeWallet = wallet;
   }
 
-  function setBaseRate(uint256 rate) external onlyGovernance {
+  function setBaseRate(uint256 rate) external onlyOwner {
       _baseRate = rate;
   }
 
-  function setTipsFeeRate(uint256 rate) external onlyGovernance {
+  function setTipsFeeRate(uint256 rate) external onlyOwner {
       _tipsFeeRate = rate;
   }
 
