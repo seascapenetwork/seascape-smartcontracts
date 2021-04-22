@@ -45,7 +45,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     SalesObject[] _salesObjects;
 
-    mapping(address => bool) public _seller;
     mapping(address => bool) public _verifySeller;
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;
@@ -147,15 +146,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         _;
     }
 
-  function addSeller(address seller) public onlyOwner validAddress(seller) {
-      _seller[seller] = true;
-  }
-
-  function removeSeller(address seller) public onlyOwner validAddress(seller) {
-      _seller[seller] = false;
-  }
-
-
 
   function addVerifySeller(address seller) public onlyOwner validAddress(seller) {
       _verifySeller[seller] = true;
@@ -201,7 +191,7 @@ function isVerifySeller(uint index) public view checkindex(index) returns(bool) 
 }
 
 function cancelSales(uint index) external checkindex(index) onlySalesOwner(index) mustNotSellingOut(index) nonReentrant {
-    require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
+    require(_isStartUserSales, "cannot sales");
     SalesObject storage obj = _salesObjects[index];
     obj.status = 2;
     nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
@@ -219,7 +209,7 @@ function startSales(uint256 tokenId,
 {
     require(tokenId != 0, "invalid token");
     require(startTime > now, "invalid start time");
-    require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
+    require(_isStartUserSales, "cannot sales");
 
     nft.safeTransferFrom(msg.sender, address(this), tokenId);
 
@@ -279,7 +269,7 @@ function buy(uint index, address currency_)
     payable
 {
   SalesObject storage obj = _salesObjects[index];
-  require(_isStartUserSales || _seller[msg.sender] == true, "cannot sales");
+  require(_isStartUserSales, "cannot sales");
 
   address currencyAddr = _saleOnCurrency[obj.id];
   uint256 price = this.getSalesPrice(index);

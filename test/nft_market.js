@@ -115,8 +115,6 @@ contract("Nft Market", async accounts => {
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
 
-      await nftMarket.addSeller(seller);
-
       await nftMarket.setIsStartUserSales(true);
 
       await nftMarket.startSales(tokenId, maxPrice, startTime, crowns.address, {from: seller});
