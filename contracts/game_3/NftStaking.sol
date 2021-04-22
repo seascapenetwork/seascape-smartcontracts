@@ -148,7 +148,9 @@ contract NftStaking is Ownable, IERC721Receiver {
         emit NftFactorySet(_address);
     }
 
-    function payDebt(address _address) external onlyOwner {
+    function payDebt(uint256 _sessionId, address _address) external onlyOwner {
+        require(_sessionId > 0, "Nft Staking: Session id should be greater than 0!");
+
 		uint256 _debt = debts[_address];
         if (_debt > 0) {
 			uint256 crownsBalance = crowns.balanceOf(address(this));
