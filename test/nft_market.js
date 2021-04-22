@@ -110,7 +110,7 @@ contract("Nft Market", async accounts => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
 
-      startTime = Math.floor(Date.now()/1000) + 2;
+      startTime = Math.floor(Date.now()/1000) + 3;
 
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
