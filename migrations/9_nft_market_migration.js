@@ -4,8 +4,14 @@ var Nft = artifacts.require("./SeascapeNft.sol");
 
 
 
-var feesReciever = "0x02FfB10472155A986e87c99C4a25A2EF3E50eb36";
-const tipsFeeRate = 100;
+async function getAccount(id) {
+    let accounts = await web3.eth.getAccounts();
+    return accounts[id];
+}
+
+
+var feesReciever = getAccount(3);
+const tipsFeeRate = 100;	// 10%
 
 module.exports = function(deployer, network) {
 	deployer.deploy(NftMarket, Crowns.address, Nft.address, feesReciever, tipsFeeRate)

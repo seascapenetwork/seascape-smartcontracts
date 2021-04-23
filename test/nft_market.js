@@ -157,7 +157,7 @@ contract("Nft Market", async accounts => {
       //check cws buyer balance after
       let fee = (price/finney) * _tipsFeeRate/1000;
       let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
-      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+price/finney-fee, "Buyer didnt pay sufficient price");
+      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+price/finney, "Buyer didnt pay sufficient price");
 
       //check that feeReciever gets the fees
 
