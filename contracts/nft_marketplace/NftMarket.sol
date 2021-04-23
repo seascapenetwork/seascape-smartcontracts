@@ -69,12 +69,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 finalPrice
     );
 
-    event eveCancelSales(
+    event SaleCanceled(
         uint256 indexed id,
         uint256 tokenId
     );
 
-    event eveNFTReceived(address operator, address from, uint256 tokenId, bytes data);
+    event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
     mapping(uint256 => address) public _saleOnCurrency;
 
@@ -247,7 +247,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
      }
 
      //success
-     emit eveNFTReceived(operator, from, tokenId, data);
+     emit NftReceived(operator, from, tokenId, data);
      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
   }
 
