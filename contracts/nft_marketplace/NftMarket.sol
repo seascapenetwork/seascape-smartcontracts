@@ -29,11 +29,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
 
     struct SalesObject {
-        uint256 id;
+        uint256 id;               // object id
         uint256 tokenId;
         uint256 startTime;        // timestamp when the sale starts
         uint256 maxPrice;         // remove, the same as finalPrice
-        uint256 finalPrice;       // nf price
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
         address payable seller;   // seller address
         address payable buyer;    // buyer address
@@ -54,7 +53,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 indexed id,
         uint256 tokenId,
         address buyer,
-        uint256 finalPrice,
+        uint256 maxPrice,
         uint256 tipsFee
     );
 
@@ -64,8 +63,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         address seller,
         address buyer,
         uint256 startTime,
-        uint256 maxPrice,
-        uint256 finalPrice
+        uint256 maxPrice
     );
 
     event SaleCanceled(
@@ -206,7 +204,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.buyer = address(0x0);
       obj.startTime = startTime;
       obj.maxPrice = maxPrice;
-      obj.finalPrice = 0;
       obj.status = 0;
 
       _saleOnCurrency[obj.id] = currency;
@@ -218,7 +215,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
           zeroObj.buyer = address(0x0);
           zeroObj.startTime = 0;
           zeroObj.maxPrice = 0;
-          zeroObj.finalPrice = 0;
           zeroObj.status = 2;
           _salesObjects.push(zeroObj);
       }
@@ -226,7 +222,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       _salesObjects.push(obj);
 
       uint256 tmpMaxPrice = maxPrice;
-      emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice, 0);
+      emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice);
       return _salesAmount;
   }
 
@@ -279,11 +275,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
 
       obj.buyer = msg.sender;
-      obj.finalPrice = price;
+      //obj.finalPrice = price;
 
       obj.status = 1;
 
-      // fire event
       emit Buy(index, obj.tokenId, msg.sender, price, tipsFee);
   }
 
