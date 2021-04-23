@@ -75,8 +75,6 @@ contract("Nft Market", async accounts => {
 
     });
 
-
-
     it("should mint 5 nft tokens", async () => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
@@ -143,32 +141,29 @@ contract("Nft Market", async accounts => {
       //and feeReciever
       feeReciever = accounts[3];
       let feeRecieverBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(feeReciever))/finney);
-
       //check cws seller balance before
       let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
 
       //execute buy
       await nftMarket.buy(tokenId, crowns.address, {from: buyer});
 
-      //check nft buyer balance after
+      //check buyers nft balance after
       let buyerNftBalanceAfter = await nft.balanceOf(buyer);
       assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
 
-      //check cws buyer balance after
+      //check buyers cws balance after
       let fee = (price/finney) * _tipsFeeRate/1000;
       let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
       assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+price/finney, "Buyer didnt pay sufficient price");
 
       //check that feeReciever gets the fees
-
       let feeRecieverBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(feeReciever))/finney);
       assert.equal(feeRecieverBalanceBefore + fee, feeRecieverBalanceAfter, "feeReciever did not recieve fees");
 
-
       //check cws seller balance after
       let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      //following assertion fails due to flooring/transaction fees
-      //assert.equal(sellerCwsBalanceBefore+price/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
+      //following assertion may fails due to no accounting transaction fees
+      assert.equal(sellerCwsBalanceBefore+price/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
     });
 
 

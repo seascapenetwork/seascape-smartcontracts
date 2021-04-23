@@ -87,30 +87,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
 
     // index cant be higher than sales amount
-    modifier checkindex(uint index) {
+    modifier checkIndex(uint index) {
         require(index <= _salesObjects.length, "overflow");
-        _;
-    }
-
-    modifier checkTime(uint index) {
-        require(index <= _salesObjects.length, "overflow");
-        SalesObject storage obj = _salesObjects[index];
-        require(obj.startTime <= now, "!open");
-        _;
-    }
-
-    modifier mustNotSellingOut(uint index) {
-        require(index <= _salesObjects.length, "overflow");
-        SalesObject storage obj = _salesObjects[index];
-        require(obj.buyer == address(0x0) && obj.status == 0, "sry, selling out");
-        _;
-    }
-
-    //only used in cancelSales
-    modifier onlySalesOwner(uint index) {
-        require(index <= _salesObjects.length, "overflow");
-        SalesObject storage obj = _salesObjects[index];
-        require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
         _;
     }
 
@@ -131,7 +109,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   }
 
   // returns sales by index
-  function getSales(uint index) external view checkindex(index) returns(SalesObject memory) {
+  function getSales(uint index) external view checkIndex(index) returns(SalesObject memory) {
       return _salesObjects[index];
   }
 
@@ -140,7 +118,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   function getSalesPrice(uint index)
       external
       view
-      checkindex(index)
+      checkIndex(index)
       returns (uint256)
   {
       SalesObject storage obj = _salesObjects[index];
@@ -148,9 +126,15 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   }
 
   // cancel a sale - only nft owner can call
-  function cancelSales(uint index) external checkindex(index) onlySalesOwner(index) mustNotSellingOut(index) nonReentrant {
-      require(_isStartUserSales, "cannot sales");
+  function cancelSales(uint index)
+    external
+    checkIndex(index)
+    nonReentrant
+    {
       SalesObject storage obj = _salesObjects[index];
+      require(obj.buyer == address(0x0) && obj.status == 0, "sorry, selling out");
+      require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
+      require(_isStartUserSales, "cannot sales");
       obj.status = 2;
       nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
 
@@ -218,11 +202,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   function buy(uint index, address currency)
       public
       nonReentrant
-      mustNotSellingOut(index)
-      checkTime(index)
+      checkIndex(index)
       payable
   {
     SalesObject storage obj = _salesObjects[index];
+    require(obj.buyer == address(0x0) && obj.status == 0, "sorry, selling out");
+    require(obj.startTime <= now, "!open");
     require(_isStartUserSales, "cannot sales");
 
     uint256 price = this.getSalesPrice(index);
