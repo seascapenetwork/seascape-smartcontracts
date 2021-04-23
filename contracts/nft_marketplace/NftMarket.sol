@@ -97,14 +97,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     }
 
 
-    /**
-     * check address
-     */
-    modifier validAddress( address addr ) {
-        require(addr != address(0x0));
-        _;
-    }
-
     // index cant be higher than sales amount
     modifier checkindex(uint index) {
         require(index <= _salesObjects.length, "overflow");
