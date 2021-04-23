@@ -24,9 +24,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     IERC20 public crowns;
     SeascapeNft private nft;
 
-    // --- Data ---
-    bool private initialized; // Flag of data initialized
-
 
     struct SalesObject {
         uint256 id;               // object id
@@ -46,7 +43,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;  // enable/disable trading
 
-    uint256 public _tipsFeeRate = 20; // feeAmount = (_tipsFeeRate / 1000) * price
+    uint256 public _tipsFeeRate; // feeAmount = (_tipsFeeRate / 1000) * price
     address payable _tipsFeeWallet; // reciever of fees
 
     event Buy(
@@ -74,27 +71,19 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
 
-    constructor(address _crowns, address _nft) public {
+    constructor(address _crowns, address _nft,
+      address payable tipsFeeWallet, uint256 tipsFeeRate) public {
+      _tipsFeeWallet = tipsFeeWallet;
+      _tipsFeeRate = tipsFeeRate;
       crowns = IERC20(_crowns);
       nft = SeascapeNft(_nft);
+      initReentrancyStatus();
     }
 
     // recieve tokens
     receive() external payable { }
     //@note Prefer using a receive function only, whenever possible
     //fallback() external [payable] { }
-
-    // set tips data - may be moved to constructor
-    function initializeFees(
-        address payable tipsFeeWallet,
-        uint256 tipsFeeRate
-    ) public {
-        require(!initialized, "Fees already initialized");
-        _tipsFeeWallet = tipsFeeWallet;
-        _tipsFeeRate = tipsFeeRate;
-        initReentrancyStatus();
-        initialized = true;
-    }
 
 
     // index cant be higher than sales amount
@@ -103,14 +92,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         _;
     }
 
-
     modifier checkTime(uint index) {
         require(index <= _salesObjects.length, "overflow");
         SalesObject storage obj = _salesObjects[index];
         require(obj.startTime <= now, "!open");
         _;
     }
-
 
     modifier mustNotSellingOut(uint index) {
         require(index <= _salesObjects.length, "overflow");
@@ -126,6 +113,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
         _;
     }
+
 
   // enable/disable trading
   function setIsStartUserSales(bool isStartUserSales) public onlyOwner {
@@ -146,6 +134,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   function getSales(uint index) external view checkindex(index) returns(SalesObject memory) {
       return _salesObjects[index];
   }
+
 
   // returns just the price of sale by index - may be deleted
   function getSalesPrice(uint index)
@@ -257,12 +246,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     }
 
       nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
-
       obj.buyer = msg.sender;
       //obj.finalPrice = price;
 
       obj.status = 1;
-
       emit Buy(index, obj.tokenId, msg.sender, price, tipsFee);
   }
 

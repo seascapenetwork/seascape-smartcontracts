@@ -14,13 +14,12 @@ contract("Nft Market", async accounts => {
     let id = 0;
     let tokenId = 1; // aka nftId
     let startTime;  //declared inside tests
-    let maxPrice = web3.utils.toWei("2", "ether");
-    let finalPrice = web3.utils.toWei("2", "ether");
+    let price = web3.utils.toWei("2", "ether");
     let status = 0;
 
     //used by buy
     let _isStartUserSales = true;
-    let _tipsFeeRate = 20;
+    let _tipsFeeRate = 100;
 
     //used by startSales
     let _salesAmount = 0;
@@ -38,7 +37,7 @@ contract("Nft Market", async accounts => {
     let gameOwner = null;
     let seller = null;
     let buyer = null;
-    let feesReciever = null;
+    let feeReciever = null;
 
     //support variables
     let finney = 1000000000000000;
@@ -58,7 +57,6 @@ contract("Nft Market", async accounts => {
 	     gameOwner = accounts[0];
        seller = accounts[1];
        buyer = accounts[2];
-       feesReciever = accounts[3];
 
 	     await nft.setFactory(factory.address);
 	     await factory.addGenerator(nftMarket.address, {from: gameOwner});
@@ -74,6 +72,7 @@ contract("Nft Market", async accounts => {
 
     	let allowance = await crowns.allowance(seller, nftMarket.address);
     	assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
+
     });
 
 
@@ -116,7 +115,7 @@ contract("Nft Market", async accounts => {
 
       await nftMarket.setIsStartUserSales(true);
 
-      await nftMarket.startSales(tokenId, maxPrice, startTime, crowns.address, {from: seller});
+      await nftMarket.startSales(tokenId, price, startTime, crowns.address, {from: seller});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(seller);
@@ -136,17 +135,14 @@ contract("Nft Market", async accounts => {
 	     assert.equal(parseInt(allowance), parseInt(depositAmount), "expected deposit sum to be allowed for nft rush");
     });
 
-    it("should initialize the fees", async() => {
-      //assert.equal(nftMarket.initialized, false, "in begining shouldn be initialized.");
-      await nftMarket.initializeFees(feesReciever, _tipsFeeRate);
-      assert(true);
-    });
-
 
     it("should buy nft", async() => {
       //check nft and cws buyer balance before
       let buyerNftBalanceBefore = await nft.balanceOf(buyer);
       let buyerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
+      //and feeReciever
+      feeReciever = accounts[3];
+      let feeRecieverBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(feeReciever))/finney);
 
       //check cws seller balance before
       let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
@@ -154,18 +150,25 @@ contract("Nft Market", async accounts => {
       //execute buy
       await nftMarket.buy(tokenId, crowns.address, {from: buyer});
 
-      //check nft and cws buyer balance after
+      //check nft buyer balance after
       let buyerNftBalanceAfter = await nft.balanceOf(buyer);
-      let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
       assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
-      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+maxPrice/finney, "Buyer didnt pay sufficient price");
+
+      //check cws buyer balance after
+      let fee = (price/finney) * _tipsFeeRate/1000;
+      let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
+      assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+price/finney-fee, "Buyer didnt pay sufficient price");
+
+      //check that feeReciever gets the fees
+
+      let feeRecieverBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(feeReciever))/finney);
+      assert.equal(feeRecieverBalanceBefore + fee, feeRecieverBalanceAfter, "feeReciever did not recieve fees");
+
 
       //check cws seller balance after
       let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      let fee = (maxPrice/finney) * _tipsFeeRate / 1000;
-
       //following assertion fails due to flooring/transaction fees
-      //assert.equal(sellerCwsBalanceBefore+maxPrice/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
+      //assert.equal(sellerCwsBalanceBefore+price/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
     });
 
 
