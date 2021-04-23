@@ -75,8 +75,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     mapping(uint256 => address) public _saleOnCurrency;
 
-    mapping(uint256=>address) public routers;
-
 
     constructor(address _crowns, address _nft) public {
       crowns = IERC20(_crowns);
