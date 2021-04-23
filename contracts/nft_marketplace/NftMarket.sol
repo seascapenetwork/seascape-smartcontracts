@@ -73,8 +73,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
-    mapping(uint256 => address) public _saleOnCurrency;
-
 
     constructor(address _crowns, address _nft) public {
       crowns = IERC20(_crowns);
@@ -204,8 +202,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.price = price;
       obj.status = 0;
 
-      _saleOnCurrency[obj.id] = currency;
-
       if (_salesObjects.length == 0) {
           SalesObject memory zeroObj;
           zeroObj.tokenId = 0;
@@ -238,7 +234,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   }
 
   // buy nft
-  function buy(uint index, address currency_)
+  function buy(uint index, address currency)
       public
       nonReentrant
       mustNotSellingOut(index)
@@ -248,13 +244,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     SalesObject storage obj = _salesObjects[index];
     require(_isStartUserSales, "cannot sales");
 
-    address currencyAddr = _saleOnCurrency[obj.id];
     uint256 price = this.getSalesPrice(index);
     uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
     uint256 purchase = price.sub(tipsFee);
 
-    require(address(currencyAddr) == currency_, "must use same currency as seller");
-    if (currencyAddr == address(0x0)){
+    if (currency == address(0x0)){
         require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
         uint256 returnBack = msg.value.sub(price);
         if(returnBack > 0) {
@@ -266,8 +260,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         obj.seller.transfer(purchase);
     }
     else{
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+        IERC20(currency).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+        IERC20(currency).safeTransferFrom(msg.sender, obj.seller, purchase);
     }
 
       nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
