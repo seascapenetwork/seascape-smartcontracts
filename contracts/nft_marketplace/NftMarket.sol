@@ -47,8 +47,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;  // enable/disable trading
 
-    uint256 public _tipsFeeRate = 20; // feeAmount = (_tipsFeeRate / _baseRate) * price
-    uint256 public _baseRate = 1000;
+    uint256 public _tipsFeeRate = 20; // feeAmount = (_tipsFeeRate / 1000) * price
     address payable _tipsFeeWallet; // reciever of fees
 
     event Buy(
@@ -92,15 +91,13 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     //fallback() external [payable] { }
 
     // set tips data - may be moved to constructor
-    function initialize(
+    function initializeFees(
         address payable tipsFeeWallet,
-        uint256 tipsFeeRate,
-        uint256 baseRate
+        uint256 tipsFeeRate
     ) public {
-        require(!initialized, "initialize: Already initialized!");
+        require(!initialized, "Fees already initialized");
         _tipsFeeWallet = tipsFeeWallet;
         _tipsFeeRate = tipsFeeRate;
-        _baseRate = baseRate;
         initReentrancyStatus();
         initialized = true;
     }
@@ -152,11 +149,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   // set address to recieve fees
   function setTipsFeeWallet(address payable wallet) public onlyOwner {
       _tipsFeeWallet = wallet;
-  }
-
-  // adjust base rate - can be deleted
-  function setBaseRate(uint256 rate) external onlyOwner {
-      _baseRate = rate;
   }
 
   // adjust tips rate in percents
@@ -264,7 +256,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     address currencyAddr = _saleOnCurrency[obj.id];
     uint256 price = this.getSalesPrice(index);
-    uint256 tipsFee = price.mul(_tipsFeeRate).div(_baseRate);
+    uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
     uint256 purchase = price.sub(tipsFee);
 
     require(address(currencyAddr) == currency_, "must use same currency as seller");

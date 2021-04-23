@@ -21,7 +21,6 @@ contract("Nft Market", async accounts => {
     //used by buy
     let _isStartUserSales = true;
     let _tipsFeeRate = 20;
-    let _baseRate = 1000;
 
     //used by startSales
     let _salesAmount = 0;
@@ -137,9 +136,9 @@ contract("Nft Market", async accounts => {
 	     assert.equal(parseInt(allowance), parseInt(depositAmount), "expected deposit sum to be allowed for nft rush");
     });
 
-    it("should initialize the contract", async() => {
+    it("should initialize the fees", async() => {
       //assert.equal(nftMarket.initialized, false, "in begining shouldn be initialized.");
-      await nftMarket.initialize(feesReciever, _tipsFeeRate, _baseRate);
+      await nftMarket.initializeFees(feesReciever, _tipsFeeRate);
       assert(true);
     });
 
@@ -163,7 +162,7 @@ contract("Nft Market", async accounts => {
 
       //check cws seller balance after
       let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      let fee = (maxPrice/finney) * _tipsFeeRate / _baseRate
+      let fee = (maxPrice/finney) * _tipsFeeRate / 1000;
 
       //following assertion fails due to flooring/transaction fees
       //assert.equal(sellerCwsBalanceBefore+maxPrice/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
