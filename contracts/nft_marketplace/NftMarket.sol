@@ -32,7 +32,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 id;               // object id
         uint256 tokenId;
         uint256 startTime;        // timestamp when the sale starts
-        uint256 maxPrice;         // remove, the same as finalPrice
+        uint256 price;         // remove, the same as finalPrice
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
         address payable seller;   // seller address
         address payable buyer;    // buyer address
@@ -53,7 +53,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 indexed id,
         uint256 tokenId,
         address buyer,
-        uint256 maxPrice,
+        uint256 price,
         uint256 tipsFee
     );
 
@@ -63,7 +63,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         address seller,
         address buyer,
         uint256 startTime,
-        uint256 maxPrice
+        uint256 price
     );
 
     event SaleCanceled(
@@ -167,7 +167,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       returns (uint256)
   {
       SalesObject storage obj = _salesObjects[index];
-      return obj.maxPrice;
+      return obj.price;
   }
 
   // cancel a sale - only nft owner can call
@@ -182,7 +182,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
   // put nft for sale
   function startSales(uint256 tokenId,
-                      uint256 maxPrice,
+                      uint256 price,
                       uint256 startTime,
                       address currency)
       external
@@ -203,7 +203,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.seller = msg.sender;
       obj.buyer = address(0x0);
       obj.startTime = startTime;
-      obj.maxPrice = maxPrice;
+      obj.price = price;
       obj.status = 0;
 
       _saleOnCurrency[obj.id] = currency;
@@ -214,15 +214,15 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
           zeroObj.seller = address(0x0);
           zeroObj.buyer = address(0x0);
           zeroObj.startTime = 0;
-          zeroObj.maxPrice = 0;
+          zeroObj.price = 0;
           zeroObj.status = 2;
           _salesObjects.push(zeroObj);
       }
 
       _salesObjects.push(obj);
 
-      uint256 tmpMaxPrice = maxPrice;
-      emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpMaxPrice);
+      uint256 tmpPrice = price;
+      emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpPrice);
       return _salesAmount;
   }
 
