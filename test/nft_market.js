@@ -66,7 +66,7 @@ contract("Nft Market", async accounts => {
 
     // before deposit of nft token,
     // seller needs to approve the token to be transferred by nft rush contract
-    it("should approve nft market to spend cws of seller", async () => {
+    xit("should approve nft market to spend cws of seller", async () => {
 
 	    await crowns.approve(nftMarket.address, depositAmount, {from: seller});
 
