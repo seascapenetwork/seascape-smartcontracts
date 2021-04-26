@@ -21,7 +21,7 @@ let init = async function(networkId) {
 
 
 
-    let gameOwner = accounts[0];
+    let user = accounts[1];
     let nftId = 0;
 
     //cancel sale, only nft owner can call

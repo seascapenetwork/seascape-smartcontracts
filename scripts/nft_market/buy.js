@@ -20,11 +20,15 @@ let init = async function(networkId) {
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
 
 
-
-    let gameOwner = accounts[0];
+    let user = accounts[1];
     let nftId = 0;
+    let approveAmount = web3.utils.toWei("5", "ether");
 
-    //cancel sale, only nft owner can call
-    await nftMarket.cancelSales(nftId, {from: user});
+    //approve spending of crowns
+    await crowns.approve(nftMarket.address, approveAmount, {from: user});
+
+    //execute buy
+    let buy = await nftMarket.buy(nftId, crowns.address, {from: user});
+    console.log(buy);
 
 }.bind(this);

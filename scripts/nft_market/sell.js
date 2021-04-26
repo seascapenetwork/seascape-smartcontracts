@@ -21,10 +21,19 @@ let init = async function(networkId) {
 
 
 
-    let gameOwner = accounts[0];
+    let user = accounts[1];
     let nftId = 0;
+    let price = web3.utils.toWei("1", "ether");
+    let startTime = Math.floor(Date.now()/1000) + 3;
 
-    //cancel sale, only nft owner can call
-    await nftMarket.cancelSales(nftId, {from: user});
+    //approve transfer of nft
+    await nft.setApprovalForAll(nftMarket.address, true, {from: user});
+
+    //enable sales (onlyOwner)
+    await nftMarket.setIsStartUserSales(true);
+
+    //put nft for sale
+    let onSale = await nftMarket.startSales(nftId, price, startTime, crowns.address, {from: user});
+    console.log(onSale);
 
 }.bind(this);

@@ -30,9 +30,14 @@ let init = async function(networkId) {
 
     let user1 = accounts[1];
     let user2 = accounts[2];
+    let approveAmount = web3.utils.toWei("5", "ether");
+    let nftId = 3;
+
+    //approve spending of crowns
+    await crowns.approve(nftMarket.address, approveAmount, {from: user1});
 
     //execute buy
-    await nftMarket.buy(3, crowns.address, {from: user1});
+    await nftMarket.buy(nftId, crowns.address, {from: user1});
 
     //cancel sale
     await nftMarket.cancelSales(4, {from: user2});
