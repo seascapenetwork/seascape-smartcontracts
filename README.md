@@ -10,7 +10,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Factory:                   [0x25F4C38FAF75dF9622FECB17Fa830278cd732091](https://etherscan.io/address/0x25F4C38FAF75dF9622FECB17Fa830278cd732091)
  * Profit Circus ( First game):   [0xbcf39f0edda668c58371e519af37ca705f2bfcbd](https://etherscan.io/address/0xbcf39f0edda668c58371e519af37ca705f2bfcbd)
  * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
- * Nft Staking (Third game):      ```yet to come...```
+ * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://etherscan.io/address/0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1)
 
 ### Binance Smart chain network
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
@@ -27,7 +27,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus ( First game):   [0x9f5FdC047e1C53D7255a0069071127A3769a2D48](https://rinkeby.etherscan.io/address/0x9f5FdC047e1C53D7255a0069071127A3769a2D48)
  * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
  * Staking Saloon (Third game):      [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
- * Nft Market:                    [0x02acB12EF7bafE2909707556673755bEff1eC15E](https://rinkeby.etherscan.io/address/0x02acb12ef7bafe2909707556673755beff1ec15e)
+ * Nft Market:                    [0xAE8f52680DE87Bcf775D6935f5D5e62CCD5B961c](https://rinkeby.etherscan.io/address/0xAE8f52680DE87Bcf775D6935f5D5e62CCD5B961c)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
