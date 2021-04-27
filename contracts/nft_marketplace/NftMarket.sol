@@ -40,6 +40,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     SalesObject[] _salesObjects;  // store sales in an array
 
+    mapping(uint256 => uint256) public nftIdToIndex;
+
     mapping(address => bool) public _supportNft;
     bool public _isStartUserSales;  // enable/disable trading
 
@@ -86,7 +88,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     //fallback() external [payable] { }
 
 
-    // index cant be higher than sales amount
+    // index cant be higher than sales amsellingount
     modifier checkIndex(uint index) {
         require(index <= _salesObjects.length, "overflow");
         _;
@@ -108,8 +110,13 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       _tipsFeeRate = rate;
   }
 
+  function getSalesByNftId(uint tokenId) public {
+    uint index = nftIdToIndex[tokenId];
+    getSales(index);
+  }
+
   // returns sales by index
-  function getSales(uint index) external view checkIndex(index) returns(SalesObject memory) {
+  function getSales(uint index) public view checkIndex(index) returns(SalesObject memory) {
       return _salesObjects[index];
   }
 
@@ -125,14 +132,19 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       return obj.price;
   }
 
+  function cancelSalesByNftId(uint tokenId, address currency) public {
+    uint index = nftIdToIndex[tokenId];
+    cancelSales(index);
+  }
+
   // cancel a sale - only nft owner can call
   function cancelSales(uint index)
-    external
+    public
     checkIndex(index)
     nonReentrant
     {
       SalesObject storage obj = _salesObjects[index];
-      require(obj.buyer == address(0x0) && obj.status == 0, "sorry, selling out");
+      require(obj.status == 0, "sorry, selling out");
       require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
       require(_isStartUserSales, "cannot sales");
       obj.status = 2;
@@ -141,12 +153,18 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       emit SaleCanceled(index, obj.tokenId);
   }
 
+  function startSalesByNftId(uint256 tokenId, uint256 price,
+    uint256 startTime, address currency) public {
+    uint index = nftIdToIndex[tokenId];
+    startSales(index, price, startTime, currency);
+  }
+
   // put nft for sale
   function startSales(uint256 tokenId,
                       uint256 price,
                       uint256 startTime,
                       address currency)
-      external
+      public
       nonReentrant
       returns(uint)
   {
@@ -167,18 +185,9 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.price = price;
       obj.status = 0;
 
-      if (_salesObjects.length == 0) {
-          SalesObject memory zeroObj;
-          zeroObj.tokenId = 0;
-          zeroObj.seller = address(0x0);
-          zeroObj.buyer = address(0x0);
-          zeroObj.startTime = 0;
-          zeroObj.price = 0;
-          zeroObj.status = 2;
-          _salesObjects.push(zeroObj);
-      }
-
       _salesObjects.push(obj);
+
+      nftIdToIndex[tokenId] = _salesObjects.length - 1;
 
       uint256 tmpPrice = price;
       emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpPrice);
@@ -198,6 +207,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
   }
 
+
+  function buyByNftId(uint tokenId, address currency) public {
+    uint index = nftIdToIndex[tokenId];
+    buy(index, currency);
+  }
+
   // buy nft
   function buy(uint index, address currency)
       public
@@ -206,7 +221,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       payable
   {
     SalesObject storage obj = _salesObjects[index];
-    require(obj.buyer == address(0x0) && obj.status == 0, "sorry, selling out");
+    require(obj.status == 0, "sorry, selling out");
     require(obj.startTime <= now, "!open");
     require(_isStartUserSales, "cannot sales");
 
