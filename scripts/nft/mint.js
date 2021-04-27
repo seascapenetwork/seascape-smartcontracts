@@ -6,7 +6,9 @@ let factoryAddress = '0x3eB88c3F2A719369320D731FbaE062b0f82F22e4';
 let nftAddress = '0x66638F4970C2ae63773946906922c07a583b6069';
 
 module.exports = async function(callback) {
-    let res = init();
+    const networkId = await web3.eth.net.getId();
+
+    let res = await init(networkId);
 
     callback(null, res);
 };
@@ -21,21 +23,21 @@ let grantPermission = async function(factory, address) {
     return res;
 }.bind(this);
 
-let init = async function() {
-    web3.eth.getAccounts(function(err,res) {accounts = res;});
+let init = async function(networkId) {
+    accounts = await web3.eth.getAccounts();
+    console.log(accounts);
 
-    let factory = await Factory.deployed();
-    let nft = await Nft.deployed();
-    
-    let nftGranted = await nft.setFactory(factory.address, {from: accounts[0], gasPrice: 136000000000});
-    console.log("Nft has been linked to factory: "+nftGranted.tx);
+    let factory;
+    let nft;
 
-    let granted = await factory.isGenerator(accounts[0], {from: accounts[0], gasPrice: 136000000000});
-    if (!granted) {
-	    await factory.grantPermission(factory, accounts[0], {from: accounts[0], gasPrice: 136000000000});
-    } else {
-	    console.log(`Account ${accounts[0]} was already granted a permission`);
-    }
+        factory = await Factory.deployed();
+        nft = await Nft.deployed();
+
+    console.log("Contracts initiated")
+
+    await grantPermission(factory, accounts[0]);
+
+    console.log("Got a permission")
 
     let amount = 5;
     let args = process.argv.slice(4);
@@ -43,17 +45,19 @@ let init = async function() {
 	    amount = parseInt(args[0]);
 	    if (amount < min || amount > max) {
 	        throw "Number of minting NFTs should be between 1 and 5";
-	        process.exit(1);
 	    }
     }
     
+
+    console.log("Set arguments")
+
     let owner = accounts[0];
     let generation = 0;
 
     for (var quality = 1; quality <= amount; quality++) {
-        let res = await factory.mintQuality(owner, generation, quality, {from: accounts[0], gasPrice: 136000000000});
+        let res = await factory.mintQuality(owner, generation, 4, {from: accounts[0], gasPrice: 136000000000});
         console.log("-------------------------");
-        console.log(`Quality ${quality} was minted!`);	
+        console.log(`Quality ${4} was minted!`);	
         console.log(`Txid: ${res.tx}`);
         console.log();
     }
