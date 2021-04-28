@@ -23,7 +23,7 @@ module.exports = {
         },
 	rinkeby: {
     provider: function () {
-        return new HDWalletProvider(process.env.MNEMONIC, "https://rinkeby.infura.io/v3/" + process.env.INFURA_API_KEY, 0, 4);
+        return new HDWalletProvider(process.env.MNEMONIC, "https://rinkeby.infura.io/v3/" + process.env.INFURA_API_KEY, 0, 5);
     },
 	    network_id: 4,
 	    skipDryRun: true // To prevent async issues occured on node v. 14. see:

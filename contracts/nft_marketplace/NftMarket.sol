@@ -224,6 +224,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     require(obj.status == 0, "sorry, selling out");
     require(obj.startTime <= now, "!open");
     require(_isStartUserSales, "cannot sales");
+    require(msg.sender != obj.seller, "can't buy from yourself");
 
     uint256 price = this.getSalesPrice(index);
     uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
