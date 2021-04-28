@@ -20,30 +20,11 @@ let init = async function(networkId) {
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
 
 
-    console.log(await nftMarket.getSales(0));
-
-    //must fill correct nftId
-    let nftId = 318;
-    let approveAmount = web3.utils.toWei("1", "ether");
-
-
     let user = accounts[0];
     console.log(`Using ${user}`);
 
-    //approve spending of crowns
-    await crowns.approve(nftMarket.address, approveAmount, {from: user}).catch(console.error);
-
-
-    let index = await nftMarket.nftIdToIndex(nftId).catch(console.error);
-    console.log(`Sales index of ${nftId} is ${index}`);
-
-    // debug that sales is correct
-    let salesObject = await nftMarket.getSalesByNftId(nftId).catch(console.error);
-    console.log(salesObject);
-
-    //execute buy
-    let buy = await nftMarket.buyByNftId(nftId, crowns.address, {from: user}).catch(console.error);
-    console.log(buy);
-
+    //enable sales (onlyOwner) -only needs to run once per contract
+    let salesStarted = await nftMarket.setIsStartUserSales(true);
+    console.log(salesStarted);
 
 }.bind(this);
