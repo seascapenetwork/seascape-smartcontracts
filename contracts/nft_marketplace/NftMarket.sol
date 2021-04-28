@@ -149,7 +149,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       SalesObject storage obj = _salesObjects[index];
       require(obj.status == 0, "sorry, selling out");
       require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
-      require(_isStartUserSales, "cannot sales");
+      require(_isStartUserSales, "Sales are closed");
       obj.status = 2;
       nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
 
@@ -170,7 +170,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       returns(uint)
   {
       require(tokenId != 0, "invalid token");
-      require(_isStartUserSales, "cannot sales");
+      require(_isStartUserSales, "Sales are closed");
 
       nft.safeTransferFrom(msg.sender, address(this), tokenId);
 
@@ -223,8 +223,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     SalesObject storage obj = _salesObjects[index];
     require(obj.status == 0, "sorry, selling out");
     require(obj.startTime <= now, "!open");
-    require(_isStartUserSales, "cannot sales");
-    require(msg.sender != obj.seller, "can't buy from yourself");
+    require(_isStartUserSales, "Sales are closed");
+    require(msg.sender != obj.seller, "cant buy from yourself");
 
     uint256 price = this.getSalesPrice(index);
     uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
