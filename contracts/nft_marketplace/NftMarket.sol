@@ -24,12 +24,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     IERC20 public crowns;
     SeascapeNft private nft;
 
-
     struct SalesObject {
         uint256 id;               // object id
         uint256 tokenId;
         uint256 startTime;        // timestamp when the sale starts
-        uint256 price;         // remove, the same as finalPrice
+        uint256 price;
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
         address payable seller;   // seller address
         address payable buyer;    // buyer address
@@ -110,6 +109,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       _tipsFeeRate = rate;
   }
 
+  function getSalesAmount() external returns(uint) {
+    return _salesAmount;
+  }
+
   function getSalesByNftId(uint tokenId) public {
     uint index = nftIdToIndex[tokenId];
     getSales(index);
@@ -153,23 +156,20 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       emit SaleCanceled(index, obj.tokenId);
   }
 
-  function startSalesByNftId(uint256 tokenId, uint256 price,
-    uint256 startTime, address currency) public {
+  function startSalesByNftId(uint256 tokenId, uint256 price, address currency) public {
     uint index = nftIdToIndex[tokenId];
-    startSales(index, price, startTime, currency);
+    startSales(index, price, currency);
   }
 
   // put nft for sale
   function startSales(uint256 tokenId,
                       uint256 price,
-                      uint256 startTime,
                       address currency)
       public
       nonReentrant
       returns(uint)
   {
       require(tokenId != 0, "invalid token");
-      require(startTime > now, "sale must start in the future");
       require(_isStartUserSales, "cannot sales");
 
       nft.safeTransferFrom(msg.sender, address(this), tokenId);
@@ -181,16 +181,16 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.tokenId = tokenId;
       obj.seller = msg.sender;
       obj.buyer = address(0x0);
-      obj.startTime = startTime;
+      obj.startTime = now;
       obj.price = price;
       obj.status = 0;
 
       _salesObjects.push(obj);
 
-      nftIdToIndex[tokenId] = _salesObjects.length - 1;
+      nftIdToIndex[tokenId] = _salesAmount - 1;
 
       uint256 tmpPrice = price;
-      emit Sell(obj.id, tokenId, msg.sender, address(0x0), startTime, tmpPrice);
+      emit Sell(obj.id, tokenId, msg.sender, address(0x0), now, tmpPrice);
       return _salesAmount;
   }
 
