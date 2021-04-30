@@ -8,7 +8,6 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
@@ -20,8 +19,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    // seascape token
-    IERC20 public crowns;
 
     struct SalesObject {
         uint256 id;               // object id
@@ -42,6 +39,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     mapping(uint256 => uint256) public nftIdToIndex;
 
     mapping(address => bool) public _supportNft;
+    mapping(address => bool) public _supportCurrency;
+    mapping(uint256 => address) public _saleOnCurrency;
+
+
+
     bool public _isStartUserSales;  // enable/disable trading
 
     uint256 public _tipsFeeRate; // feeAmount = (_tipsFeeRate / 1000) * price
@@ -73,11 +75,9 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
 
-    constructor(address _crowns, address payable tipsFeeWallet,
-      uint256 tipsFeeRate) public {
+    constructor(address payable tipsFeeWallet, uint256 tipsFeeRate) public {
       _tipsFeeWallet = tipsFeeWallet;
       _tipsFeeRate = tipsFeeRate;
-      crowns = IERC20(_crowns);
       initReentrancyStatus();
     }
 
@@ -103,8 +103,20 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       _supportNft[nft] = false;
   }
 
+  function addSupportCurrency(address currency) public onlyOwner {
+      require(currency != address(0x0), "invalid address");
+      require(_supportCurrency[currency] == false, "currency already supported");
+      _supportCurrency[currency] = true;
+  }
+
+  function removeSupportCurrency(address currency) public onlyOwner {
+      require(currency != address(0x0), "invalid address");
+      require(_supportCurrency[currency], "currency already removed");
+      _supportCurrency[currency] = false;
+  }
+
   // enable/disable trading
-  function setIsStartUserSales(bool isStartUserSales) public onlyOwner {
+  function setIsStartUserSales(bool isStartUserSales) external onlyOwner {
       _isStartUserSales = isStartUserSales;
   }
 
@@ -184,7 +196,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       require(nft != address(0x0), "invalid nft address");
       require(tokenId != 0, "invalid nft token");
       require(_isStartUserSales, "sales are closed");
-      require(_supportNft[nft] == true, "unsupported nft");
+      require(_supportNft[nft] == true, "nft address unsupported");
+      require(_supportCurrency[currency] == true, "currency not supported");
 
       IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
 
@@ -199,6 +212,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.startTime = now;
       obj.price = price;
       obj.status = 0;
+
+      _saleOnCurrency[obj.id] = currency;
 
       _salesObjects.push(obj);
 
@@ -236,16 +251,18 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   {
     SalesObject storage obj = _salesObjects[index];
     require(obj.status == 0, "sorry, selling out");
-    require(obj.startTime <= now, "!open");
+    require(obj.startTime <= now, "not yet for sale");
     require(_isStartUserSales, "sales are closed");
     require(msg.sender != obj.seller, "cant buy from yourself");
 
+    address currencyAddr = _saleOnCurrency[obj.id];
+    require(currencyAddr == currency, "must pay same currency as sold");
     uint256 price = this.getSalesPrice(index);
     uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
     uint256 purchase = price.sub(tipsFee);
 
-    if (currency == address(0x0)){
-        require (msg.value >= this.getSalesPrice(index), "umm.....  your price is too low");
+    if (currencyAddr == address(0x0)){
+        require (msg.value >= this.getSalesPrice(index), "your price is too low");
         uint256 returnBack = msg.value.sub(price);
         if(returnBack > 0) {
             msg.sender.transfer(returnBack);
@@ -256,8 +273,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         obj.seller.transfer(purchase);
     }
     else{
-        IERC20(currency).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-        IERC20(currency).safeTransferFrom(msg.sender, obj.seller, purchase);
+        IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+        IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
     }
 
       obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
