@@ -15,7 +15,7 @@ let accounts;
 
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
-    let res = init(networkId);
+    let res = await init(networkId);
     callback(null, res);
 };
 

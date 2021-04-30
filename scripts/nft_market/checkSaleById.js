@@ -15,16 +15,19 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftMarket = await NftMarket.at("0xAd7C13003832A67734CDDA723AE4E14b8d9f21Af");
+    let nftMarket = await NftMarket.at("0xd79a536581166551b5a4ded9eAC6822627e755bE");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
 
 
-    // must fill correct nftId
-    let nftId = 548;
-    let user = accounts[1];
+    let user = accounts[0];
+    console.log(`Using ${user}`);
 
-    //cancel sale, only nft owner can call
-    await nftMarket.cancelSalesByNftId(nftId, {from: user}).catch(e => console.error(e));
+    //let nftId = await nft.tokenOfOwnerByIndex(user, 0).catch(e => console.error(e));
+    let nftId = 5;
+
+    //approve transfer of nft
+    let forSale = await nftMarket.getSales(1, {from: user}).catch(console.error);
+    console.log(forSale);
 
 }.bind(this);

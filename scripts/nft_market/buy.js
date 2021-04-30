@@ -15,7 +15,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftMarket = await NftMarket.at("0xAd7C13003832A67734CDDA723AE4E14b8d9f21Af");
+    let nftMarket = await NftMarket.at("0xd79a536581166551b5a4ded9eAC6822627e755bE");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
 
@@ -23,7 +23,7 @@ let init = async function(networkId) {
     console.log(await nftMarket.getSales(0));
 
     //must fill correct nftId
-    let nftId = 318;
+    let nftId = 548;
     let approveAmount = web3.utils.toWei("1", "ether");
 
 
