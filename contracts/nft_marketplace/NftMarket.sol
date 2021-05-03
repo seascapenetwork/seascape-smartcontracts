@@ -29,6 +29,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         address payable seller;   // seller address
         address payable buyer;    // buyer address
         IERC721 nft;
+        address currency;
     }
 
 
@@ -40,8 +41,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     mapping(address => bool) public _supportNft;
     mapping(address => bool) public _supportCurrency;
-    mapping(uint256 => address) public _saleOnCurrency;
-
 
 
     bool public _isStartUserSales;  // enable/disable trading
@@ -54,13 +53,17 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 tokenId,
         address buyer,
         uint256 price,
-        uint256 tipsFee
+        uint256 tipsFee,
+        address currency,
+        address currency,
+        address nft
     );
 
     event Sell(
         uint256 indexed id,
         uint256 tokenId,
         address nft,
+        address currency,
         address seller,
         address buyer,
         uint256 startTime,
@@ -187,7 +190,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   function startSales(uint256 tokenId,
                       uint256 price,
                       address nft,
-                      address currency
+                      address _currency
                       )
       public
       nonReentrant
@@ -197,7 +200,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       require(tokenId != 0, "invalid nft token");
       require(_isStartUserSales, "sales are closed");
       require(_supportNft[nft] == true, "nft address unsupported");
-      require(_supportCurrency[currency] == true, "currency not supported");
+      require(_supportCurrency[_currency] == true, "currency not supported");
 
       IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
 
@@ -207,19 +210,18 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       obj.id = _salesAmount;
       obj.tokenId = tokenId;
       obj.nft = IERC721(nft);
+      obj.currency = IERC20(_currency);
       obj.seller = msg.sender;
       obj.buyer = address(0x0);
       obj.startTime = now;
       obj.price = price;
       obj.status = 0;
 
-      _saleOnCurrency[obj.id] = currency;
-
       _salesObjects.push(obj);
 
       nftIdToIndex[tokenId] = _salesAmount - 1;
 
-      emit Sell(obj.id, tokenId, nft, msg.sender, address(0x0), now, price);
+      emit Sell(obj.id, tokenId, obj.currency, nft, msg.sender, address(0x0), now, price);
       return _salesAmount;
   }
 
@@ -243,7 +245,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   }
 
   // buy nft
-  function buy(uint index, address currency)
+  function buy(uint index, address _currency)
       public
       nonReentrant
       checkIndex(index)
@@ -255,13 +257,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     require(_isStartUserSales, "sales are closed");
     require(msg.sender != obj.seller, "cant buy from yourself");
 
-    address currencyAddr = _saleOnCurrency[obj.id];
-    require(currencyAddr == currency, "must pay same currency as sold");
+    require(obj.currency == _currency, "must pay same currency as sold");
     uint256 price = this.getSalesPrice(index);
     uint256 tipsFee = price.mul(_tipsFeeRate).div(1000);
     uint256 purchase = price.sub(tipsFee);
 
-    if (currencyAddr == address(0x0)){
+    if (obj.currency == address(0x0)){
         require (msg.value >= this.getSalesPrice(index), "your price is too low");
         uint256 returnBack = msg.value.sub(price);
         if(returnBack > 0) {
@@ -273,8 +274,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         obj.seller.transfer(purchase);
     }
     else{
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
-        IERC20(currencyAddr).safeTransferFrom(msg.sender, obj.seller, purchase);
+        IERC20(obj.currency).safeTransferFrom(msg.sender, _tipsFeeWallet, tipsFee);
+        IERC20(obj.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
     }
 
       obj.nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
@@ -282,7 +283,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       //obj.finalPrice = price;
 
       obj.status = 1;
-      emit Buy(index, obj.tokenId, msg.sender, price, tipsFee);
+      emit Buy(index, obj.tokenId, msg.sender, price, tipsFee, obj.currency, obj.nft);
   }
 
 }
