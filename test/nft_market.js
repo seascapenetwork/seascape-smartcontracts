@@ -7,25 +7,10 @@ let Factory = artifacts.require("./NftFactory.sol");
 contract("Nft Market", async accounts => {
 
 
-    //input for buy
-    let index = 0;
-
-    //struct SalesObject
-    let id = 0;
-    let tokenId = 1; // aka nftId
-    let startTime;  //declared inside tests
+    let tokenId;
     let price = web3.utils.toWei("2", "ether");
-    let status = 0;
+    let tipsFeeRate = 100;
 
-    //used by buy
-    let _isStartUserSales = true;
-    let _tipsFeeRate = 100;
-
-    //used by startSales
-    let _salesAmount = 0;
-
-    //used by crowns and other contracts
-    let depositAmount = web3.utils.toWei("5", "ether");
 
     // following vars present contracts
     let nft = null;
@@ -43,7 +28,7 @@ contract("Nft Market", async accounts => {
     let finney = 1000000000000000;
 
 
-    //--------------------------------------------------
+
 
     // before seller starts, need to prepare a few things.
     // one of the things is to allow nft to be minted by nft factory
@@ -62,18 +47,20 @@ contract("Nft Market", async accounts => {
 	     await factory.addGenerator(nftMarket.address, {from: gameOwner});
     });
 
-    //--------------------------------------------------
 
     // before deposit of nft token,
     // seller needs to approve the token to be transferred by nft rush contract
-    xit("should approve nft market to spend cws of seller", async () => {
+    it("should initialize the contract", async () => {
 
-	    await crowns.approve(nftMarket.address, depositAmount, {from: seller});
+      // add nftAddress and currencyAddress
+      let nftAddressAdded = await nftMarket.addSupportNft(nft.address, {from: gameOwner});
+      let currencyAddressAdded = await nftMarket.addSupportCurrency(crowns.address, {from: gameOwner});
 
-    	let allowance = await crowns.allowance(seller, nftMarket.address);
-    	assert.equal(allowance, depositAmount, "expected deposit sum to be allowed for nft rush");
-
+      //enable sales
+      let salesStarted = await nftMarket.enableSales(true);
+      assert.equal(salesStarted.receipt.status, true, "sales are not enabled");
     });
+
 
     it("should mint 5 nft tokens", async () => {
       //check nft user balance before
@@ -101,24 +88,25 @@ contract("Nft Market", async accounts => {
       assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+5, "5 Nft tokens should be minted");
     });
 
-    it("should put nft for sale", async() => {
 
+    it("should put nft for sale", async() => {
       //check nft user balance before
       let balanceBefore = await nft.balanceOf(seller);
-
-      startTime = Math.floor(Date.now()/1000) + 3;
 
       //ERC721 approve and deposit token to contract
       await nft.setApprovalForAll(nftMarket.address, true, {from: seller});
 
-      await nftMarket.setIsStartUserSales(true);
+      // fetch nftId
+      tokenId = await nft.tokenOfOwnerByIndex(seller, 0);
+      let startTime = Math.floor(Date.now()/1000) + 3;
 
-      await nftMarket.startSales(tokenId, price, startTime, crowns.address, {from: seller});
+      await nftMarket.sell(tokenId, price, nft.address, crowns.address, {from: seller});
 
       //check nft user balance after
       let balanceAfter = await nft.balanceOf(seller);
-      assert.equal(parseInt(balanceBefore), parseInt(balanceAfter)+1, "5 Nft tokens should be minted");
+      assert.equal(parseInt(balanceBefore), parseInt(balanceAfter)+1, "Seller should have one nft less");
     });
+
 
     it("should approve nft market to spend cws of buyer", async () => {
 
@@ -130,7 +118,7 @@ contract("Nft Market", async accounts => {
        //approve spending of crowns
 	     await crowns.approve(nftMarket.address, crownsDeposit, {from: buyer});
 	     let allowance = await crowns.allowance(buyer, nftMarket.address);
-	     assert.equal(parseInt(allowance), parseInt(depositAmount), "expected deposit sum to be allowed for nft rush");
+	     assert.equal(parseInt(allowance), parseInt(crownsDeposit), "expected deposit sum to be allowed for nft rush");
     });
 
 
@@ -138,21 +126,21 @@ contract("Nft Market", async accounts => {
       //check nft and cws buyer balance before
       let buyerNftBalanceBefore = await nft.balanceOf(buyer);
       let buyerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
-      //and feeReciever
+      //also check cws balance of feeReciever
       feeReciever = accounts[3];
       let feeRecieverBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(feeReciever))/finney);
       //check cws seller balance before
       let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
 
       //execute buy
-      await nftMarket.buy(tokenId, crowns.address, {from: buyer});
+      await nftMarket.buy(tokenId, nft.address, crowns.address, {from: buyer});
 
       //check buyers nft balance after
       let buyerNftBalanceAfter = await nft.balanceOf(buyer);
       assert.equal(parseInt(buyerNftBalanceBefore)+1, parseInt(buyerNftBalanceAfter), "Buyer did not recieve nft");
 
       //check buyers cws balance after
-      let fee = (price/finney) * _tipsFeeRate/1000;
+      let fee = (price/finney) * tipsFeeRate/1000;
       let buyerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/finney);
       assert.equal(buyerCwsBalanceBefore, buyerCwsBalanceAfter+price/finney, "Buyer didnt pay sufficient price");
 
@@ -162,7 +150,6 @@ contract("Nft Market", async accounts => {
 
       //check cws seller balance after
       let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      //following assertion may fails due to no accounting transaction fees
       assert.equal(sellerCwsBalanceBefore+price/finney-fee, sellerCwsBalanceAfter, "Seller didnt recieve enough money");
     });
 
