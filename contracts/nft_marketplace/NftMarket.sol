@@ -21,8 +21,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
 
     struct SalesObject {
-        uint256 id;               // object id
-        uint256 tokenId;
+        uint256 id;               // sales ID
+        uint256 tokenId;          // token unique id
         address nft;              // nft address
         address currency;         // currency address
         address payable seller;   // seller address
@@ -85,7 +85,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     //@note Prefer using a receive function only, whenever possible
     //fallback() external [payable] { }
 
-
   function addSupportNft(address _nftAddress) public onlyOwner {
       require(_nftAddress != address(0x0), "invalid address");
       supportNft[_nftAddress] = true;
@@ -133,16 +132,14 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       return salesObjects[_nftAddress][_tokenId];
   }
 
-
   // returns the price of sale
   function getSalesPrice(uint _tokenId, address _nftAddress) external view returns (uint256) {
       SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
       return obj.price;
   }
 
-
   // cancel a sale - only nft owner can call
-  function cancelSales(uint _tokenId, address _nftAddress) public nonReentrant {
+  function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
       SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
       require(obj.status == 0, "sorry, selling out");
       require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
@@ -155,7 +152,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   }
 
   // put nft for sale
-  function startSales(uint256 _tokenId,
+  function sell(uint256 _tokenId,
                       uint256 _price,
                       address _nftAddress,
                       address _currency
@@ -188,12 +185,19 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
       salesObjects[_nftAddress][_tokenId] = SalesObject(salesAmount, _tokenId,
         _nftAddress, _currency, msg.sender, address(0x0), now, _price, 0);
 
-      emit Sell(salesAmount, _tokenId, _nftAddress, _currency, msg.sender, address(0x0), now, _price);
+      emit Sell(salesAmount, _tokenId, _nftAddress, _currency, msg.sender,
+        address(0x0), now, _price);
       return salesAmount;
   }
 
-  // log nft reciept upon transfer 
-  function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data) public override returns (bytes4) {
+  // log nft reciept upon transfer
+  function onERC721Received(
+    address operator,
+    address from,
+    uint256 tokenId,
+    bytes memory data
+    )
+    public override returns (bytes4) {
      //only receive the _nft staff
      if(address(this) != operator) {
          //invalid from nft
