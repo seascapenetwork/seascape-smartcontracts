@@ -41,10 +41,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     mapping(address => bool) public supportCurrency;   // supported ERC20 contracts
 
 
-    bool public salesEnabled;  // enable/disable trading
+    bool public salesEnabled;       // enable/disable trading
 
-    uint256 public tipsFeeRate; // feeAmount = (tipsFeeRate / 1000) * price
-    address payable tipsFeeWallet; // reciever of fees
+    uint256 public tipsFeeRate;     // feeAmount = (tipsFeeRate / 1000) * price
+    address payable tipsFeeWallet;  // reciever of fees
 
     event Buy(
         uint256 indexed id,
@@ -141,8 +141,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   // cancel a sale - only nft owner can call
   function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
       SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
-      require(obj.status == 0, "sorry, selling out");
-      require(obj.seller == msg.sender || msg.sender == owner(), "author & owner");
+      require(obj.status == 0, "status: sold or canceled");
+      require(obj.seller == msg.sender || msg.sender == owner(), "seller is not owner");
       require(salesEnabled, "sales are closed");
       obj.status = 2;
       IERC721 nft = IERC721(obj.nft);
@@ -212,7 +212,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
   // buy nft
   function buy(uint _tokenId, address _nftAddress, address _currency) public nonReentrant payable {
     SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
-    require(obj.status == 0, "sorry, selling out");
+    require(obj.status == 0, "status: sold or canceled");
     require(obj.startTime <= now, "not yet for sale");
     require(salesEnabled, "sales are closed");
     require(msg.sender != obj.seller, "cant buy from yourself");
