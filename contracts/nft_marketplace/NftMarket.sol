@@ -38,7 +38,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedNft;
-    mapping(address => bool) public supportCurrency;
+    mapping(address => bool) public supportedCurrency;
 
     /// @notice enable/disable trading
     bool public salesEnabled;
@@ -103,18 +103,18 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     /// @notice add supported currency token
     /// @param _currencyAddress ERC20 contract address
-    function addSupportCurrency(address _currencyAddress) external onlyOwner {
+    function addSupportedCurrency(address _currencyAddress) external onlyOwner {
         require(_currencyAddress != address(0x0), "invalid address");
-        require(supportCurrency[_currencyAddress] == false, "currency already supported");
-        supportCurrency[_currencyAddress] = true;
+        require(supportedCurrency[_currencyAddress] == false, "currency already supported");
+        supportedCurrency[_currencyAddress] = true;
     }
 
     /// @notice disable supported currency token
     /// @param _currencyAddress ERC20 contract address
-    function removeSupportCurrency(address _currencyAddress) external onlyOwner {
+    function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
         require(_currencyAddress != address(0x0), "invalid address");
-        require(supportCurrency[_currencyAddress], "currency already removed");
-        supportCurrency[_currencyAddress] = false;
+        require(supportedCurrency[_currencyAddress], "currency already removed");
+        supportedCurrency[_currencyAddress] = false;
     }
 
     /// @notice change fee receiver address
@@ -164,7 +164,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         require(_tokenId != 0, "invalid nft token");
         require(salesEnabled, "sales are closed");
         require(supportedNft[_nftAddress] == true, "nft address unsupported");
-        require(supportCurrency[_currency] == true, "currency not supported");
+        require(supportedCurrency[_currency] == true, "currency not supported");
         IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         salesAmount++;
