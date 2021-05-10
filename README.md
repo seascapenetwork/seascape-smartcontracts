@@ -33,7 +33,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
  * Seascape Nft:                  [0x66638F4970C2ae63773946906922c07a583b6069](https://testnet.bscscan.com/address/0x66638F4970C2ae63773946906922c07a583b6069)
  * Factory:                       [0x3eB88c3F2A719369320D731FbaE062b0f82F22e4](https://testnet.bscscan.com/address/0x3eB88c3F2A719369320D731FbaE062b0f82F22e4)
- * Profit Circus ( First game):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
+ * Profit Circus ( First game):   [0x93A782FD81444dC3fE2EFB529Dd7a6FB9eef7190](https://testnet.bscscan.com/address/0x93A782FD81444dC3fE2EFB529Dd7a6FB9eef7190)
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (Third game):   [0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5](https://testnet.bscscan.com/address/0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5)
 
