@@ -27,7 +27,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus ( First game):   [0x9f5FdC047e1C53D7255a0069071127A3769a2D48](https://rinkeby.etherscan.io/address/0x9f5FdC047e1C53D7255a0069071127A3769a2D48)
  * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
  * Staking Saloon (Third game):   [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
- * Nft Market:                    [0xd79a536581166551b5a4ded9eAC6822627e755bE](https://rinkeby.etherscan.io/address/0xd79a536581166551b5a4ded9eAC6822627e755bE)
+ * Nft Market:                    [0xF4C4Ea5508Fe0EEb3E2f300AB8AfFDa1881cf96a](https://rinkeby.etherscan.io/address/0xF4C4Ea5508Fe0EEb3E2f300AB8AfFDa1881cf96a)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
