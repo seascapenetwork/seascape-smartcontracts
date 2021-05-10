@@ -12,7 +12,6 @@ import "./../seascape_nft/SeascapeNft.sol";
 import "./Crowns.sol";
 
 
-
 //declare contract + title
 contract NftBurning is Crowns, Ownable, IERC721Receiver{
   using SafeMath for uint256;
@@ -23,8 +22,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
   SeascapeNft private nft;
   Counters.Counter private sessionId;
-
-
 
   /// @notice game event struct. as event is a solidity keyword, we call them session instead.
   struct Session {
@@ -56,7 +53,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
   // new nft factory address
   event FactorySet(address indexed factoryAddress);
 
-
   // instantinate contracts, start session
   constructor(address _crowns, address _nftFactory, address _nft)  public {
 
@@ -69,14 +65,11 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     sessionId.increment(); 	// starts at value 1
     nftFactory = NftFactory(_nftFactory);
     nft = SeascapeNft(_nft);
-}
-
+  }
 
 
   // starts a new session, during which game would allow players to mint nfts
-  function startSession(uint256 _startTime, uint256 _period, uint256 _generation,
-    uint256 _interval, uint256 _fee) external onlyOwner {
-
+  function startSession(uint256 _startTime, uint256 _period, uint256 _generation, uint256 _interval, uint256 _fee) external onlyOwner {
       // cant start new session when another is active
       if (lastSessionId > 0) {
           require(!isActive(lastSessionId), "Another session is already active");
@@ -108,6 +101,11 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     // spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
     function mint(uint256 _sessionId, uint256[5] calldata _nfts, uint8 _quality,
       uint8 _v, bytes32 _r, bytes32 _s) external {
+        require(nft.ownerOf(_nfts[0]) == msg.sender, "Nft is not owned by caller");
+        require(nft.ownerOf(_nfts[1]) == msg.sender, "Nft is not owned by caller");
+        require(nft.ownerOf(_nfts[2]) == msg.sender, "Nft is not owned by caller");
+        require(nft.ownerOf(_nfts[3]) == msg.sender, "Nft is not owned by caller");
+        require(nft.ownerOf(_nfts[4]) == msg.sender, "Nft is not owned by caller");
 
         Session storage _session = sessions[_sessionId];
         //Balance storage _mintedTime = mintedTime[msg.sender];
@@ -117,26 +115,30 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(_quality >= 1 && _quality <= 5,
             "Seascape Burning: Incorrect quality");
         require(isActive(_sessionId), "Game session is already finished");
-        require(mintedTime[msg.sender] == 0 ||
-          (mintedTime[msg.sender].add(_session.interval) < block.timestamp),
+        require(mintedTime[msg.sender] == 0 || (mintedTime[msg.sender].add(_session.interval) < block.timestamp),
           "Still in locking period, try again later");
 
-        //TODO: make sure that all nfts are owned by the function caller.
-        /*TODO: make sure that signature of (nft_1, nft_2, nft_3, nft_4, nft_5, quality)
-         matches with the address of the contract deployer.*/
+        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nfts[0], _nfts[1], _nfts[2], _nfts[3], _nfts[4], _quality));
+        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+        address _recover = ecrecover(_message, _v, _r, _s);
+        require(_recover == owner(),  "Verification failed");
+
         require(crowns.balanceOf(msg.sender) >= sessions[_sessionId].fee,
             "Not enough CWS, please check your CWS balance");
-
 
         //--------------------------------------------------------------------
     		// burn nfts, spend crowns, mint nft
     		//--------------------------------------------------------------------
 
+
         require(crowns.spendFrom(msg.sender, sessions[_sessionId].fee),
             "Failed to spend CWS");
-        /* nft.safeTransferFrom(msg.sender, address(this), _nfts);
-        nft.burn(_nfts); */
 
+        nft.burn(_nfts[0]);
+        nft.burn(_nfts[1]);
+        nft.burn(_nfts[2]);
+        nft.burn(_nfts[3]);
+        nft.burn(_nfts[4]);
 
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "failed to mint a token");
@@ -146,24 +148,13 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     }
 
 
-    /* function checkAllSlots(uint256[5] _nfts) internal {
-      // TODO: check that all slots are full
-      require(_nftId > 0, "Nft Staking: Nft id must be greater than 0");
-      require(nft.ownerOf(_nftId) == msg.sender, "Nft is not owned by caller");
-
-      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
-      bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
-      address _recover = ecrecover(_message, _v, _r, _s);
-      require(_recover == owner(),  "Nft Staking: Seascape points verification failed");
-    } */
-
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
     function setNftFactory(address _address) external onlyOwner {
-    require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
-    nftFactory = NftFactory(_address);
+      require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
+      nftFactory = NftFactory(_address);
 
-    emit FactorySet(_address);
+      emit FactorySet(_address);
     }
 
 
@@ -189,6 +180,4 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
-
-
 }
