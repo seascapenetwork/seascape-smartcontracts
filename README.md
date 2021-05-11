@@ -17,6 +17,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Seascape Nft:                  [0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8](https://bscscan.com/address/0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8)
  * Nft Factory:                   [0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d](https://bscscan.com/address/0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d)
  * Profit Circus ( First game):   [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
+ * Profit Circus V2 (First Game): [0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B](https://bscscan.com/address/0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B)
  * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://bscscan.com/address/0x29b0d9a9a989e4651488d0002ebf79199ce1b7c1)
 
