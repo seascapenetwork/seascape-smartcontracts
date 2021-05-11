@@ -168,17 +168,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         salesAmount++;
-        SalesObject memory obj;
-
-        obj.id = salesAmount;
-        obj.tokenId = _tokenId;
-        obj.nft = _nftAddress;
-        obj.currency = _currency;
-        obj.seller = msg.sender;
-        obj.buyer = address(0x0);
-        obj.startTime = now;
-        obj.price = _price;
-        obj.status = 0;
 
         salesObjects[_nftAddress][_tokenId] = SalesObject(
             salesAmount,
