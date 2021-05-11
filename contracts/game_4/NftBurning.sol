@@ -47,11 +47,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
   event Minted(
       uint256 indexed sessionId,
       address indexed owner,
-      uint256 burnt_nft_1,
-      uint256 burnt_nft_2,
-      uint256 burnt_nft_3,
-      uint256 burnt_nft_4,
-      uint256 burt_nft_5,
+      uint256[5] burnt_nfts,
       uint256 time,
       uint256 minted_nft
   );
@@ -189,11 +185,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         emit Minted(
             _sessionId,
             msg.sender,
-            _nfts[0],
-            _nfts[1],
-            _nfts[2],
-            _nfts[3],
-            _nfts[4],
+            _nfts,
             now,
             mintedNftId
         );
