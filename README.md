@@ -55,6 +55,29 @@ The details of all contract audits can be seen at [Certik Security Leaderboard -
 ## This repository depends on the following **submodules**:
  * crowns - an ERC-20 token used as a in-game token of Blocklords. Strategy game on ethereum at https://blocklords.io
 
+# Running up on your machine
+Pull this repository into your machine.
+
+Inside the folder, fetch the git submodules, Crowns (CWS) is fetched as a submodule, and other smartcontracts depends on Crowns:
+
+```git submodule update --init --recursive```
+
+Then, we need to setup truffle as a global module:
+
+```npm install -g truffle```
+
+Then, we need to update the local dependencies:
+
+```npm install```
+
+Ccompile the contracts to generate ABI interfaces of smartcontracts, to use in the scripts:
+```truffle compile```
+
+Finally, edit the truffle-config.js by setting up your network credentials including your Private Key and RPC node endpoint.
+
+Done, check the tests, migrations and scripts. Edit them to set correct smartcontract address before using them. Especially, if you want to interact
+with already deployed smartcontracts.
+
 ### Repository consists the following smartcontracts:
  * ```contracts/seascape_nft/SeascapeNft.sol``` &ndash; Based on openzeppelin ERC721 library. This NFT is burnable, owns metadata, mintable. However minting option are available through another smartcontract - Nft Factory. Seascape NFT also stores additional properties used in Seascape Network.
  * ```contracts/seascape_nft/NftFactory.sol``` &ndash; Minting Seascape NFTs. It is using Role permission feature to mint different kind of NFTs.
