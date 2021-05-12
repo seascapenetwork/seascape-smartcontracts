@@ -8,7 +8,8 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Crowns:                        [0xac0104cca91d167873b8601d2e71eb3d4d8c33e0](https://etherscan.io/token/0xac0104cca91d167873b8601d2e71eb3d4d8c33e0) 
  * Seascape Nft:                  [0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad](https://etherscan.io/address/0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad)
  * Nft Factory:                   [0x25F4C38FAF75dF9622FECB17Fa830278cd732091](https://etherscan.io/address/0x25F4C38FAF75dF9622FECB17Fa830278cd732091)
- * Profit Circus ( First game):   [0xbcf39f0edda668c58371e519af37ca705f2bfcbd](https://etherscan.io/address/0xbcf39f0edda668c58371e519af37ca705f2bfcbd)
+ * Profit Circus (First game):    [0xbcf39f0edda668c58371e519af37ca705f2bfcbd](https://etherscan.io/address/0xbcf39f0edda668c58371e519af37ca705f2bfcbd)
+ * Profit Circus V2 (First Game): [0xa35abb86c53695bb1b23b55808b6c5871432c22c](https://etherscan.io/address/0xa35abb86c53695bb1b23b55808b6c5871432c22c)
  * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://etherscan.io/address/0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1)
 
@@ -16,7 +17,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
  * Seascape Nft:                  [0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8](https://bscscan.com/address/0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8)
  * Nft Factory:                   [0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d](https://bscscan.com/address/0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d)
- * Profit Circus ( First game):   [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
+ * Profit Circus (First game):    [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
  * Profit Circus V2 (First Game): [0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B](https://bscscan.com/address/0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B)
  * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://bscscan.com/address/0x29b0d9a9a989e4651488d0002ebf79199ce1b7c1)
