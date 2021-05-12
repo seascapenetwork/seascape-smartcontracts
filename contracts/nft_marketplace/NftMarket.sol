@@ -1,7 +1,5 @@
 pragma solidity ^0.6.7;
-
 pragma experimental ABIEncoderV2;
-
 
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
@@ -12,14 +10,13 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
 
-
-
+/// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
+/// @author Nejc Schneider
 contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
-
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-
+    /// @notice individual sale related data
     struct SalesObject {
         uint256 id;               // sales ID
         uint256 tokenId;          // token unique id
@@ -28,22 +25,27 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         address payable seller;   // seller address
         address payable buyer;    // buyer address
         uint256 startTime;        // timestamp when the sale starts
-        uint256 price;
+        uint256 price;            // nft price
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
     }
 
+    /// @dev keep count of SalesObject amount
+    uint256 public salesAmount;
 
-    uint256 public salesAmount;   // keeps count of sales
-
+    /// @dev store sales objects.
+    /// @param nft token address => (nft id => salesObject)
     mapping(address => mapping(uint256 => SalesObject)) salesObjects; // store sales in a mapping
 
-    mapping(address => bool) public supportNft;        // supported ERC721 contracts
-    mapping(address => bool) public supportCurrency;   // supported ERC20 contracts
+    /// @dev supported ERC721 and ERC20 contracts
+    mapping(address => bool) public supportedNft;
+    mapping(address => bool) public supportedCurrency;
 
-    bool public salesEnabled;       // enable/disable trading
+    /// @notice enable/disable trading
+    bool public salesEnabled;
 
-    uint256 public tipsFeeRate;     // feeAmount = (tipsFeeRate / 1000) * price
-    address payable tipsFeeWallet;  // reciever of fees
+    /// @dev fee rate and fee reciever. feeAmount = (feeRate / 1000) * price
+    uint256 public feeRate;
+    address payable feeReceiver;
 
     event Buy(
         uint256 indexed id,
@@ -66,55 +68,76 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     );
 
     event SaleCanceled(uint256 indexed id, uint256 tokenId);
-
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
-
-    constructor(address payable _tipsFeeWallet, uint256 _tipsFeeRate) public {
-        tipsFeeWallet = _tipsFeeWallet;
-        tipsFeeRate = _tipsFeeRate;
+    /// @dev set fee reciever address and fee rate
+    /// @param _feeReceiver fee receiving address
+    /// @param _feeRate fee amount
+    constructor(address payable _feeReceiver, uint256 _feeRate) public {
+        feeReceiver = _feeReceiver;
+        feeRate = _feeRate;
         initReentrancyStatus();
     }
 
-    receive() external payable { }
+    //--------------------------------------------------
+    // External methods
+    //--------------------------------------------------
 
-    // enable/disable trading
+    /// @notice enable/disable sales
+    /// @param _salesEnabled set sales to true/false
     function enableSales(bool _salesEnabled) external onlyOwner { salesEnabled = _salesEnabled; }
 
-    function addSupportNft(address _nftAddress) external onlyOwner {
+    /// @notice add supported nft token
+    /// @param _nftAddress ERC721 contract address
+    function addSupportedNft(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportNft[_nftAddress] = true;
+        supportedNft[_nftAddress] = true;
     }
 
-    function removeSupportNft(address _nftAddress) external onlyOwner {
+    /// @notice disable supported nft token
+    /// @param _nftAddress ERC721 contract address
+    function removeSupportedNft(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportNft[_nftAddress] = false;
+        supportedNft[_nftAddress] = false;
     }
 
-    function addSupportCurrency(address _currencyAddress) external onlyOwner {
+    /// @notice add supported currency token
+    /// @param _currencyAddress ERC20 contract address
+    function addSupportedCurrency(address _currencyAddress) external onlyOwner {
         require(_currencyAddress != address(0x0), "invalid address");
-        require(supportCurrency[_currencyAddress] == false, "currency already supported");
-        supportCurrency[_currencyAddress] = true;
+        require(supportedCurrency[_currencyAddress] == false, "currency already supported");
+        supportedCurrency[_currencyAddress] = true;
     }
 
-    function removeSupportCurrency(address _currencyAddress) external onlyOwner {
+    /// @notice disable supported currency token
+    /// @param _currencyAddress ERC20 contract address
+    function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
         require(_currencyAddress != address(0x0), "invalid address");
-        require(supportCurrency[_currencyAddress], "currency already removed");
-        supportCurrency[_currencyAddress] = false;
+        require(supportedCurrency[_currencyAddress], "currency already removed");
+        supportedCurrency[_currencyAddress] = false;
     }
 
-    // set address to recieve fees
-    function setTipsFeeWallet(address payable _walletAddress) external onlyOwner {
-        tipsFeeWallet = _walletAddress;
+    /// @notice change fee receiver address
+    /// @param _walletAddress address of the new fee receiver
+    function setFeeReceiver(address payable _walletAddress) external onlyOwner {
+        feeReceiver = _walletAddress;
     }
 
-    // adjust tips rate in percents
-    function setTipsFeeRate(uint256 _rate) external onlyOwner { tipsFeeRate = _rate; }
+    /// @notice change fee rate
+    /// @param _rate amount value. Actual rate in percent = _rate * 10
+    function setFeeRate(uint256 _rate) external onlyOwner { feeRate = _rate; }
 
-    // returns total amount of sales
+    /// @notice returns sales amount
+    /// @return total amount of sales objects
     function getSalesAmount() external view returns(uint) { return salesAmount; }
 
-    // cancel a sale - only nft owner can call
+    //--------------------------------------------------
+    // Public methods
+    //--------------------------------------------------
+
+    /// @notice cancel nft sale
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
     function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         require(obj.status == 0, "status: sold or canceled");
@@ -126,7 +149,12 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         emit SaleCanceled(_tokenId, obj.tokenId);
     }
 
-    // put nft for sale
+    /// @notice put nft for sale
+    /// @param _tokenId nft unique ID
+    /// @param _price required price to pay by buyer. Seller receives less: price - fees
+    /// @param _nftAddress nft token address
+    /// @param _currency currency token address
+    /// @return salesAmount total amount of sales
     function sell(uint256 _tokenId, uint256 _price, address _nftAddress, address _currency)
         public
         nonReentrant
@@ -135,8 +163,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         require(_nftAddress != address(0x0), "invalid nft address");
         require(_tokenId != 0, "invalid nft token");
         require(salesEnabled, "sales are closed");
-        require(supportNft[_nftAddress] == true, "nft address unsupported");
-        require(supportCurrency[_currency] == true, "currency not supported");
+        require(supportedNft[_nftAddress] == true, "nft address unsupported");
+        require(supportedCurrency[_currency] == true, "currency not supported");
         IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         salesAmount++;
@@ -178,7 +206,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         return salesAmount;
     }
 
-    // log nft reciept upon transfer
+    /// @dev encrypt token data
     function onERC721Received(
         address operator,
         address from,
@@ -200,7 +228,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 
-    // buy nft
+    /// @notice buy nft
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
+    /// @param _currency currency token address
     function buy(uint _tokenId, address _nftAddress, address _currency)
         public
         nonReentrant
@@ -214,7 +245,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
         require(obj.currency == _currency, "must pay same currency as sold");
         uint256 price = this.getSalesPrice(_tokenId, _nftAddress);
-        uint256 tipsFee = price.mul(tipsFeeRate).div(1000);
+        uint256 tipsFee = price.mul(feeRate).div(1000);
         uint256 purchase = price.sub(tipsFee);
 
         if (obj.currency == address(0x0)) {
@@ -223,10 +254,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
             if (returnBack > 0)
                 msg.sender.transfer(returnBack);
             if (tipsFee > 0)
-                tipsFeeWallet.transfer(tipsFee);
+                feeReceiver.transfer(tipsFee);
             obj.seller.transfer(purchase);
         } else {
-            IERC20(obj.currency).safeTransferFrom(msg.sender, tipsFeeWallet, tipsFee);
+            IERC20(obj.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
             IERC20(obj.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
         }
 
@@ -238,7 +269,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         emit Buy(obj.id, obj.tokenId, msg.sender, price, tipsFee, obj.currency);
     }
 
-    // returns sale object
+    /// @dev fetch sale object at nftId and nftAddress
+    /// @param _tokenId unique nft ID
+    /// @param _nftAddress nft token address
+    /// @return SalesObject at given index
     function getSales(uint _tokenId, address _nftAddress)
         public
         view
@@ -247,7 +281,10 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         return salesObjects[_nftAddress][_tokenId];
     }
 
-    // returns the price of sale
+    /// @dev returns the price of sale
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
+    /// @return obj.price price of corresponding sale
     function getSalesPrice(uint _tokenId, address _nftAddress) public view returns (uint256) {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         return obj.price;

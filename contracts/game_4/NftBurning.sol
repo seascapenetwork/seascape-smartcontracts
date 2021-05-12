@@ -12,14 +12,16 @@ import "./../seascape_nft/SeascapeNft.sol";
 import "./Crowns.sol";
 
 
-//declare contract + title
+
+/// @title Nft Burning contract  mints a higher quality nft in exchange for
+/// five lower quality nfts + CWS fee
+/// @author Nejc Schneider
 contract NftBurning is Crowns, Ownable, IERC721Receiver{
   using SafeMath for uint256;
   using Counters for Counters.Counter;
 
   //initialize contracts; factory cws, nft, sessionId
   NftFactory nftFactory;
-
   SeascapeNft private nft;
   Counters.Counter private sessionId;
 
@@ -36,21 +38,27 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
   // session related data
   uint256 public lastSessionId;
+  // each session is a seperate object
   mapping(uint256 => Session) public sessions;
-
   // track minted time per address
   mapping(address => uint256) public mintedTime;
 
   // sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
-  event Minted(uint256 indexed sessionId, address indexed owner, uint256 burnt_nft_1,
-     uint256 burnt_nft_2, uint256 burnt_nft_3, uint256 burnt_nft_4, uint256 burt_nft_5,
-     uint256 time, uint256 minted_nft);
-
-
-  event SessionStarted(uint256 indexed sessionId, uint256 generation, uint256 fee,
-      uint256 interval, uint256 start_time, uint256 end_time);
-
-  // new nft factory address
+  event Minted(
+      uint256 indexed sessionId,
+      address indexed owner,
+      uint256[5] burnt_nfts,
+      uint256 time,
+      uint256 minted_nft
+  );
+  event SessionStarted(
+      uint256 indexed sessionId,
+      uint256 generation,
+      uint256 fee,
+      uint256 interval,
+      uint256 start_time,
+      uint256 end_time
+  );
   event FactorySet(address indexed factoryAddress);
 
   // instantinate contracts, start session
@@ -65,14 +73,23 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     sessionId.increment(); 	// starts at value 1
     nftFactory = NftFactory(_nftFactory);
     nft = SeascapeNft(_nft);
-  }
-
+}
 
   // starts a new session, during which game would allow players to mint nfts
-  function startSession(uint256 _startTime, uint256 _period, uint256 _generation, uint256 _interval, uint256 _fee) external onlyOwner {
+  function startSession(
+      uint256 _startTime,
+      uint256 _period,
+      uint256 _generation,
+      uint256 _interval,
+      uint256 _fee
+  )
+      external
+      onlyOwner
+  {
+
       // cant start new session when another is active
       if (lastSessionId > 0) {
-          require(!isActive(lastSessionId), "Another session is already active");
+          require(!isActive(lastSessionId), "Another session already active");
       }
       // startTime should be greater than current time
       require(_startTime > block.timestamp, "Seassion should start in the future");
@@ -87,74 +104,101 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
   		//--------------------------------------------------------------------
   		// updating session related data
   		//--------------------------------------------------------------------
-  		uint256 _sessionId = sessionId.current();
-  		sessions[_sessionId] = Session(_period, _startTime, _startTime+ _period,
-        _generation, _interval, _fee);
+
+      uint256 _sessionId = sessionId.current();
+  		sessions[_sessionId] = Session(
+          _period,
+          _startTime,
+          _startTime+ _period,
+          _generation,
+          _interval,
+          _fee
+      );
 
   		sessionId.increment();
   		lastSessionId = _sessionId;
 
-  		emit SessionStarted(_sessionId, _generation, _fee, _interval, _startTime, _startTime + _period);
+  		emit SessionStarted(
+          _sessionId,
+          _generation,
+          _fee,
+          _interval,
+          _startTime,
+          _startTime + _period
+      );
     }
 
 
-    // spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
-    function mint(uint256 _sessionId, uint256[5] calldata _nfts, uint8 _quality,
-      uint8 _v, bytes32 _r, bytes32 _s) external {
-        require(nft.ownerOf(_nfts[0]) == msg.sender, "Nft is not owned by caller");
-        require(nft.ownerOf(_nfts[1]) == msg.sender, "Nft is not owned by caller");
-        require(nft.ownerOf(_nfts[2]) == msg.sender, "Nft is not owned by caller");
-        require(nft.ownerOf(_nfts[3]) == msg.sender, "Nft is not owned by caller");
-        require(nft.ownerOf(_nfts[4]) == msg.sender, "Nft is not owned by caller");
+    /// @notice spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
+    function mint(
+        uint256 _sessionId,
+        uint256[5] calldata _nfts,
+        uint8 _quality,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        external
+    {
 
         Session storage _session = sessions[_sessionId];
-        //Balance storage _mintedTime = mintedTime[msg.sender];
 
         require(_sessionId > 0, "Session has not started yet");
         require(_nfts.length == 4, "Need to deposit 5 nfts");
-        require(_quality >= 1 && _quality <= 5,
-            "Seascape Burning: Incorrect quality");
+        require(_quality >= 1 && _quality <= 5, "Incorrect quality");
         require(isActive(_sessionId), "Game session is already finished");
-        require(mintedTime[msg.sender] == 0 || (mintedTime[msg.sender].add(_session.interval) < block.timestamp),
-          "Still in locking period, try again later");
+        require(mintedTime[msg.sender] == 0 ||
+            (mintedTime[msg.sender].add(_session.interval) < block.timestamp),
+            "Still in locking period, try again later");
 
-        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nfts[0], _nfts[1], _nfts[2], _nfts[3], _nfts[4], _quality));
-        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
-        address _recover = ecrecover(_message, _v, _r, _s);
-        require(_recover == owner(),  "Verification failed");
-
-        require(crowns.balanceOf(msg.sender) >= sessions[_sessionId].fee,
-            "Not enough CWS, please check your CWS balance");
+        require(crowns.balanceOf(msg.sender) >= _session.fee, "Not enough CWS in your wallet");
 
         //--------------------------------------------------------------------
-    		// burn nfts, spend crowns, mint nft
+    		// spend crowns, spend and burn nfts, mint better nft
     		//--------------------------------------------------------------------
 
+        // spend crowns
+        require(crowns.spendFrom(msg.sender, _session.fee), "Failed to spend CWS");
 
-        require(crowns.spendFrom(msg.sender, sessions[_sessionId].fee),
-            "Failed to spend CWS");
+        for (uint _index=0; _index < 5; _index++) {
+            // all nfts are owned by the function caller.
+            require(nft.ownerOf(_index) == msg.sender, "Nft is not owned by caller");
+            require(_nfts[_index] > 0, "Nft id must be greater than 0");
 
-        nft.burn(_nfts[0]);
-        nft.burn(_nfts[1]);
-        nft.burn(_nfts[2]);
-        nft.burn(_nfts[3]);
-        nft.burn(_nfts[4]);
+            // make sure that signature of nft matches with the address of the contract deployer
+            bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nfts[_index]));
+            bytes32 _message = keccak256(
+              abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix)
+            );
+            address _recover = ecrecover(_message, _v, _r, _s);
+            require(_recover == owner(),  "Verification failed");
 
+            // spend and burn nfts
+            nft.safeTransferFrom(msg.sender, address(this), _nfts[_index]);
+            nft.burn(_nfts[_index]);
+        }
+
+        //mint better nft
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "failed to mint a token");
         mintedTime[msg.sender] = block.timestamp;
-        emit Minted(_sessionId, msg.sender, _nfts[0], _nfts[1], _nfts[2], _nfts[3],
-          _nfts[4], now, mintedNftId);
+        emit Minted(
+            _sessionId,
+            msg.sender,
+            _nfts,
+            now,
+            mintedNftId
+        );
     }
 
 
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
     function setNftFactory(address _address) external onlyOwner {
-      require(_address != address(0), "Seascape Staking: Nft Factory address can not be be zero");
-      nftFactory = NftFactory(_address);
+        require(_address != address(0), "Nft Factory address can not be be zero");
+        nftFactory = NftFactory(_address);
 
-      emit FactorySet(_address);
+        emit FactorySet(_address);
     }
 
 
@@ -180,4 +224,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
+
+
 }
