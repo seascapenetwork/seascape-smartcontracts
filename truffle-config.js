@@ -21,13 +21,14 @@ module.exports = {
 		   network_id: "*", // match any network
 		   from: process.env.ADDRESS_1
         },
-		rinkeby: {
-	        provider: () => new HDWalletProvider(process.env.MNEMONIC, "https://rinkeby.infura.io/v3/" + process.env.INFURA_API_KEY, 2),
-		    network_id: 4,
-		    gasPrice: 100000000000, // 100 gwei
-		    skipDryRun: true // To prevent async issues occured on node v. 14. see:
-		    // https://github.com/trufflesuite/truffle/issues/3008
-		},
+    rinkeby: {
+        provider: function () {
+            return new HDWalletProvider(process.env.MNEMONIC, "https://rinkeby.infura.io/v3/" + process.env.INFURA_API_KEY, 0, 5);
+        },
+    	    network_id: 4,
+    	    skipDryRun: true // To prevent async issues occured on node v. 14. see:
+    	    // https://github.com/trufflesuite/truffle/issues/3008
+    	},
 		mainnet: {
 		    provider: () => new HDWalletProvider(process.env.MNEMONIC, process.env.REMOTE_HTTP),
 		    gasPrice: 100000000000, // 100 gwei

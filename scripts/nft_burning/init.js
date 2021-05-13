@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x099E19a7CD344DF526bC3c7276A7a8E30efe02c0");
+    let nftBurning = await NftBurning.at("0x1Cc48F1A888110423D4Ec85f7dE40C96f2b6C4e9");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");

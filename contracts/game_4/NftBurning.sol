@@ -144,7 +144,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         Session storage _session = sessions[_sessionId];
 
         require(_sessionId > 0, "Session has not started yet");
-        require(_nfts.length == 4, "Need to deposit 5 nfts");
+        require(_nfts.length == 5, "Need to deposit 5 nfts");
         require(_quality >= 1 && _quality <= 5, "Incorrect quality");
         require(isActive(_sessionId), "Game session is already finished");
         require(mintedTime[msg.sender] == 0 ||
@@ -157,21 +157,27 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     		// spend crowns, spend and burn nfts, mint better nft
     		//--------------------------------------------------------------------
 
+        // make sure that signature of nft matches with the address of the contract deployer
+        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
+            _nfts[0],
+            _nfts[1],
+            _nfts[2],
+            _nfts[3],
+            _nfts[4],
+            _quality
+        ));
+        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+        address _recover = ecrecover(_message, _v, _r, _s);
+        require(_recover == owner(),  "Verification failed");
+
         // spend crowns
         require(crowns.spendFrom(msg.sender, _session.fee), "Failed to spend CWS");
 
+        // spend nfts
         for (uint _index=0; _index < 5; _index++) {
             // all nfts are owned by the function caller.
             require(nft.ownerOf(_index) == msg.sender, "Nft is not owned by caller");
             require(_nfts[_index] > 0, "Nft id must be greater than 0");
-
-            // make sure that signature of nft matches with the address of the contract deployer
-            bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nfts[_index]));
-            bytes32 _message = keccak256(
-              abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix)
-            );
-            address _recover = ecrecover(_message, _v, _r, _s);
-            require(_recover == owner(),  "Verification failed");
 
             // spend and burn nfts
             nft.safeTransferFrom(msg.sender, address(this), _nfts[_index]);
