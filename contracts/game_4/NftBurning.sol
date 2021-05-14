@@ -232,4 +232,78 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     }
 
 
+    function returnMessageWithoutPrefix (
+      uint256 _nft1,
+      uint256 _nft2,
+      uint256 _nft3,
+      uint256 _nft4,
+      uint256 _nft5,
+      uint8 _quality
+    )
+        public
+        returns (bytes32)
+    {
+      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
+          _nft1,
+          _nft2,
+          _nft3,
+          _nft4,
+          _nft5,
+          _quality
+      ));
+
+      return _messageNoPrefix;
+    }
+
+    function returnMessageWithPrefix (
+      uint256 _nft1,
+      uint256 _nft2,
+      uint256 _nft3,
+      uint256 _nft4,
+      uint256 _nft5,
+      uint8 _quality
+    )
+        public
+        returns (bytes32)
+    {
+        bytes32 _messageNoPrefix = returnMessageWithoutPrefix(
+          _nft1,
+          _nft2,
+          _nft3,
+          _nft4,
+          _nft5,
+          _quality
+      );
+        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+        return _message;
+    }
+
+
+    function returnSigner (
+      uint256 _nft1,
+      uint256 _nft2,
+      uint256 _nft3,
+      uint256 _nft4,
+      uint256 _nft5,
+      uint8 _quality,
+      uint8 _v,
+      bytes32 _r,
+      bytes32 _s
+    )
+        public
+        returns (address)
+    {
+      bytes32 _message = returnMessageWithPrefix(
+        _nft1,
+        _nft2,
+        _nft3,
+        _nft4,
+        _nft5,
+        _quality
+        );
+      address _recover = ecrecover(_message, _v, _r, _s);
+      return _recover;
+    }
+
+
 }
