@@ -120,7 +120,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	/// @dev required CWS balance of this contract
       	require(crowns.balanceOf(address(this)) >= _totalReward,
             "Seascape Staking: Not enough balance of Crowns for reward");
-        
+
 
       	//--------------------------------------------------------------------
       	// creating the session
@@ -178,7 +178,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	require(_recover == owner(),  "Nft Staking: Seascape points verification failed");
 
       	nft.safeTransferFrom(msg.sender, address(this), _nftId);
-	
+
       	Session storage _session  = sessions[_sessionId];
       	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
 
@@ -209,7 +209,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	nft.burn(_nftId);
 
 	    uint256 _claimed = transfer(_sessionId, _index);
-	
+
         if(earning[_sessionId][msg.sender] > 0){
             earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
         } else{
@@ -264,9 +264,9 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        uint256 _sp = _balance.sp;
 
       	    nft.burn(_nftId);
-            
+
       	    delete balances[_sessionId][msg.sender][_index];
-	    
+
       	    sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_sp);
 
             updateInterestPerPoint(_sessionId);
@@ -305,7 +305,7 @@ contract NftStaking is Ownable, IERC721Receiver {
         bytes32 _r,
         bytes32 _s
     )
-        view 
+        view
         internal
         returns(bool)
     {
@@ -313,9 +313,9 @@ contract NftStaking is Ownable, IERC721Receiver {
         Balance[3] storage _balance = balances[_sessionId][msg.sender];
 
         require(_balance[0].nftId > 0, "NFT Staking: first slot is empty for bonus");
-        require(_balance[1].nftId > 0, "NFT Staking: first slot is empty for bonus");		
+        require(_balance[1].nftId > 0, "NFT Staking: first slot is empty for bonus");
         require(_balance[2].nftId > 0, "NFT Staking: first slot is empty for bonus");
-			
+
         /// @dev 2. a message from bonus +nft slot 1, slot 2, slot 3
         bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
             _bonusPercent,
@@ -337,7 +337,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     /// @notice Returns true if bonus transaction was successful
     function giveBonus(uint256 _sessionId, uint256 _bonusPercent) internal returns(bool) {
 	    uint256 _interests = 0;
-	
+
         for(uint _index = 0; _index < 3; _index++){
 	        _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
         }
@@ -400,7 +400,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 	    return true;
     }
 
-    	
+
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
 	/// @param _sessionId is a session id
@@ -428,4 +428,17 @@ contract NftStaking is Ownable, IERC721Receiver {
 		// we avoid sub. underflow, for calulating session.claimedPerPoint
 		_session.lastInterestUpdate = _sessionCap;
 	}
+
+
+  function returnMessageWithoutPrefix (uint256 _nftId, uint256 _sp)
+      public
+      returns (bytes32)
+  {
+    /// @dev 2. a message from bonus +nft slot 1, slot 2, slot 3
+    bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _sp));
+    return _messageNoPrefix;
+  }
+
+
+
 }
