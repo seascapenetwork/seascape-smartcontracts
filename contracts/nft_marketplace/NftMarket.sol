@@ -141,7 +141,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         require(obj.status == 0, "status: sold or canceled");
-        require(obj.seller == msg.sender || msg.sender == owner(), "seller is not owner");
+        require(obj.seller == msg.sender, "seller not nft owner");
         require(salesEnabled, "sales are closed");
         obj.status = 2;
         IERC721 nft = IERC721(obj.nft);
