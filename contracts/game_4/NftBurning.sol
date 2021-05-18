@@ -176,8 +176,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         // spend nfts
         for (uint _index=0; _index < 5; _index++) {
             // all nfts are owned by the function caller.
-            require(nft.ownerOf(_index) == msg.sender, "Nft is not owned by caller");
             require(_nfts[_index] > 0, "Nft id must be greater than 0");
+            require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
 
             // spend and burn nfts
             nft.safeTransferFrom(msg.sender, address(this), _nfts[_index]);
@@ -232,21 +232,22 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     }
 
 
-    function returnMessageWithoutPrefix (uint256 _quality)
+    function returnMessageWithoutPrefix (uint256 _nftId, uint8 _quality)
         public
+        view
         returns (bytes32)
     {
-      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_quality));
-
+      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _quality));
       return _messageNoPrefix;
     }
 
 
-    function returnMessageWithPrefix (uint256 _quality)
+    function returnMessageWithPrefix (uint256 _nftId, uint8 _quality)
         public
+        view
         returns (bytes32)
     {
-        bytes32 _messageNoPrefix = returnMessageWithoutPrefix(_quality);
+        bytes32 _messageNoPrefix = returnMessageWithoutPrefix(_nftId, _quality);
         bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
         return _message;
     }
@@ -264,10 +265,11 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
       bytes32 _s
     )
         public
+        view
         returns (address)
     {
       bytes32 _message = returnMessageWithPrefix(
-        _quality
+        _nft1, _quality
         );
       address _recover = ecrecover(_message, _v, _r, _s);
       return _recover;
