@@ -75,7 +75,12 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     nft = SeascapeNft(_nft);
 }
 
-  // starts a new session, during which game would allow players to mint nfts
+  /// @dev start a new session, during which players are allowed to mint nfts
+  /// @param _startTime unix timestamp when session starts
+  /// @param _period unix timestamp when session ends. Should be equal to startTime + period
+  /// @param _generation generation of newly minted nfts
+  /// @param _interval duration between every possible minting
+  /// @param _fee amount of CWS token to spend to mint a new nft
   function startSession(
       uint256 _startTime,
       uint256 _period,
@@ -128,8 +133,13 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
       );
     }
 
-
     /// @notice spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
+    /// @param _sessionId id of the active session, during which nfts can be minted
+    /// @param _nfts users nfts which will be burned
+    /// @param _quality  of the new minting nft
+    /// @param _v part of signature of message
+    /// @param _r part of signature of message
+    /// @param _s part of signature of message
     function mint(
         uint256 _sessionId,
         uint256[5] calldata _nfts,
@@ -140,7 +150,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     )
         external
     {
-
         Session storage _session = sessions[_sessionId];
 
         require(_sessionId > 0, "Session has not started yet");
@@ -150,7 +159,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(mintedTime[msg.sender] == 0 ||
             (mintedTime[msg.sender].add(_session.interval) < block.timestamp),
             "Still in locking period, try again later");
-
         require(crowns.balanceOf(msg.sender) >= _session.fee, "Not enough CWS in your wallet");
 
         //--------------------------------------------------------------------
@@ -180,26 +188,19 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
 
             // spend and burn nfts
-            nft.safeTransferFrom(msg.sender, address(this), _nfts[_index]);
             nft.burn(_nfts[_index]);
         }
 
-        //mint better nft
+        // mint better nft
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "failed to mint a token");
         mintedTime[msg.sender] = block.timestamp;
-        emit Minted(
-            _sessionId,
-            msg.sender,
-            _nfts,
-            now,
-            mintedNftId
-        );
+        emit Minted(_sessionId, msg.sender, _nfts, now, mintedNftId);
     }
-
 
     /// @dev sets an nft factory, a smartcontract that mints tokens.
     /// the nft factory should give a permission on it's own side to this contract too.
+    /// @param _address nftFactory's new address
     function setNftFactory(address _address) external onlyOwner {
         require(_address != address(0), "Nft Factory address can not be be zero");
         nftFactory = NftFactory(_address);
@@ -207,17 +208,18 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         emit FactorySet(_address);
     }
 
-
-    /// @notice Returns true if session is active
+    /// @notice check whether session is active or not
+    /// @param _sessionId id of session to verify
+    /// @return true if session is active
     function isActive(uint256 _sessionId) internal view returns(bool) {
 	    if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
 	        return false;
 	    }
-
 	    return true;
     }
 
     /// @dev encrypt token data
+    /// @return encrypted data
     function onERC721Received(
         address operator,
         address from,
@@ -230,51 +232,5 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
-
-
-    function returnMessageWithoutPrefix (uint256 _nftId, uint8 _quality)
-        public
-        view
-        returns (bytes32)
-    {
-      bytes32 _messageNoPrefix = keccak256(abi.encodePacked(_nftId, _quality));
-      return _messageNoPrefix;
-    }
-
-
-    function returnMessageWithPrefix (uint256 _nftId, uint8 _quality)
-        public
-        view
-        returns (bytes32)
-    {
-        bytes32 _messageNoPrefix = returnMessageWithoutPrefix(_nftId, _quality);
-        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
-        return _message;
-    }
-
-
-    function returnSigner (
-      uint256 _nft1,
-      uint256 _nft2,
-      uint256 _nft3,
-      uint256 _nft4,
-      uint256 _nft5,
-      uint8 _quality,
-      uint8 _v,
-      bytes32 _r,
-      bytes32 _s
-    )
-        public
-        view
-        returns (address)
-    {
-      bytes32 _message = returnMessageWithPrefix(
-        _nft1, _quality
-        );
-      address _recover = ecrecover(_message, _v, _r, _s);
-      return _recover;
-    }
-
-
 
 }

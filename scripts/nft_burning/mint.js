@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x8E38F57DF5595b506FBfaF8733B7E62E63FB8d39");
+    let nftBurning = await NftBurning.at("0xff5c4C7d158EC93257c6B1E4596011bF2993f8FE");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -26,31 +26,34 @@ let init = async function(networkId) {
     let user = accounts[0];
     let sessionId = 1;
     let quality = 3;
-    let depositInt = "5";
+    let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
 
 
     console.log(`Using ${user}`);
 
     // fetch nftIds
-    // let nftIds = new Array(5);
-    // for(let index = 0; index <5; index++){
-    //   let tokenId = await nft.tokenOfOwnerByIndex(user, index);
-    //   nftIds[index] = parseInt(tokenId.toString());
-    //   //.catch(console.error);
-    //   console.log(`Nft at index ${index} of ${user} has id ${nftIds[index]}`);
-    // }
+    let nftIds = new Array(5);
+    for(let index = 0; index <5; index++){
+      let tokenId = await nft.tokenOfOwnerByIndex(user, index);
+      nftIds[index] = parseInt(tokenId.toString());
+      //.catch(console.error);
+      console.log(`Nft at index ${index} of ${user} has id ${nftIds[index]}`);
+    }
 
     // known nft ids
-    let nftIds = [670 ,671, 672, 673, 674];
-    console.log(nftIds);
+    // let nftIds = [670 ,671, 672, 673, 674];
+    // console.log(nftIds);
 
-    //approve transfer of nfts
-    await nft.setApprovalForAll(nftBurning.address, true, {from: user})
-      .catch(console.error);
-    console.log("nftBurning was approved to spend nfts")
-
-    await crowns.approve(nftBurning.address, depositAmount);
+    // approve transfer of nfts
+    // await nft.setApprovalForAll(nftBurning.address, true, {from: user})
+    //   .catch(console.error);
+    // console.log("nftBurning was approved to spend nfts")
+    //
+    // // approve transfer of crowns
+    // await crowns.approve(nftBurning.address, depositAmount)
+    // .catch(console.error);
+  console.log("nftBurning was approved to spend nfts")
 
 
     // signature part
@@ -61,14 +64,15 @@ let init = async function(networkId) {
       let bytes1 = web3.utils.bytesToHex([quality]);
 	    let str = bytes32 + bytes1.substr(2);
 	    let data = web3.utils.keccak256(str);
+      let hash = await web3.eth.sign(data, user);
+      console.log("hash: " ,hash);
 
 
 
     // let dataFromContract = await nftBurning.returnMessageWithoutPrefix(nftIds, quality);
     // console.log("from client: ",data);
     // console.log("from contract: ",dataFromContract);
-    let hash = await web3.eth.sign(data, user);
-    // console.log("hash: " ,hash);
+
 
 
     let r = hash.substr(0,66);
@@ -90,6 +94,7 @@ let init = async function(networkId) {
 
 
     //mint
+    console.log("calling the mint function...");
     let minted = await nftBurning.mint(
         sessionId,
         nftIds,
