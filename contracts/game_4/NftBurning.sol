@@ -17,120 +17,120 @@ import "./Crowns.sol";
 /// five lower quality nfts + CWS fee
 /// @author Nejc Schneider
 contract NftBurning is Crowns, Ownable, IERC721Receiver{
-  using SafeMath for uint256;
-  using Counters for Counters.Counter;
+    using SafeMath for uint256;
+    using Counters for Counters.Counter;
 
-  //initialize contracts; factory cws, nft, sessionId
-  NftFactory nftFactory;
-  SeascapeNft private nft;
-  Counters.Counter private sessionId;
+    //initialize contracts; factory cws, nft, sessionId
+    NftFactory nftFactory;
+    SeascapeNft private nft;
+    Counters.Counter private sessionId;
 
-  /// @notice game event struct. as event is a solidity keyword, we call them session instead.
-  struct Session {
-      uint256 period;       // session duration
-      uint256 startTime;    // session start in unixtimestamp
-      uint256 endTime;      // session end in unixtimestamp
-                            // should be equal to startTime + period
-      uint256 generation;		// Seascape Nft generation
-      uint256 interval;   	// duration between every minting
-      uint256 fee;          // amount of CWS token to spend to mint a new nft
-  }
+    /// @notice game event struct. as event is a solidity keyword, we call them session instead.
+    struct Session {
+        uint256 period;       // session duration
+        uint256 startTime;    // session start in unixtimestamp
+        uint256 endTime;      // session end in unixtimestamp
+                              // should be equal to startTime + period
+        uint256 generation;		// Seascape Nft generation
+        uint256 interval;   	// duration between every minting
+        uint256 fee;          // amount of CWS token to spend to mint a new nft
+    }
 
-  // session related data
-  uint256 public lastSessionId;
-  // each session is a seperate object
-  mapping(uint256 => Session) public sessions;
-  // track minted time per address
-  mapping(address => uint256) public mintedTime;
+    // session related data
+    uint256 public lastSessionId;
+    // each session is a seperate object
+    mapping(uint256 => Session) public sessions;
+    // track minted time per address
+    mapping(address => uint256) public mintedTime;
 
-  // sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
-  event Minted(
-      uint256 indexed sessionId,
-      address indexed owner,
-      uint256[5] burnt_nfts,
-      uint256 time,
-      uint256 minted_nft
-  );
-  event SessionStarted(
-      uint256 indexed sessionId,
-      uint256 generation,
-      uint256 fee,
-      uint256 interval,
-      uint256 start_time,
-      uint256 end_time
-  );
-  event FactorySet(address indexed factoryAddress);
+    // sessionId newly created nft owner, burnt nft IDs, minted nft ID, minted nft time
+    event Minted(
+        uint256 indexed sessionId,
+        address indexed owner,
+        uint256[5] burnt_nfts,
+        uint256 time,
+        uint256 minted_nft
+    );
+    event SessionStarted(
+        uint256 indexed sessionId,
+        uint256 generation,
+        uint256 fee,
+        uint256 interval,
+        uint256 start_time,
+        uint256 end_time
+    );
+    event FactorySet(address indexed factoryAddress);
 
-  // instantinate contracts, start session
-  constructor(address _crowns, address _nftFactory, address _nft)  public {
+    // instantinate contracts, start session
+    constructor(address _crowns, address _nftFactory, address _nft)  public {
 
-    require(_crowns != address(0), "Crowns can't be zero address");
-    require(_nftFactory != address(0), "Nft Factory can't be zero address");
+        require(_crowns != address(0), "Crowns can't be zero address");
+        require(_nftFactory != address(0), "Nft Factory can't be zero address");
 
-    /// @dev set crowns is defined in Crowns.sol
-    setCrowns(_crowns);
+        /// @dev set crowns is defined in Crowns.sol
+        setCrowns(_crowns);
 
-    sessionId.increment(); 	// starts at value 1
-    nftFactory = NftFactory(_nftFactory);
-    nft = SeascapeNft(_nft);
-}
+        sessionId.increment(); 	// starts at value 1
+        nftFactory = NftFactory(_nftFactory);
+        nft = SeascapeNft(_nft);
+    }
 
-  /// @dev start a new session, during which players are allowed to mint nfts
-  /// @param _startTime unix timestamp when session starts
-  /// @param _period unix timestamp when session ends. Should be equal to startTime + period
-  /// @param _generation generation of newly minted nfts
-  /// @param _interval duration between every possible minting
-  /// @param _fee amount of CWS token to spend to mint a new nft
-  function startSession(
-      uint256 _startTime,
-      uint256 _period,
-      uint256 _generation,
-      uint256 _interval,
-      uint256 _fee
-  )
-      external
-      onlyOwner
-  {
+    /// @dev start a new session, during which players are allowed to mint nfts
+    /// @param _startTime unix timestamp when session starts
+    /// @param _period unix timestamp when session ends. Should be equal to startTime + period
+    /// @param _generation generation of newly minted nfts
+    /// @param _interval duration between every possible minting
+    /// @param _fee amount of CWS token to spend to mint a new nft
+    function startSession(
+        uint256 _startTime,
+        uint256 _period,
+        uint256 _generation,
+        uint256 _interval,
+        uint256 _fee
+    )
+        external
+        onlyOwner
+    {
 
-      // cant start new session when another is active
-      if (lastSessionId > 0) {
-          require(!isActive(lastSessionId), "Another session already active");
-      }
-      // startTime should be greater than current time
-      require(_startTime > block.timestamp, "Seassion should start in the future");
-      // period should be greater than 0
-      require(_period > 0, "Session duration should be greater than 0");
-      // interval should be greater than 0 and less or equal to period
-      require(_interval > 0 && _interval <= _period,
-        "Interval should be greater than 0 and lower than period");
-      // fee should be greater than 0
-      require(_fee > 0, "Fee should be greater than 0");
+        // cant start new session when another is active
+        if (lastSessionId > 0) {
+            require(!isActive(lastSessionId), "Another session already active");
+        }
+        // startTime should be greater than current time
+        require(_startTime > block.timestamp, "Seassion should start in the future");
+        // period should be greater than 0
+        require(_period > 0, "Session duration should be greater than 0");
+        // interval should be greater than 0 and less or equal to period
+        require(_interval > 0 && _interval <= _period,
+            "Interval should be greater than 0 and lower than period");
+        // fee should be greater than 0
+        require(_fee > 0, "Fee should be greater than 0");
 
-  		//--------------------------------------------------------------------
-  		// updating session related data
-  		//--------------------------------------------------------------------
+    		//--------------------------------------------------------------------
+    		// updating session related data
+    		//--------------------------------------------------------------------
 
-      uint256 _sessionId = sessionId.current();
-  		sessions[_sessionId] = Session(
-          _period,
-          _startTime,
-          _startTime+ _period,
-          _generation,
-          _interval,
-          _fee
-      );
+        uint256 _sessionId = sessionId.current();
+        sessions[_sessionId] = Session(
+            _period,
+            _startTime,
+            _startTime+ _period,
+            _generation,
+            _interval,
+            _fee
+        );
 
-  		sessionId.increment();
-  		lastSessionId = _sessionId;
+        sessionId.increment();
+        lastSessionId = _sessionId;
 
-  		emit SessionStarted(
-          _sessionId,
-          _generation,
-          _fee,
-          _interval,
-          _startTime,
-          _startTime + _period
-      );
+        emit SessionStarted(
+            _sessionId,
+            _generation,
+            _fee,
+            _interval,
+            _startTime,
+            _startTime + _period
+        );
     }
 
     /// @notice spend 5 nfts and 1 cws, burn nfts, mint a higher quality nft and send it to player
@@ -162,8 +162,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(crowns.balanceOf(msg.sender) >= _session.fee, "Not enough CWS in your wallet");
 
         //--------------------------------------------------------------------
-    		// spend crowns, spend and burn nfts, mint better nft
-    		//--------------------------------------------------------------------
+        // spend crowns, spend and burn nfts, mint better nft
+        //--------------------------------------------------------------------
 
         // make sure that signature of nft matches with the address of the contract deployer
         bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
@@ -212,10 +212,10 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of session to verify
     /// @return true if session is active
     function isActive(uint256 _sessionId) internal view returns(bool) {
-	    if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
-	        return false;
-	    }
-	    return true;
+        if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+            return false;
+	      }
+        return true;
     }
 
     /// @dev encrypt token data
@@ -230,7 +230,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         override
         returns (bytes4)
     {
-      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 
 }
