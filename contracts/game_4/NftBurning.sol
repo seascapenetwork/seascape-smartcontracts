@@ -91,7 +91,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         external
         onlyOwner
     {
-
         // cant start new session when another is active
         if (lastSessionId > 0) {
             require(!isActive(lastSessionId), "Another session already active");
@@ -174,23 +173,24 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             _nfts[4],
             _quality
         ));
-        bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+        bytes32 _message = keccak256(abi.encodePacked(
+            "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
         address _recover = ecrecover(_message, _v, _r, _s);
         require(_recover == owner(),  "Verification failed");
 
         // spend crowns
         require(crowns.spendFrom(msg.sender, _session.fee), "Failed to spend CWS");
 
-        // spend nfts
+        // verify nfts
         for (uint _index=0; _index < 5; _index++) {
             // all nfts are owned by the function caller.
             require(_nfts[_index] > 0, "Nft id must be greater than 0");
             require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
-
-            // spend and burn nfts
+        }
+        // burn nfts
+        for (uint _index=0; _index < 5; _index++) {
             nft.burn(_nfts[_index]);
         }
-
         // mint better nft
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "failed to mint a token");
