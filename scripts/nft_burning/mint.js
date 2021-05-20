@@ -93,7 +93,7 @@ let init = async function(networkId) {
     //console.log("Signature: ",hash);
 
 
-    //mint
+    // mint
     console.log("calling the mint function...");
     let minted = await nftBurning.mint(
         sessionId,

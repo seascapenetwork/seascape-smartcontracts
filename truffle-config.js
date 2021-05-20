@@ -42,6 +42,11 @@ module.exports = {
 		    confirmations: 10,
 		    timeoutBlocks: 200,
 		    skipDryRun: true
-	    }
+	    },
+      ganache: {
+        host: "localhost",
+        port: 9545,
+        network_id: "*"
+      }
     }
 };
