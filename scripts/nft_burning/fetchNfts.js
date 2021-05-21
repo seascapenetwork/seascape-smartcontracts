@@ -15,13 +15,13 @@ module.exports = async function(callback) {
 let init = async function(networkId) {
     let accounts = await web3.eth.getAccounts();
     let nft = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
-    let user = accounts[0];
+    let user = accounts[1];
 
     console.log(`Using ${user}`);
 
     //fetch nft balance
-    let balance = await nft.balanceOf(accounts[0]);
+    let balance = await nft.balanceOf(user);
     console.log(`User owns ${balance} nfts`);
-    
+
 
 }.bind(this);
