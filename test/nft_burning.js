@@ -7,16 +7,16 @@ var Nft = artifacts.require("./SeascapeNft.sol");
 
 contract("Game 4: Nft Burning", async accounts => {
 
+
   //digital signatures
-  async function signNfts(nftId,sp) {
+  async function signNfts(nftIds, quality) {
     //v, r, s related stuff
     let bytes32 = web3.eth.abi.encodeParameters(
       ["uint256", "uint256", "uint256", "uint256", "uint256"], nftIds);
     let bytes1 = web3.utils.bytesToHex([quality]);
     let str = bytes32 + bytes1.substr(2);
     let data = web3.utils.keccak256(str);
-    let hash = await web3.eth.sign(data, player);
-    console.log("hash: " ,hash);
+    let hash = await web3.eth.sign(data, gameOwner);
 
     let r = hash.substr(0,66);
     let s = "0x" + hash.substr(66,64);
@@ -24,11 +24,12 @@ contract("Game 4: Nft Burning", async accounts => {
     if (v < 27) {
       v += 27;
     }
+
     return [v, r, s];
   }
 
 
-///////////// GLOBAL VARS /////////////
+///////////// GLOBAL VARS ///////////////
 
   // imported contracts
   let nftBurning = null;
@@ -90,17 +91,13 @@ contract("Game 4: Nft Burning", async accounts => {
     }
   });
 
-  it("4. should mint 5 nft tokens", async () => {
+  it("4. should mint 5 nft tokens and fetch their ids", async () => {
     //check nft user balance before
     let balanceBefore = await nft.balanceOf(player);
 
     let granted = await factory.isGenerator(accounts[0]);
-    if (!granted) {
-      await factory.addGenerator(accounts[0]);
-    } else {
-      //replace with throw errror
-	    console.log(`Account ${accounts[0]} was already granted a permission`);
-    }
+    await factory.addGenerator(accounts[0]);
+
     let generation = 0;
     let quality = 1;
     //mint 2 tokens of each quality
@@ -113,10 +110,8 @@ contract("Game 4: Nft Burning", async accounts => {
     //check nft user balance after
     let balanceAfter = await nft.balanceOf(player);
     assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+5, "5 Nft tokens should be minted");
-  });
 
-  it("5. should fetch players nft ids", async () => {
-
+    //fetch nft ids
     for(let index = 0; index <5; index++){
       let tokenId = await nft.tokenOfOwnerByIndex(player, index);
       nftIds[index] = parseInt(tokenId.toString());
@@ -124,11 +119,14 @@ contract("Game 4: Nft Burning", async accounts => {
     assert.equal(nftIds[4], 5, "couldnt fetch nft ids");
   });
 
-  it("6. should approve spending of crowns and nfts", async () => {
 
+  it("6. should mint crowns and approve spending of crowns and nfts", async () => {
     // scapes approve
     //await nft.approve(nftBurning.address, nftId, {from: player});
     await nft.setApprovalForAll(nftBurning.address, true, {from: player});
+
+    //get some Crowns
+    await crowns.transfer(player, fee, {from: gameOwner});
 
     // crowns approve
     await crowns.approve(nftBurning.address, fee, {from: player});
@@ -137,29 +135,27 @@ contract("Game 4: Nft Burning", async accounts => {
     });
 
   it("7. should burn the nfts and mint a higher quality one", async () => {
-
     //check player balance before
     let nftBalanceBefore = await nft.balanceOf(player);
     let cwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(player))/finney);
 
-
-    signature = await signNfts(nftIds, quality);
     quality = 3;
+    signature = await signNfts(nftIds, quality);
 
     // mint function
     let minted = await nftBurning.mint(lastSessionId, nftIds, quality,
         signature[0], signature[1], signature[2], {from: player})
       .catch(console.error);
 
-
     // check player balance after
     let nftBalanceAfter = await nft.balanceOf(player);
-    assert.equal(parseInt(nftBalanceBefore), parseInt(nftBalanceAfter)-4, "Player has too many nfts");
+    assert.equal(parseInt(nftBalanceBefore), parseInt(nftBalanceAfter)+4, "Player has too many nfts");
+
     let cwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(player))/finney);
     assert.equal(cwsBalanceBefore, cwsBalanceAfter+fee/finney, "Player didnt pay enough crowns");
-    console.log(nftBalanceAfter[0]);
-    console.log(nftBalanceAfter[0]);
-    assert.equal(nftBalanceAfter[0], 6, "Newly minted nftId should be 6");
+
+    let newNftId = await nft.tokenOfOwnerByIndex(player, 0);
+    assert.equal(parseInt(newNftId), 6, "Newly minted nftId should be 6");
   });
 
 
