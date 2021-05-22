@@ -1,4 +1,4 @@
-# seascape-smartcontracts
+# Crowns, Seascape NFT and game smartcontracts on Seascape Platform
 Smartcontracts for https://seascape.network/ &ndash; a platform for games.
 It's developed by truffle framework. For more in-depth explanation, please visit https://docs.seascape.network/
 
