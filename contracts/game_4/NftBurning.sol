@@ -36,6 +36,17 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 fee;          // amount of CWS token to spend to mint a new nft
     }
 
+    struct Balance {
+	    uint256 amount;        // amount of crowns staked
+	    uint256 depositTime;    // time of last deposit
+    }
+
+
+    /// @notice Tracking player balance within a game session.
+    /// @dev session id =>(wallet address => (Balance struct))
+    mapping(uint256 => mapping(address => Balance)) public balances;
+
+
     // session related data
     uint256 public lastSessionId;
     // each session is a seperate object
@@ -60,6 +71,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 end_time
     );
     event FactorySet(address indexed factoryAddress);
+    event Staked(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
 
     // instantinate contracts, start session
     constructor(address _crowns, address _nftFactory, address _nft)  public {
@@ -104,6 +116,30 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             "Interval should be greater than 0 and lower than period");
         // fee should be greater than 0
         require(_fee > 0, "Fee should be greater than 0");
+
+
+        // from constructor
+        require(_minSpend > 0, "Min spend can't be 0");
+        require(_maxSpend > _minSpend, "Max spend should be greater than min limit");
+
+        minSpend = _minSpend;
+        maxSpend = _maxSpend;
+
+
+      // from function setMinSpendAmount
+      require(_amount > 0, "Min amount should be greater than 0");
+      minSpend = _amount;
+
+        emit MinSpendUpdated(_amount);
+
+      // from function setMaxSpendAmount
+      require(_amount > minSpend, "Max amount should be greater than min amount");
+        maxSpend = _amount;
+
+        emit MaxSpendUpdated(_amount);
+
+
+
 
     		//--------------------------------------------------------------------
     		// updating session related data
@@ -196,6 +232,31 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(mintedNftId > 0, "failed to mint a token");
         mintedTime[msg.sender] = block.timestamp;
         emit Minted(_sessionId, msg.sender, _nfts, now, mintedNftId);
+    }
+
+    // from nftRush
+    function stake(uint256 _sessionId, uint256 _amount) external {
+        require(_amount >= minSpend,
+            "NFT Rush: Amount of CWS to spend should be greater or equal to min deposit");
+        require(_amount <= maxSpend,
+            "Nft Rush: Amount of CWS to spend should be less or equal to max deposit");
+        require(_sessionId > 0,
+            "NFT Rush: Session is not started yet!");
+        require(isActive(_sessionId),
+            "NFT Rush: Game session is already finished");
+        require(crowns.balanceOf(msg.sender) >= _amount,
+            "NFT Rush: Not enough CWS, please check your CWS balance");
+        require(crowns.spendFrom(msg.sender, _amount),
+            "NFT Rush: Failed to spend CWS");
+
+        Balance storage _balance  = balances[_sessionId][msg.sender];
+
+        require(_balance.amount.add(_amount) <= maxSpend,
+            "NFT Rush: Can not spent more than max spending limit");
+
+        _balance.amount = _balance.amount.add(_amount);
+
+        emit Staked(msg.sender, _sessionId, _balance.amount, _balance.mintedTime, _amount);
     }
 
     /// @dev sets an nft factory, a smartcontract that mints tokens.
