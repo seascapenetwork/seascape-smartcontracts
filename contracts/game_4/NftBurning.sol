@@ -20,7 +20,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
-    //initialize contracts; factory cws, nft, sessionId
     NftFactory nftFactory;
     SeascapeNft private nft;
     Counters.Counter private sessionId;
@@ -40,7 +39,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
     struct Balance {
 	    uint256 totalStaked;    // amount of crowns staked
-	    uint256 depositTime;    // time of last deposit
       uint256 mintedTime;     // track minted time per address
     }
 
@@ -75,8 +73,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 indexed sessionId,
         address indexed owner,
         uint256 amount,
-        uint256 totalStaked,
-        uint256 depositTime
+        uint256 totalStaked
     );
     event FactorySet(address indexed factoryAddress);
 
@@ -227,16 +224,17 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, mintedNftId);
     }
 
-    // from nftRush
+    /// @notice stake crowns
+    /// @param _sessionId id of session to verify
     function stake(uint256 _sessionId, uint256 _amount) external {
         Session storage _session = sessions[_sessionId];
         Balance storage _balance  = balances[_sessionId][msg.sender];
 
         require(_amount > 0, "Should stake more than 0");
         require(_balance.totalStaked.add(_amount) <= _session.maxStake,
-            "Can't stake more than max staking limit");
+            "Cant stake more than max staking limit");
         require(_balance.totalStaked.add(_amount) >= _session.minStake,
-            "Can't stake less than min staking limit");
+            "Cant stake less than min staking limit");
         require(_sessionId > 0, "Session is not active yet");
         require(isActive(_sessionId), "Session is already finished");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
@@ -244,9 +242,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
         // update balance
         _balance.totalStaked = _balance.totalStaked.add(_amount);
-        _balance.depositTime = block.timestamp;
 
-        emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked, _balance.depositTime);
+        emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked);
     }
 
     /// @dev sets an nft factory, a smartcontract that mints tokens.
