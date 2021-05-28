@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x7F3E3aC2ea90E00f46f76Da0FCadE8CE1F05c5e9");
+    let nftBurning = await NftBurning.at("0x26f88c201AD0d015c203e2EFDfEed64CC9766A11");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -50,27 +50,16 @@ let init = async function(networkId) {
     // await nft.setApprovalForAll(nftBurning.address, true, {from: user})
     //   .catch(console.error);
     // console.log("nftBurning was approved to spend nfts")
-
-
-    // let approve = async function (nft, walletAddress, nftStakingAddress) {
-    //     // first, checking whether game's smartcontract was approved to manipulate
-    //     // player's nft
-        // let approved = await nft.isApprovedForAll(user, nftBurning.address);
-        // console.log(approved);
-
-        // if not approved, we approve player
-
-        // approve to manipulate with player's token in smartcontract:
-    //     let res = await nft.setApprovalForAll(nftStakingAddress, true, {from: walletAddress});
-    //     console.log(`Approvement txid: ${res.tx}`);
-    // };
+    // check if nfts are approved
+    // let approved = await nft.isApprovedForAll(user, nftBurning.address);
+    // console.log("Nfts are approved? ",approved);
 
 
 
     //approve transfer of crowns and check allowance
     // await crowns.approve(nftBurning.address, depositAmount, {from:user})
     // .catch(console.error);
-
+    // // check if crowns are approved
     // let allowance = await crowns.allowance(user, nftBurning.address);
     // allowance = parseInt(allowance).toString();
     // allowance = allowance / 1000000000000000000;
