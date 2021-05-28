@@ -4,27 +4,31 @@ let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
 let accounts;
-let interval = 120;  // 0.5 minutes
-let period = 3600 * 24 * 7;   // 1 day 
-let generation = 0;
-let dailyWinners = ["120", "50", "30", "15", "10", "5", "5", "5", "5", "5"];
-let allTimeWinners = ["2000", "1000", "500", "300", "300", "300", "200", "200", "100", "100"];
+let interval = 10;  // 0.5 minutes
+let period = 3600 * 24;   // 1 day
+let generation = 1;
+let dailyWinners = ["12", "5", "3", "15", "10", "5", "5", "5", "5", "5"];
+let allTimeWinners = ["20", "10", "5", "3", "3", "3", "2", "2", "1", "1"];
 let nftBrawlAddress = "0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2";
-let nftFactoryAddress = "0x25F4C38FAF75dF9622FECB17Fa830278cd732091";    
+let nftFactoryAddress = "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0";
 
 /**
  * For test purpose, starts a game session
  */
 module.exports = async function(callback) {
-    let res = await init(networkId);
-    
+    console.log("starting");
+    let res = await init();
+
     callback(null, res);
 };
 
 let init = async function() {
-    web3.eth.getAccounts(function(err,res) { accounts = res; });
-
-    let nftRush = await NftRush.at(nftBrawlAddress);    
+    accounts = await web3.eth.getAccounts();
+    console.log(accounts);
+    let nftRush = await NftRush.at(nftBrawlAddress);
+    let announcement = await nftRush.announcement(1);
+    console.log(announcement.dailySpentTime.toString());
+    return;
 
     await setAllRewards(nftRush);
     console.log("Nft Rush set the reward sizes");
@@ -59,7 +63,7 @@ let setAllRewards = async function(nftRush) {
         dailyWinners[i] = web3.utils.toWei(dailyWinners[i]);
     }
 
-    await nftRush.setPrizes(dailyWinners, allTimeWinners, {gasPrice: 136000000000});
+    await nftRush.setPrizes(dailyWinners, allTimeWinners, {gasPrice: 136000000000}).catch(console.error);
 
     console.log("Set all reward prizes");
 };
