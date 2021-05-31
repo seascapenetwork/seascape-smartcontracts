@@ -2,8 +2,8 @@ pragma solidity 0.6.7;
 
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./GameSession.sol";
-import "./Crowns.sol";
+import "./NftRushGameSession.sol";
+import "./NftRushCrowns.sol";
 
 /// @notice There are four types of leaderboards in the game:
 ///
