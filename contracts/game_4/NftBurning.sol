@@ -75,6 +75,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 amount,
         uint256 totalStaked
     );
+    event Withdrawn(address indexed owner, uint256 indexed sessionId, uint256 withdrawnAmount, uint256 withdrawnTime);
     event FactorySet(address indexed factoryAddress);
 
 
@@ -198,6 +199,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             _nfts[2],
             _nfts[3],
             _nfts[4],
+            _balance.totalStaked,
             _quality
         ));
         bytes32 _message = keccak256(abi.encodePacked(
@@ -244,6 +246,28 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         _balance.totalStaked = _balance.totalStaked.add(_amount);
 
         emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked);
+    }
+
+    /// @notice Withdraws totalStaked per msg.sender
+    function withdraw(uint256 _sessionId) external {
+        Session storage _session = sessions[_sessionId];
+        Balance storage _balance  = balances[_sessionId][msg.sender];
+
+        require(isActive(_sessionId) == false, "Session is still active");
+        require(_balance.totalStaked > 0, "Total staked amount is 0");
+        require(crowns.transfer(msg.sender, _balance.totalStaked), "Failed to transfer crowns from contract to user");
+
+        // update balance
+        uint256 withdrawnAmount = _balance.totalStaked;
+        _balance.totalStaked = 0;
+
+        emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
+    }
+
+
+    /// @notice Returns amount of Token staked by _owner
+    function totalStakedBalanceOf(uint256 _sessionId, address _owner) external view returns(uint256) {
+        return balances[_sessionId][_owner].totalStaked;
     }
 
     /// @dev sets an nft factory, a smartcontract that mints tokens.
