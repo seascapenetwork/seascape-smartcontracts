@@ -9,6 +9,7 @@ services:
       - type: bind
         source: ./
         target: /home/node/app/
+      - /home/node/app/node_modules
     ports:
       - "8089:8000"
     networks:
