@@ -1,3 +1,6 @@
 [submodule "contracts/crowns"]
 	path = contracts/crowns
 	url = https://github.com/blocklords/crowns.git
+[submodule "contracts/crowns-wrapper"]
+	path = contracts/crowns-wrapper
+	url = https://github.com/blocklords/crowns-wrapper.git
