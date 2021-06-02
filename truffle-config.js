@@ -6,6 +6,7 @@ module.exports = {
     'truffle-plugin-verify'
   ],
   api_keys: {
+  bscscan: 'ACACHKEKDCFBHJTQQHV49R5UV9W8T5TR6X',
   etherscan: 'AZIRCZGSJY4BTC9EK2C6EEFGYSNKUI315K'
 },
     compilers: {
@@ -38,13 +39,14 @@ module.exports = {
   },
   // Moonbase Alpha TestNet
   moonbase: {
-  provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://rpc.testnet.moonbeam.network`),
-  network_id: 1287
+    provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://rpc.testnet.moonbeam.network`),
+    network_id: 1287,
+    gas: 5190000
 },
   ganache: {
-  host: "localhost",
-  port: 9545,
-  network_id: "*"
+    host: "localhost",
+    port: 9545,
+    network_id: "*"
 }
 }
 };
