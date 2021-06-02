@@ -12,7 +12,6 @@ import "./../seascape_nft/SeascapeNft.sol";
 import "./Crowns.sol";
 
 
-
 /// @title Nft Burning contract  mints a higher quality nft in exchange for
 /// five lower quality nfts + CWS fee
 /// @author Nejc Schneider
@@ -250,21 +249,21 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     }
 
     /// @notice Withdraws totalStaked per msg.sender
-    function withdraw(uint256 _sessionId) external {
-        Session storage _session = sessions[_sessionId];
-        Balance storage _balance  = balances[_sessionId][msg.sender];
+    function withdraw(uint256 _sessionId) external{
 
-        require(isActive(_sessionId) == false, "Session is still active");
-        //require(_balance.totalStaked > 0, "Total staked amount is 0");
-        require(crowns.transfer(msg.sender, _balance.totalStaked), "Failed to transfer crowns from contract to user");
+        require(!isActive(_sessionId), "Session is still active");
+        require(balances[_sessionId][msg.sender].totalStaked > 0, "Total staked amount is 0");
 
-        // update balance
-        uint256 withdrawnAmount = _balance.totalStaked;
-        delete balances[_sessionId][msg.sender];
+        // update balance first to avoid reentrancy
+        uint256 withdrawnAmount = balances[_sessionId][msg.sender].totalStaked;
+        delete balances[_sessionId][msg.sender].totalStaked;
+
+        // transfer crowns second
+        require(crowns.transfer(msg.sender, withdrawnAmount),
+            "Failed to transfer crowns from contract to user");
 
         emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
     }
-
 
     /// @notice Returns amount of Token staked by _owner
     function totalStakedBalanceOf(uint256 _sessionId, address _owner) external view returns(uint256) {
