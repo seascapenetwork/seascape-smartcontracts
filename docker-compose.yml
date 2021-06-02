@@ -3,14 +3,15 @@ version: "3.2"
 services:
   smartcontract:
     build:
-      context: ../seascape-smartcontracts
+      context: .
     container_name: "smartcontract"
     volumes:
       - type: bind
-        source: ../seascape-smartcontracts
+        source: ./
         target: /home/node/app/
+      - /home/node/app/node_modules
     ports:
-      - "8087:8000"
+      - "8089:8000"
     networks:
       - net
     entrypoint: sh
@@ -61,7 +62,7 @@ services:
         - net
     volumes:
       - type: bind
-        source: ../seascape-smartcontracts
+        source: ./
         target: /app/
   ipfs:
     image: ipfs/go-ipfs:v0.4.23

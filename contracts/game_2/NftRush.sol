@@ -5,9 +5,9 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../seascape_nft/NftTypes.sol";
 import "./../seascape_nft/NftFactory.sol";
-import "./Crowns.sol";
-import "./Leaderboard.sol";
-import "./GameSession.sol";
+import "./NftRushCrowns.sol";
+import "./NftRushLeaderboard.sol";
+import "./NftRushGameSession.sol";
 
 /// @title Nft Rush a game on seascape platform allowing to earn Nft by spending crowns
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
