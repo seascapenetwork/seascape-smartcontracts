@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x4B9f2881761db5353A2A4DFF498B1764C5B85067");
+    let nftBurning = await NftBurning.at("0xc7E86E65CdAB581cCBcd6C0B8d33A527cA502e52");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -38,12 +38,14 @@ let init = async function(networkId) {
     console.log("contract balance before calling withdraw function: " ,balanceBefore);
 
     // call withdraw
-    let withdrawn = await nftBurning.withdraw(sessionId, {from: user})
-      .catch(console.error);
-    //console.log(`Withdrawn ${difference} crowns.`);
+    let withdrawn = await nftBurning.withdraw(sessionId, {from: user}).catch(console.error);
 
     // PRINT BALANCE AFTER
-    let contractBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(nftBurning))/finney);
-    console.log(contractBalanceAfter);
+    let balanceAfter = Math.floor(parseInt(await crowns.balanceOf(nftBurning.address))/finney);
+    console.log("contract balance after calling withdraw function: " ,balanceAfter);
+
+    // let getMoney = await nftBurning.getMoney(depositAmount, {from:user}).catch(console.error);
+    // console.log("withdrawn money");
+
 
 }.bind(this);
