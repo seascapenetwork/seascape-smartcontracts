@@ -38,6 +38,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus ( First game):   [0x93A782FD81444dC3fE2EFB529Dd7a6FB9eef7190](https://testnet.bscscan.com/address/0x93A782FD81444dC3fE2EFB529Dd7a6FB9eef7190)
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (Third game):   [0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5](https://testnet.bscscan.com/address/0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5)
+ * Nft Market:                    [0xBd5ee6AC93dCff051c3E67faDa19eA3Fa05803e3](https://rinkeby.etherscan.io/address/0xBd5ee6AC93dCff051c3E67faDa19eA3Fa05803e3)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
@@ -46,6 +47,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus ( First game):   [0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73](https://moonbeam-explorer.netlify.app/address/0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73)
  * Nft Rush (Second game):        [0x548b3589766AB56f2910A76bcFe1421Fe387F528](https://moonbeam-explorer.netlify.app/address/0x548b3589766AB56f2910A76bcFe1421Fe387F528)
  * Nft Staking (Third game):      [0x18B496578793B0bA4502612b4A2E874Fb9213337](https://moonbeam-explorer.netlify.app/address/0x18B496578793B0bA4502612b4A2E874Fb9213337)
+ * Nft Market:                    Coming soon...
 
 # Audit
 The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org/).
