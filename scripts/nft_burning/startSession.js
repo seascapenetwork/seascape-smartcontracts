@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x0f539c3C550AD30B27572536D1BcE9DC2c56d425");
+    let nftBurning = await NftBurning.at("0x4B9f2881761db5353A2A4DFF498B1764C5B85067");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -33,10 +33,10 @@ let init = async function(networkId) {
     // }
 
     // startSession parameters
-    let startTime = Math.floor(Date.now()/1000) + 50;
-    let period = 600; // one day
+    let startTime = Math.floor(Date.now()/1000) + 40;
+    let period = 60; // one day
     let generation = 1;
-    let interval = 180; // 3 minutes
+    let interval = 10; // 3 minutes
     let fee = web3.utils.toWei("1", "ether");
     let minStake = web3.utils.toWei("100", "milli"); // 0.1 ether
     let maxStake = web3.utils.toWei("1", "ether");

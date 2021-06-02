@@ -230,20 +230,21 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of session to verify
     function stake(uint256 _sessionId, uint256 _amount) external {
         Session storage _session = sessions[_sessionId];
-        Balance storage _balance  = balances[_sessionId][msg.sender];
+        Balance storage _balance = balances[_sessionId][msg.sender];
 
+        require(_sessionId > 0, "Session is not active yet");
+        require(isActive(_sessionId), "Session is already finished");
         require(_amount > 0, "Should stake more than 0");
         require(_balance.totalStaked.add(_amount) <= _session.maxStake,
             "Cant stake more than max staking limit");
         require(_balance.totalStaked.add(_amount) >= _session.minStake,
             "Cant stake less than min staking limit");
-        require(_sessionId > 0, "Session is not active yet");
-        require(isActive(_sessionId), "Session is already finished");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
-        require(crowns.spendFrom(msg.sender, _amount), "Failed to spend CWS");
+        require(crowns.transferFrom(msg.sender, address(this), _amount), "Failed to spend CWS");
 
         // update balance
-        _balance.totalStaked = _balance.totalStaked.add(_amount);
+        balances[_sessionId][msg.sender].totalStaked = balances[_sessionId][msg.sender]
+          .totalStaked.add(_amount);
 
         emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked);
     }
@@ -254,12 +255,12 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         Balance storage _balance  = balances[_sessionId][msg.sender];
 
         require(isActive(_sessionId) == false, "Session is still active");
-        require(_balance.totalStaked > 0, "Total staked amount is 0");
+        //require(_balance.totalStaked > 0, "Total staked amount is 0");
         require(crowns.transfer(msg.sender, _balance.totalStaked), "Failed to transfer crowns from contract to user");
 
         // update balance
         uint256 withdrawnAmount = _balance.totalStaked;
-        _balance.totalStaked = 0;
+        delete balances[_sessionId][msg.sender];
 
         emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
     }

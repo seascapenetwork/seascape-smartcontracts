@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x7f2FFe308eb757DEf7ad532c81C8ae659dDCc8Bc");
+    let nftBurning = await NftBurning.at("0x4B9f2881761db5353A2A4DFF498B1764C5B85067");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -24,9 +24,9 @@ let init = async function(networkId) {
     //global variables
     let user = accounts[1];
     let owner = accounts[0];
-    let sessionId = 1;
-    let depositInt = "10";
-    let depositAmount = web3.utils.toWei(depositInt, "ether");
+    let sessionId = 2;
+    let depositInt = "500";
+    let depositAmount = web3.utils.toWei(depositInt, "milli");
 
     console.log(`Using ${user}`);
 
