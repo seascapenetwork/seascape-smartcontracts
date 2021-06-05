@@ -27,8 +27,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     struct Session {
         uint256 period;       // session duration
         uint256 startTime;    // session start in unixtimestamp
-        uint256 endTime;      // session end in unixtimestamp
-                              // should be equal to startTime + period
         uint256 generation;		// Seascape Nft generation
         uint256 interval;   	// duration between every minting
         uint256 fee;          // amount of CWS token to spend to mint a new nft
@@ -118,7 +116,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
         /// cant start new session when another is active
         if (lastSessionId > 0) {
-            require(!isActive(lastSessionId), "lastSessionId already active");
+            require(!isActive(lastSessionId), "lastSession should be inactive");
             require(_startTime > block.timestamp, "startTime should be in future");
             require(_period > 0, "period should be above 0");
             require(_interval > 0 && _interval <= _period,
@@ -157,6 +155,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
                 _maxStake
             );
         }
+    }
 
     /// @notice spend nfts and cws, burn nfts, mint a higher quality nft and send it to player
     /// @param _sessionId id of the active session, during which nfts can be minted
@@ -181,7 +180,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(_sessionId > 0, "Session has not started yet");
         require(_nfts.length == 5, "Need to deposit 5 nfts");
         require(_quality >= 1 && _quality <= 5, "Quality value should range 1 - 5");
-        require(isActive(_sessionId), "Session already finished");
+        require(isActive(_sessionId), "Session should be active");
         require(_balance.mintedTime == 0 ||
             (_balance.mintedTime.add(_session.interval) < block.timestamp),
             "Still in cooldown, try later");
@@ -232,7 +231,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         Balance storage _balance = balances[_sessionId][msg.sender];
 
         require(_sessionId > 0, "Session not active yet");
-        require(isActive(_sessionId), "Session already finished");
+        require(isActive(_sessionId), "Session should be active");
         require(_amount > 0, "Should stake more than 0");
         require(_balance.totalStaked.add(_amount) <= _session.maxStake,
             "Cant stake more than maxStake");
@@ -251,7 +250,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @notice withdraw callers totalStaked crowns
     /// @param _sessionId id of past session
     function withdraw(uint256 _sessionId) external {
-        require(!isActive(_sessionId), "Session is still active");
+        require(!isActive(_sessionId), "Session should be inactive");
         require(balances[_sessionId][msg.sender].totalStaked > 0, "Total staked amount is 0");
 
         /// update balance first to avoid reentrancy
