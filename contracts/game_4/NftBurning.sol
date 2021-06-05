@@ -243,7 +243,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
         /// @dev update balance
         balances[_sessionId][msg.sender].totalStaked = balances[_sessionId][msg.sender]
-          .totalStaked.add(_amount);
+            .totalStaked.add(_amount);
 
         emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked);
     }
@@ -269,7 +269,14 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of active or past session
     /// @param _owner owner of staked coins
     /// @return token amount
-    function totalStakedBalanceOf(uint256 _sessionId, address _owner) external view returns(uint256) {
+    function totalStakedBalanceOf(
+        uint256 _sessionId,
+        address _owner
+    )
+        external
+        view
+        returns(uint256)
+    {
         return balances[_sessionId][_owner].totalStaked;
     }
 
