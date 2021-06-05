@@ -87,8 +87,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _nftFactory nft minting contract address
     /// @param _nft nft fusion contract address
     constructor(address _crowns, address _nftFactory, address _nft)  public {
-        require(_crowns != address(0), "Crowns can't be zero address");
-        require(_nftFactory != address(0), "Nft Factory can't be zero address");
+        require(_crowns != address(0), "Crowns cant be zero address");
+        require(_nftFactory != address(0), "nftFactory cant be zero address");
 
         /// @dev set crowns is defined in Crowns.sol
         setCrowns(_crowns);
@@ -118,14 +118,14 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
         /// cant start new session when another is active
         if (lastSessionId > 0) {
-            require(!isActive(lastSessionId), "Another session already active");
-            require(_startTime > block.timestamp, "Seassion should start in the future");
-            require(_period > 0, "Session duration should be greater than 0");
+            require(!isActive(lastSessionId), "lastSessionId already active");
+            require(_startTime > block.timestamp, "startTime should be in future");
+            require(_period > 0, "period should be above 0");
             require(_interval > 0 && _interval <= _period,
-            "Interval should be greater than 0 and lower than period");
-            require(_fee > 0, "Fee should be greater than 0");
-            require(_minStake > 0, "Min stake should be greater than 0");
-            require(_maxStake > _minStake, "Max stake should be greater than min limit");
+            "interval should be >0 & <period");
+            require(_fee > 0, "fee should be above 0");
+            require(_minStake > 0, "minStake should be above 0");
+            require(_maxStake > _minStake, "maxStake should be > minStake");
 
         		//--------------------------------------------------------------------
         		// updating session related data
@@ -180,11 +180,11 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
         require(_sessionId > 0, "Session has not started yet");
         require(_nfts.length == 5, "Need to deposit 5 nfts");
-        require(_quality >= 1 && _quality <= 5, "Incorrect quality");
-        require(isActive(_sessionId), "Game session is already finished");
+        require(_quality >= 1 && _quality <= 5, "Quality value should range 1 - 5");
+        require(isActive(_sessionId), "Session already finished");
         require(_balance.mintedTime == 0 ||
             (_balance.mintedTime.add(_session.interval) < block.timestamp),
-            "Still in locking period, try again later");
+            "Still in cooldown, try later");
         require(crowns.balanceOf(msg.sender) >= _session.fee, "Not enough CWS in your wallet");
 
         //--------------------------------------------------------------------
@@ -219,7 +219,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         }
         /// @dev mint new nft
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
-        require(mintedNftId > 0, "failed to mint a token");
+        require(mintedNftId > 0, "Failed to mint a token");
         _balance.mintedTime = block.timestamp;
         emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, mintedNftId);
     }
@@ -231,13 +231,13 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         Session storage _session = sessions[_sessionId];
         Balance storage _balance = balances[_sessionId][msg.sender];
 
-        require(_sessionId > 0, "Session is not active yet");
-        require(isActive(_sessionId), "Session is already finished");
+        require(_sessionId > 0, "Session not active yet");
+        require(isActive(_sessionId), "Session already finished");
         require(_amount > 0, "Should stake more than 0");
         require(_balance.totalStaked.add(_amount) <= _session.maxStake,
-            "Cant stake more than max staking limit");
+            "Cant stake more than maxStake");
         require(_balance.totalStaked.add(_amount) >= _session.minStake,
-            "Cant stake less than min staking limit");
+            "Cant stake less than minStake");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
         require(crowns.transferFrom(msg.sender, address(this), _amount), "Failed to spend CWS");
 
@@ -260,7 +260,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
 
         /// transfer crowns second
         require(crowns.transfer(msg.sender, withdrawnAmount),
-            "Failed to transfer crowns from contract to user");
+            "Transfer crowns to user failed");
 
         emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
     }
@@ -284,7 +284,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @dev the nft factory should give a permission on it's own side to this contract too.
     /// @param _address nftFactory's new address
     function setNftFactory(address _address) external onlyOwner {
-        require(_address != address(0), "Nft Factory address can not be be zero");
+        require(_address != address(0), "nftFactory address cant be zero");
         nftFactory = NftFactory(_address);
 
         emit FactorySet(_address);
