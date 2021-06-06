@@ -292,10 +292,10 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of session to verify
     /// @return true if session is active
     function isActive(uint256 _sessionId) internal view returns(bool) {
-        if (now >= sessions[_sessionId].startTime &&
-            now < sessions[_sessionId].startTime + sessions[_sessionId].period)
-            return true;
-	      return true;
+        if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+            return false;
+	      }
+        return true;
     }
 
     /// @dev encrypt token data
