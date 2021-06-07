@@ -116,44 +116,44 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     {
         /// cant start new session when another is active
         if (lastSessionId > 0) {
-            require(!isActive(lastSessionId), "lastSession should be inactive");
-            require(_startTime > block.timestamp, "startTime should be in future");
-            require(_period > 0, "period should be above 0");
-            require(_interval > 0 && _interval <= _period,
-            "interval should be >0 & <period");
-            require(_fee > 0, "fee should be above 0");
-            require(_minStake > 0, "minStake should be above 0");
-            require(_maxStake > _minStake, "maxStake should be > minStake");
-
-        		//--------------------------------------------------------------------
-        		// updating session related data
-        		//--------------------------------------------------------------------
-
-            uint256 _sessionId = sessionId.current();
-            sessions[_sessionId] = Session(
-                _period,
-                _startTime,
-                _generation,
-                _interval,
-                _fee,
-                _minStake,
-                _maxStake
-            );
-
-            sessionId.increment();
-            lastSessionId = _sessionId;
-
-            emit SessionStarted(
-                _sessionId,
-                _generation,
-                _fee,
-                _interval,
-                _startTime,
-                _startTime + _period,
-                _minStake,
-                _maxStake
-            );
+            require(!isActive(lastSessionId), "another session is still active");
         }
+        require(_startTime > block.timestamp, "session should start in future");
+        require(_period > 0, "period should be above 0");
+        require(_interval > 0 && _interval <= _period,
+        "interval should be >0 & <period");
+        require(_fee > 0, "fee should be above 0");
+        require(_minStake > 0, "minStake should be above 0");
+        require(_maxStake > _minStake, "maxStake should be > minStake");
+
+    		//--------------------------------------------------------------------
+    		// updating session related data
+    		//--------------------------------------------------------------------
+
+        uint256 _sessionId = sessionId.current();
+        sessions[_sessionId] = Session(
+            _period,
+            _startTime+ _period,
+            _generation,
+            _interval,
+            _fee,
+            _minStake,
+            _maxStake
+        );
+
+        sessionId.increment();
+        lastSessionId = _sessionId;
+
+        emit SessionStarted(
+            _sessionId,
+            _generation,
+            _fee,
+            _interval,
+            _startTime,
+            _startTime + _period,
+            _minStake,
+            _maxStake
+        );
     }
 
     /// @notice spend nfts and cws, burn nfts, mint a higher quality nft and send it to player
@@ -179,7 +179,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(_sessionId > 0, "Session has not started yet");
         require(_nfts.length == 5, "Need to deposit 5 nfts");
         require(_quality >= 1 && _quality <= 5, "Quality value should range 1 - 5");
-        require(isActive(_sessionId), "Session should be active");
+        require(isActive(_sessionId), "Session not active");
         require(_balance.mintedTime == 0 ||
             (_balance.mintedTime.add(_session.interval) < block.timestamp),
             "Still in cooldown, try later");
@@ -229,8 +229,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         Session storage _session = sessions[_sessionId];
         Balance storage _balance = balances[_sessionId][msg.sender];
 
-        require(_sessionId > 0, "Session not active yet");
-        require(isActive(_sessionId), "Session should be active");
+        require(_sessionId > 0, "No active session");
+        require(isActive(_sessionId), "Session not active");
         require(_amount > 0, "Should stake more than 0");
         require(_balance.totalStaked.add(_amount) <= _session.maxStake,
             "Cant stake more than maxStake");
