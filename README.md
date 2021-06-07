@@ -16,34 +16,35 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
  * Seascape Nft:                  [0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8](https://bscscan.com/address/0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8)
  * Nft Factory:                   [0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d](https://bscscan.com/address/0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d)
- * Profit Circus ( First game):   [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
- * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
- * Nft Staking (Third game):      ```yet to come...```
+ * Profit Circus (game1):   [0x82b6ed562f202E76A5bDBB209e077f4a96bD5605](https://bscscan.com/address/0x82b6ed562f202E76A5bDBB209e077f4a96bD5605)
+ * Nft Brawl (game2):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
+ * Nft Staking (game3):      ```yet to come...```
 
 ### Rinkeby test network
  * Crowns:                        [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
  * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
  * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
- * Profit Circus ( First game):   [0xC159318769A275aCB43B956e85a582894cE00837](https://rinkeby.etherscan.io/address/0xC159318769A275aCB43B956e85a582894cE00837)
- * Nft Brawl (Second game):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
- * Nft Staking (Third game):      [0xf01AB6f972f987Ad9262466F955dF979A1d6F93F](https://rinkeby.etherscan.io/address/0xf01AB6f972f987Ad9262466F955dF979A1d6F93F)
+ * Profit Circus (game1):   [0xC159318769A275aCB43B956e85a582894cE00837](https://rinkeby.etherscan.io/address/0xC159318769A275aCB43B956e85a582894cE00837)
+ * Nft Brawl (game2):       [0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2](https://rinkeby.etherscan.io/address/0xE34E8F8eFa3D040f2625790C96295e0aB22B1EA2)
+ * Nft Staking (game3):      [0xf01AB6f972f987Ad9262466F955dF979A1d6F93F](https://rinkeby.etherscan.io/address/0xf01AB6f972f987Ad9262466F955dF979A1d6F93F)
+ * Nft Burning (game4):      [0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608](https://rinkeby.etherscan.io/address/0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608)
  * Nft Market:                    [0x02acB12EF7bafE2909707556673755bEff1eC15E](https://rinkeby.etherscan.io/address/0x02acb12ef7bafe2909707556673755beff1ec15e)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
  * Seascape Nft:                  [0x66638F4970C2ae63773946906922c07a583b6069](https://testnet.bscscan.com/address/0x66638F4970C2ae63773946906922c07a583b6069)
  * Factory:                       [0x3eB88c3F2A719369320D731FbaE062b0f82F22e4](https://testnet.bscscan.com/address/0x3eB88c3F2A719369320D731FbaE062b0f82F22e4)
- * Profit Circus ( First game):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
- * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
- * Staking Saloon (Third game):   [0xC0630A06B91b08B4137faA04eF599E4DEEd35b30](https://testnet.bscscan.com/address/0xC0630A06B91b08B4137faA04eF599E4DEEd35b30)
+ * Profit Circus (game1):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
+ * Nft Brawl (game2):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
+ * Staking Saloon (game3):   [0xC0630A06B91b08B4137faA04eF599E4DEEd35b30](https://testnet.bscscan.com/address/0xC0630A06B91b08B4137faA04eF599E4DEEd35b30)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
  * Seascape Nft:                  [0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37](https://moonbeam-explorer.netlify.app/address/0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37)
  * Factory:                       [0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2](https://moonbeam-explorer.netlify.app/address/0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2)
- * Profit Circus ( First game):   [0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73](https://moonbeam-explorer.netlify.app/address/0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73)
- * Nft Rush (Second game):        [0x548b3589766AB56f2910A76bcFe1421Fe387F528](https://moonbeam-explorer.netlify.app/address/0x548b3589766AB56f2910A76bcFe1421Fe387F528)
- * Nft Staking (Third game):      [0x18B496578793B0bA4502612b4A2E874Fb9213337](https://moonbeam-explorer.netlify.app/address/0x18B496578793B0bA4502612b4A2E874Fb9213337)
+ * Profit Circus (game1):   [0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73](https://moonbeam-explorer.netlify.app/address/0xDD3ccd9936E2D94B90776fEb9A0cEacAe61A8E73)
+ * Nft Rush (game2):        [0x548b3589766AB56f2910A76bcFe1421Fe387F528](https://moonbeam-explorer.netlify.app/address/0x548b3589766AB56f2910A76bcFe1421Fe387F528)
+ * Nft Staking (game3):      [0x18B496578793B0bA4502612b4A2E874Fb9213337](https://moonbeam-explorer.netlify.app/address/0x18B496578793B0bA4502612b4A2E874Fb9213337)
 
 # Audit
 The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org/).
