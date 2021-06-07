@@ -16,37 +16,43 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x27C85b5211f8EA23c89236786259Dc3f9Fa47DE5");
+    let nftBurning = await NftBurning.at("0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
 
 
-    //global variables
+    // global variables
     let user = accounts[1];
     let owner = accounts[0];
-    let totalStaked = 0;
-    let sessionId = 1;
+    let stakedInt = "0";        //remember to update accordingly or verification will fail
+    let totalStaked = web3.utils.toWei(stakedInt, "milli");
+    let sessionId = 3;
     let quality = 3;
     let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
 
 
+    // return current account and sessionId
     console.log(`Using ${user}`);
+    let lastSessionId = await nftBurning.lastSessionId.call();
+    console.log("current session id: " ,parseInt(lastSessionId));
 
-    // check if session is active
-    // let active = await nftBurning.isActive(sessionId);
-    // console.log(active);
 
+    // return current account and lastSessionId
+    console.log(`Fetching users totalStaked amount per session`);
+    let staked = await nftBurning.totalStakedBalanceOf(sessionId, user);
+    console.log("Users total staked balance: " ,parseInt(staked));
 
 
     // fetch nftIds
     let nftIds = new Array(5);
+    console.log(`Fetching the nft Ids`);
     for(let index = 0; index < 5; index++){
       let tokenId = await nft.tokenOfOwnerByIndex(user, index);
       nftIds[index] = parseInt(tokenId.toString());
       //.catch(console.error);
-      console.log(`Nft at index ${index} of ${user} has id ${nftIds[index]}`);
+      console.log(`Nft at index ${index} has id ${nftIds[index]}`);
     }
 
     // known nft ids
@@ -55,24 +61,26 @@ let init = async function(networkId) {
 
 
     // approve transfer of nfts
+    console.log("approving nftBurning to spend nfts...")
     await nft.setApprovalForAll(nftBurning.address, true, {from: user})
       .catch(console.error);
-    console.log("nftBurning was approved to spend nfts")
     // check if nfts are approved
+    console.log("Checking if Nfts are approved ?")
     let approved = await nft.isApprovedForAll(user, nftBurning.address);
-    console.log("Nfts are approved? ",approved);
+    console.log(approved);
 
 
-    //approve transfer of crowns and check allowance
+    // approve transfer of crowns and check allowance
+    console.log("approving nftBurning to spend crowns...")
     await crowns.approve(nftBurning.address, depositAmount, {from:user})
     .catch(console.error);
-    // check if crowns are approved
+    console.log("checking if crowns are approved...")
     let allowance = await crowns.allowance(user, nftBurning.address);
-    allowance = parseInt(allowance).toString();
-    allowance = allowance / 1000000000000000000;
+    allowance = parseInt(allowance).toString() / 1000000000000000000;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
 
-    //signature part
+
+    // signature part
     let bytes32 = web3.eth.abi.encodeParameters(
       ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
       [nftIds[0], nftIds[1], nftIds[2], nftIds[3], nftIds[4], totalStaked]);
