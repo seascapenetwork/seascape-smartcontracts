@@ -1,25 +1,34 @@
-var LpMining = artifacts.require("./LpMining.sol");
+var ProfitCircus = artifacts.require("./LpMining.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 var NftFactory = artifacts.require("./NftFactory.sol");
 
+module.exports = async function(deployer, network) {
+	let crowns;
+	let factory;
 
-module.exports = function(deployer, network) {
     if (network == "development") {
-		deployer.deploy(LpMining, Crowns.address, NftFactory.address).then(function(){
-	    	console.log("Lp Mining contract was deployed at address: "+LpMining.address);
-	    	console.log("It is used with Crowns (CWS) Token at address: "+Crowns.address);
-	    	console.log("It is using Nft Factory address: "+NftFactory.address);
-		});
+		crowns = Crowns.address;
+		factory = NftFactory.address;
     } else if (network == "rinkeby") {
-        	deployer.deploy(LpMining, "0x168840df293413a930d3d40bab6e1cd8f406719d", "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0").then(function(){
-	    	console.log("Profit Circus contract was deployed at address: "+LpMining.address);
-		});
-    } else {
-		let crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
-		let factory = "0x3eB88c3F2A719369320D731FbaE062b0f82F22e4";
+		crowns = "0x168840df293413a930d3d40bab6e1cd8f406719d";
+		factory = "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0";
+	} else if (network == 'mainnet') {
+		crowns = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0";
+		factory = "0x25F4C38FAF75dF9622FECB17Fa830278cd732091";
+	} else if (network == 'bsc') {
+		crowns = "0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd";
+		factory = "0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d";
+    } else if (network == 'bsctestnet') {
+		// bsc-testnet
+		crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
+		factory = "0x3eB88c3F2A719369320D731FbaE062b0f82F22e4";
+	} else {
+		throw `${network} is not supported`;
+	}
 
-		deployer.deploy(LpMining, crowns, factory).then(function(){
-	    	console.log("Profit Circus contract was deployed at address: "+LpMining.address);
-		});
-    }
+	deployer.deploy(ProfitCircus, crowns, factory)
+	.then(() => {
+		console.log("Profit Circus smartcontract was deployed at address: "+ProfitCircus.address);
+		console.log("Now call, scripts/lp_mining/init.js with uncommenting nftFactory.addStaticUser(profitCircus.address)");
+	});
 };
