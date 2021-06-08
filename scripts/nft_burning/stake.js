@@ -37,17 +37,16 @@ let init = async function(networkId) {
 
 
     // approve transfer of crowns and check allowance
-    console.log(`approving nftBurning to spend crowns...n`);
+    console.log(`approving nftBurning to spend crowns...`);
     await crowns.approve(nftBurning.address, stakeAmount, {from:user})
     .catch(console.error);
-    console.log("checking if crowns are approved...")
     let allowance = await crowns.allowance(user, nftBurning.address);
     allowance = parseInt(allowance).toString() / 1000000000000000000;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
 
 
     // stake crowns
-    console.log(`Calling the stake function`);
+    console.log(`Calling the stake function...`);
     let stakeCrowns = await nftBurning.stake(
         sessionId,
         stakeAmount,

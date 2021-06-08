@@ -19,9 +19,9 @@ let init = async function(networkId) {
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
 
     // global vars
-    let user = accounts[0]; // should use factory deployer!
+    let user = accounts[1]; // should use factory deployer!
     let generation = 0;
-    let amountToMint = 22;
+    let amountToMint = 50;
     //let quality = 1;    // fixed quality
 
 
@@ -30,18 +30,17 @@ let init = async function(networkId) {
 
 
     // mint nfts
-    console.log("attemping to mint nfts...");
+    console.log(`attemping to mint ${amountToMint} nfts...`);
     for(let i=1; i<=amountToMint; i++){
         let quality = Math.floor(Math.random() * (6 - 1))+1;
         let minted = await factory.mintQuality(user, generation, quality);
-        console.log(`Quality ${quality} was minted`);
+        console.log(`Nft ${i} with quality ${quality} was minted`);
         // show progress
         if(i % 5 == 0){
           let percentComplete = Math.round(i/amountToMint*10000) / 100
           console.log(`Minting ${percentComplete}% complete.`);
         }
     }
-
 
     //fetch nft balance
     console.log("Checking users nft balance...");

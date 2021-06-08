@@ -27,7 +27,7 @@ let init = async function(networkId) {
     let owner = accounts[0];
     let stakedInt = "0";        //remember to update accordingly or verification will fail
     let totalStaked = web3.utils.toWei(stakedInt, "milli");
-    let sessionId = 3;
+    let sessionId = 2;
     let quality = 3;
     let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
@@ -39,15 +39,14 @@ let init = async function(networkId) {
     console.log("current session id: " ,parseInt(lastSessionId));
 
 
-    // return current account and lastSessionId
-    console.log(`Fetching users totalStaked amount per session`);
+    // return user staked balance per sessionId
     let staked = await nftBurning.totalStakedBalanceOf(sessionId, user);
-    console.log("Users total staked balance: " ,parseInt(staked));
+    console.log(`User staked ${staked} in session ${sessionId}`);
 
 
     // fetch nftIds
     let nftIds = new Array(5);
-    console.log(`Fetching the nft Ids`);
+    console.log(`Fetching the nft Ids...`);
     for(let index = 0; index < 5; index++){
       let tokenId = await nft.tokenOfOwnerByIndex(user, index);
       nftIds[index] = parseInt(tokenId.toString());
@@ -56,7 +55,7 @@ let init = async function(networkId) {
     }
 
     // known nft ids
-    // let nftIds = [708 ,709, 710, 711, 891];
+    // let nftIds = [970 ,971, 972, 973, 974];
     // console.log(nftIds);
 
 
@@ -74,7 +73,7 @@ let init = async function(networkId) {
     console.log("approving nftBurning to spend crowns...")
     await crowns.approve(nftBurning.address, depositAmount, {from:user})
     .catch(console.error);
-    console.log("checking if crowns are approved...")
+    console.log("checking if crowns are approved ?")
     let allowance = await crowns.allowance(user, nftBurning.address);
     allowance = parseInt(allowance).toString() / 1000000000000000000;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
