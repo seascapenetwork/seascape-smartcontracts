@@ -5,8 +5,8 @@ let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
 let accounts;
-let reward = web3.utils.toWei("1000", "ether");  // cws
-let period = 3600 * 24 * 3;
+let reward = web3.utils.toWei("20", "ether");  // cws
+let period = 3600 * 24 * 1;
 let generation = 1;
 
 /**
@@ -20,22 +20,19 @@ module.exports = async function(callback) {
 };
 
 let init = async function(networkId) {
-    web3.eth.getAccounts(function(err,res) { accounts = res; });
+    accounts = await web3.eth.getAccounts();
+    console.log(accounts)
 
-	let lpMining = await LpMining.at("0x9f5FdC047e1C53D7255a0069071127A3769a2D48");
-	let factory = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-	//let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
-	let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");	
-    let lpTokenAddress = "0xdc935332d39a4c632864dbbed3cfdbf049fb9267";
+	let lpMining        = await LpMining.at("0xa35abb86c53695bb1b23b55808b6c5871432c22c");
+	let factory         = await Factory.at("0x25F4C38FAF75dF9622FECB17Fa830278cd732091");
+	let crowns          = await Crowns.at("0xac0104cca91d167873b8601d2e71eb3d4d8c33e0");	
+    let lpTokenAddress  = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0";
 
-    console.log("Set the contracs");
+    console.log("Set the contracts");
 
-    //let nftGranted = await nft.setFactory(factory.address);
-    //console.log("Nft has been linked to factory: "+nftGranted.tx);
+    //await factory.addStaticUser(lpMining.address).catch(console.error);
+    //console.log("Profit Circus contract got a permission to mint nfts");
 
-    await factory.addStaticUser(lpMining.address);
-    console.log("Profit Circus contract got a permission to mint nfts");
-    
     // should transfer reward amount to contract
     await crowns.transfer(lpMining.address, reward, {from: accounts[0]});
     console.log("Crowns for session were transferred to the Lp Mining smartcontract");
