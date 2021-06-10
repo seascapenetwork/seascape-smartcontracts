@@ -37,6 +37,8 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus (game1):   [0xd920A36252c63ec2260537Dfac90926AE56dAFC0](https://testnet.bscscan.com/address/0xd920A36252c63ec2260537Dfac90926AE56dAFC0)
  * Nft Brawl (game2):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (game3):   [0xC0630A06B91b08B4137faA04eF599E4DEEd35b30](https://testnet.bscscan.com/address/0xC0630A06B91b08B4137faA04eF599E4DEEd35b30)
+ * Nft Burning (game4):      [0xD17DAa519a7e515dD82b78f332c93FA5663ACC9D](https://testnet.bscscan.com/address/0xD17DAa519a7e515dD82b78f332c93FA5663ACC9D)
+ * Nft Market:                    [0xC9c4fF6b893a67a7fc19E2A8158F4296A78943fa](https://testnet.bscscan.com/address/0xC9c4fF6b893a67a7fc19E2A8158F4296A78943fa)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
