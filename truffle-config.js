@@ -43,6 +43,12 @@ module.exports = {
 		    timeoutBlocks: 200,
 		    skipDryRun: true
 	    },
+      // Moonbase Alpha TestNet
+      moonbase: {
+        provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://moonbeam-alpha.api.onfinality.io/rpc?apikey=79d44cff-f2bd-410a-9a27-05d86a57a353`),
+        network_id: 1287,
+        gas: 13000000
+      },
       ganache: {
         host: "localhost",
         port: 9545,

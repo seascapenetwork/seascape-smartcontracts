@@ -32,5 +32,13 @@ module.exports = async function(deployer, network) {
 
           await deployer.deploy(NftBurning, crowns, factory, nft);
           console.log("NftBurning contract was deployed at address: "+NftBurning.address);
-        }
+      }
+      else if (network == "moonbase") {
+          var crowns = "0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989";
+          var factory = "0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2";
+          var nft = "0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37";
+
+          await deployer.deploy(NftBurning, crowns, factory, nft);
+          console.log("NftBurning contract was deployed at address: "+NftBurning.address);
+      }
 };
