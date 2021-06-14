@@ -128,7 +128,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @param _rate amount value. Actual rate in percent = _rate / 10
     function setFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 100, "Rate should be bellow 100 (10%)");
-        require(_rate >= 0, "Rate should be above 0");
         feeRate = _rate;
     }
 
