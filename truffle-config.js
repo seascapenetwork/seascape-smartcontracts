@@ -6,8 +6,7 @@ module.exports = {
     'truffle-plugin-verify'
   ],
   api_keys: {
-  bscscan: 'ACACHKEKDCFBHJTQQHV49R5UV9W8T5TR6X',
-  etherscan: 'AZIRCZGSJY4BTC9EK2C6EEFGYSNKUI315K'
+    /// add here
 },
     compilers: {
 	solc: {
