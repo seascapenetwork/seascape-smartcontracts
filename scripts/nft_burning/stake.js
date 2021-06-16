@@ -25,15 +25,19 @@ let init = async function(networkId) {
     // global variables
     let user = accounts[1];
     let owner = accounts[0];
-    let sessionId = 3;
     let stakeInt = "200";
     let stakeAmount = web3.utils.toWei(stakeInt, "milli");
 
 
-    // show current account and lastSessionId
+    // print current account and sessionId
     console.log(`Using ${user}`);
-    let lastSessionId = await nftBurning.lastSessionId.call();
-    console.log("last session id: " ,parseInt(lastSessionId));
+    let sessionId = await nftBurning.lastSessionId.call();
+    sessionId = parseInt(sessionId);
+    console.log("last session id: " ,sessionId);
+
+
+    // set value manually
+    // let sessionId = 2;
 
 
     // approve transfer of crowns and check allowance

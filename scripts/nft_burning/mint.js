@@ -25,9 +25,6 @@ let init = async function(networkId) {
     // global variables
     let user = accounts[1];
     let owner = accounts[0];
-    let stakedInt = "0";        //remember to update accordingly or verification will fail
-    let totalStaked = web3.utils.toWei(stakedInt, "milli");
-    let sessionId = 2;
     let quality = 3;
     let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
@@ -35,13 +32,14 @@ let init = async function(networkId) {
 
     // return current account and sessionId
     console.log(`Using ${user}`);
-    let lastSessionId = await nftBurning.lastSessionId.call();
-    console.log("current session id: " ,parseInt(lastSessionId));
+    let sessionId = await nftBurning.lastSessionId.call();
+    sessionId = parseInt(sessionId);
+    console.log("current session id: " ,sessionId);
 
 
-    // return user staked balance per sessionId
-    let staked = await nftBurning.totalStakedBalanceOf(sessionId, user);
-    console.log(`User staked ${staked} in session ${sessionId}`);
+    // return user totalStaked balance per sessionId
+    let totalStaked = await nftBurning.totalStakedBalanceOf(sessionId, user);
+    console.log(`User staked ${totalStaked} in session ${sessionId}`);
 
 
     // fetch nftIds
@@ -54,9 +52,10 @@ let init = async function(networkId) {
       console.log(`Nft at index ${index} has id ${nftIds[index]}`);
     }
 
-    // known nft ids
+    // or set values manually
+    // let sessionId = 2;
+    // let totalStaked = web3.utils.toWei("0", "milli");
     // let nftIds = [970 ,971, 972, 973, 974];
-    // console.log(nftIds);
 
 
     // approve transfer of nfts

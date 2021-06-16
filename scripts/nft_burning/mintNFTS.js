@@ -42,7 +42,7 @@ let init = async function(networkId) {
         }
     }
 
-    //fetch nft balance
+    // fetch nft balance
     console.log("Checking users nft balance...");
     let balance = await nft.balanceOf(user);
     console.log(`User owns ${balance} nfts`);

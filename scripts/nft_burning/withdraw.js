@@ -24,7 +24,7 @@ let init = async function(networkId) {
 
     // global vars
     let user = accounts[1];
-    let sessionId = 3;
+    let sessionId = 3;              // need to update this field accordingly
     let finney = 1000000000000000;
     let depositAmount = 1;
     console.log(`Using ${user}`);
