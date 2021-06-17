@@ -85,7 +85,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _nftFactory nft minting contract address
     /// @param _nft nft fusion contract address
     constructor(address _crowns, address _nftFactory, address _nft)  public {
-        require(_crowns != address(0), "Crowns cant be zero address");
         require(_nftFactory != address(0), "nftFactory cant be zero address");
 
         /// @dev set crowns is defined in Crowns.sol
