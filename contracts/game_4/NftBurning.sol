@@ -53,6 +53,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         address indexed owner,
         uint256[5] burntNfts,
         uint256 mintedTime,
+        uint256 imgId,
         uint256 mintedNft
     );
     event SessionStarted(
@@ -166,6 +167,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 _sessionId,
         uint256[5] calldata _nfts,
         uint8 _quality,
+        uint256 _imgId,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -196,7 +198,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             _nfts[3],
             _nfts[4],
             _balance.totalStaked,
-            _quality
+            _quality,
+            _imgId
         ));
         bytes32 _message = keccak256(abi.encodePacked(
             "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
@@ -218,7 +221,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "Failed to mint a token");
         _balance.mintedTime = block.timestamp;
-        emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, mintedNftId);
+        emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, _imgId, mintedNftId);
     }
 
     /// @notice stake crowns
