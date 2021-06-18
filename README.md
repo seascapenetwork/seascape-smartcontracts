@@ -30,7 +30,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Brawl (Second game):       [0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa](https://rinkeby.etherscan.io/address/0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa)
  * Staking Saloon (Third game):   [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
  * Nft Market:                    [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
- * Nft Burning (game4):      [0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608](https://rinkeby.etherscan.io/address/0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608)
+ * Nft Burning (Fourth game):     [0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f](https://rinkeby.etherscan.io/address/0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
