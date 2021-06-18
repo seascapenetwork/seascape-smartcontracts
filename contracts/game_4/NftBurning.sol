@@ -198,8 +198,8 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             _nfts[3],
             _nfts[4],
             _balance.totalStaked,
-            _quality,
-            _imgId
+            _imgId,
+            _quality
         ));
         bytes32 _message = keccak256(abi.encodePacked(
             "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
