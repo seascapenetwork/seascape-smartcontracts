@@ -212,7 +212,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
         }
         /// @dev spend crowns
-        require(crowns.spendFrom(msg.sender, _session.fee), "Failed to spend CWS");
+        crowns.spendFrom(msg.sender, _session.fee);
         /// @dev burn nfts
         for (uint _index=0; _index < 5; _index++) {
             nft.burn(_nfts[_index]);
@@ -239,7 +239,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(_balance.totalStaked.add(_amount) >= _session.minStake,
             "Cant stake less than minStake");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
-        require(crowns.transferFrom(msg.sender, address(this), _amount), "Failed to spend CWS");
+        crowns.transferFrom(msg.sender, address(this), _amount);
 
         /// @dev update balance
         balances[_sessionId][msg.sender].totalStaked = balances[_sessionId][msg.sender]
@@ -259,8 +259,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         delete balances[_sessionId][msg.sender].totalStaked;
 
         /// transfer crowns second
-        require(crowns.transfer(msg.sender, withdrawnAmount),
-            "Transfer crowns to user failed");
+        crowns.transfer(msg.sender, withdrawnAmount);
 
         emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
     }
