@@ -106,3 +106,4 @@ dist
 build/contracts
 data/postgres
 data/ipfs
+truffle-config.js
