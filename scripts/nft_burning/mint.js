@@ -16,7 +16,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f");
+    let nftBurning = await NftBurning.at("0x2D8f2dE35197e170a69B31DAeFDDFDb24EA56166");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
@@ -25,10 +25,12 @@ let init = async function(networkId) {
     // global variables
     let user = accounts[1];
     let owner = accounts[0];
+    let imgId = 1;
     let quality = 3;
     let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
-    let imgId = 1;
+    let ether = 1000000000000000000;
+
 
 
     // return current account and sessionId
@@ -39,8 +41,8 @@ let init = async function(networkId) {
 
 
     // return user totalStaked balance per sessionId
-    let totalStaked = await nftBurning.totalStakedBalanceOf(sessionId, user);
-    console.log(`User staked ${totalStaked} in session ${sessionId}`);
+    let totalStaked = parseInt(await nftBurning.totalStakedBalanceOf(sessionId, user)).toString();
+    console.log(`User staked ${totalStaked / ether} CWS in session ${sessionId}`);
 
 
     // fetch nftIds
@@ -54,9 +56,9 @@ let init = async function(networkId) {
     }
 
     // or set values manually
-    // let sessionId = 2;
-    // let totalStaked = web3.utils.toWei("0", "milli");
-    // let nftIds = [970 ,971, 972, 973, 974];
+    // let sessionId = 1;
+    // let totalStaked = web3.utils.toWei("1000", "milli");
+    // let nftIds = [1565, 1265, 1126, 1125, 1124];
 
 
     // approve transfer of nfts
@@ -75,12 +77,12 @@ let init = async function(networkId) {
     .catch(console.error);
     console.log("checking if crowns are approved ?")
     let allowance = await crowns.allowance(user, nftBurning.address);
-    allowance = parseInt(allowance).toString() / 1000000000000000000;
+    allowance = parseInt(allowance).toString() / ether;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
 
 
     // signature part
-    console.log("generating sig");
+    console.log("making signature..");
     let bytes32 = web3.eth.abi.encodeParameters(
       ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
       [nftIds[0], nftIds[1], nftIds[2], nftIds[3], nftIds[4], totalStaked, imgId]);

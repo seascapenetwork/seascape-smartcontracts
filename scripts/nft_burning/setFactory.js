@@ -17,7 +17,7 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let nftBurning = await NftBurning.at("0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f");
+    let nftBurning = await NftBurning.at("0x2D8f2dE35197e170a69B31DAeFDDFDb24EA56166");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
