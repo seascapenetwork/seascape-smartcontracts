@@ -14,16 +14,17 @@
   "license": "GPLv3",
   "devDependencies": {
     "solium": "1.1.3",
-    "truffle-plugin-verify": "^0.5.7"
+    "truffle-plugin-verify": "^0.5.8"
   },
   "dependencies": {
-    "@truffle/hdwallet-provider": "^1.2.4",
+    "@graphprotocol/graph-ts": "^0.20.0",
+    "@truffle/hdwallet-provider": "^1.3.1",
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
     "command-line-args": "^5.1.1",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
+    "keytar": "^7.7.0",
     "mysql": "^2.18.1",
-    "truffle-hdwallet-provider": "^1.0.17",
     "truffle-privatekey-provider": "^1.5.0"
   }
 }
