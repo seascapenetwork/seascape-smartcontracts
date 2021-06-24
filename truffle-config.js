@@ -37,7 +37,7 @@ module.exports = {
 		    // https://github.com/trufflesuite/truffle/issues/3008
 		},
 	  	bsctestnet: {
-		    provider: () => new HDWalletProvider(process.env.MNEMONIC, "https://data-seed-prebsc-2-s3.binance.org:8545"),
+		    provider: () => new HDWalletProvider(process.env.MNEMONIC, "https://data-seed-prebsc-2-s3.binance.org:8545", 0, 5),
 		    network_id: 97,
 		    confirmations: 10,
 		    timeoutBlocks: 200,

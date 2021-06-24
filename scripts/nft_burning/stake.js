@@ -17,13 +17,13 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let nftBurning = await NftBurning.at("0x2D8f2dE35197e170a69B31DAeFDDFDb24EA56166");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let nftBurning = await NftBurning.at("0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf");
+    let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");
+    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
 
     // global variables
-    let user = accounts[1];
+    let user = accounts[0];
     let owner = accounts[0];
     let stakeInt = "500";
     let stakeAmount = web3.utils.toWei(stakeInt, "milli");

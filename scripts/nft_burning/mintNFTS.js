@@ -15,13 +15,13 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
 
     // global vars
     let user = accounts[1]; // should use factory deployer!
     let generation = 0;
-    let amountToMint = 50;
+    let amountToMint = 150;
     //let quality = 1;    // fixed quality
 
 
