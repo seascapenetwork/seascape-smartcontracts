@@ -1,16 +1,6 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../seascape_nft/SeascapeNft.sol";
-import "./Crowns.sol";
-
 /// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
 /// @author Nejc Schneider
 contract NftSwapParameters{
