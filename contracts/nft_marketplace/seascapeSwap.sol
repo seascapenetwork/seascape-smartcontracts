@@ -37,7 +37,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @notice individual requested token related data
     struct requestedToken{
         address tokenAddress;              // requested token address
-        bytes tokenParameters;             // requested token parameters - metadata
+        bytes tokenParams;             // requested token Params - metadata
     }
 
     /// @notice enable/disable offers

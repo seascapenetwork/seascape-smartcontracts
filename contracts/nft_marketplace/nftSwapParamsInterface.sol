@@ -1,11 +1,11 @@
 pragma solidity ^0.6.0;
 
-/**
- * @dev Interface of the nftSwapParameters
- */
-interface IERC20 {
+
+/// @dev Interface of the nftSwapParams
+
+interface nftSwapParams {
 
     /// @dev Returns true if signature is valid
-    function isValidParams(bytes encodedParameters) external returns (bool);
+    function isValidParams(bytes encodedParams) external returns (bool);
 
 }

@@ -1,9 +1,9 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-/// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
+/// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
 /// @author Nejc Schneider
-contract NftSwapParameters{
+contract NftSwapParams{
 
     // takes in pramams and converts to seascape
     function isValidParams(bytes) returns (bool){
@@ -13,12 +13,12 @@ contract NftSwapParameters{
     	return isValid;
     }
 
-    function encodeParameters (uint imgId, uint gen, uint8 quality, bytes32 signature) returns (bytes){
+    function encodeParams (uint imgId, uint gen, uint8 quality, bytes32 signature) returns (bytes){
       // bytes messageNoPrefix = abi.encode(uint)
       // return messageNoPrefix;
     }
 
-    function decodeParameters (bytes) returns (uint imgId, uint generation, uint8 quality, bytes32 signature){
+    function decodeParams (bytes) returns (uint imgId, uint generation, uint8 quality, bytes32 signature){
       	 /// params: 1. what to decode 2. how to decode it 3.
       	 (imgId, generaton, quality, signature) = abi.decode(bytes, (uint, uint, uint8, bytes32) )
          return [imgId, generation, quality, signature];
