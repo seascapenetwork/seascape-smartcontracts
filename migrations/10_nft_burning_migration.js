@@ -24,5 +24,21 @@ module.exports = async function(deployer, network) {
 
           await deployer.deploy(NftBurning, crowns, factory, nft);
           console.log("NftBurning contract was deployed at address: "+NftBurning.address);
-        }
+      }
+      else if (network == "bsctestnet") {
+          var crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
+          var factory = "0x3eB88c3F2A719369320D731FbaE062b0f82F22e4";
+          var nft = "0x66638F4970C2ae63773946906922c07a583b6069";
+
+          await deployer.deploy(NftBurning, crowns, factory, nft);
+          console.log("NftBurning contract was deployed at address: "+NftBurning.address);
+      }
+      else if (network == "moonbase") {
+          var crowns = "0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989";
+          var factory = "0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2";
+          var nft = "0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37";
+
+          await deployer.deploy(NftBurning, crowns, factory, nft);
+          console.log("NftBurning contract was deployed at address: "+NftBurning.address);
+      }
 };

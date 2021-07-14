@@ -17,37 +17,41 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let nftBurning = await NftBurning.at("0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let nftBurning = await NftBurning.at("0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf");
+    let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");
+    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
 
     // global variables
-    let user = accounts[1];
+    let user = accounts[0];
     let owner = accounts[0];
-    let sessionId = 3;
-    let stakeInt = "200";
+    let stakeInt = "500";
     let stakeAmount = web3.utils.toWei(stakeInt, "milli");
+    let ether = 1000000000000000000;
 
 
-    // show current account and lastSessionId
+    // print current account and sessionId
     console.log(`Using ${user}`);
-    let lastSessionId = await nftBurning.lastSessionId.call();
-    console.log("last session id: " ,parseInt(lastSessionId));
+    let sessionId = await nftBurning.lastSessionId.call();
+    sessionId = parseInt(sessionId);
+    console.log("last session id: " ,sessionId);
+
+
+    // set value manually
+    // let sessionId = 2;
 
 
     // approve transfer of crowns and check allowance
-    console.log(`approving nftBurning to spend crowns...n`);
+    console.log(`approving nftBurning to spend crowns...`);
     await crowns.approve(nftBurning.address, stakeAmount, {from:user})
     .catch(console.error);
-    console.log("checking if crowns are approved...")
     let allowance = await crowns.allowance(user, nftBurning.address);
-    allowance = parseInt(allowance).toString() / 1000000000000000000;
+    allowance = parseInt(allowance).toString() / ether;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
 
 
     // stake crowns
-    console.log(`Calling the stake function`);
+    console.log(`Calling the stake function...`);
     let stakeCrowns = await nftBurning.stake(
         sessionId,
         stakeAmount,

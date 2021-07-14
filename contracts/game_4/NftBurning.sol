@@ -53,6 +53,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         address indexed owner,
         uint256[5] burntNfts,
         uint256 mintedTime,
+        uint256 imgId,
         uint256 mintedNft
     );
     event SessionStarted(
@@ -85,7 +86,6 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
     /// @param _nftFactory nft minting contract address
     /// @param _nft nft fusion contract address
     constructor(address _crowns, address _nftFactory, address _nft)  public {
-        require(_crowns != address(0), "Crowns cant be zero address");
         require(_nftFactory != address(0), "nftFactory cant be zero address");
 
         /// @dev set crowns is defined in Crowns.sol
@@ -167,6 +167,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 _sessionId,
         uint256[5] calldata _nfts,
         uint8 _quality,
+        uint256 _imgId,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -197,6 +198,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             _nfts[3],
             _nfts[4],
             _balance.totalStaked,
+            _imgId,
             _quality
         ));
         bytes32 _message = keccak256(abi.encodePacked(
@@ -210,7 +212,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
             require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
         }
         /// @dev spend crowns
-        require(crowns.spendFrom(msg.sender, _session.fee), "Failed to spend CWS");
+        crowns.spendFrom(msg.sender, _session.fee);
         /// @dev burn nfts
         for (uint _index=0; _index < 5; _index++) {
             nft.burn(_nfts[_index]);
@@ -219,7 +221,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(mintedNftId > 0, "Failed to mint a token");
         _balance.mintedTime = block.timestamp;
-        emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, mintedNftId);
+        emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, _imgId, mintedNftId);
     }
 
     /// @notice stake crowns
@@ -237,7 +239,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         require(_balance.totalStaked.add(_amount) >= _session.minStake,
             "Cant stake less than minStake");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
-        require(crowns.transferFrom(msg.sender, address(this), _amount), "Failed to spend CWS");
+        crowns.transferFrom(msg.sender, address(this), _amount);
 
         /// @dev update balance
         balances[_sessionId][msg.sender].totalStaked = balances[_sessionId][msg.sender]
@@ -257,8 +259,7 @@ contract NftBurning is Crowns, Ownable, IERC721Receiver{
         delete balances[_sessionId][msg.sender].totalStaked;
 
         /// transfer crowns second
-        require(crowns.transfer(msg.sender, withdrawnAmount),
-            "Transfer crowns to user failed");
+        crowns.transfer(msg.sender, withdrawnAmount);
 
         emit Withdrawn(msg.sender, _sessionId, withdrawnAmount, block.timestamp);
     }

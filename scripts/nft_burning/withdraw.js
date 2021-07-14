@@ -17,40 +17,43 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let nftBurning = await NftBurning.at("0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let nftBurning = await NftBurning.at("0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf");
+    let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");
+    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
 
     // global vars
-    let user = accounts[1];
-    let sessionId = 3;
-    let finney = 1000000000000000;
-    let depositAmount = 1;
+    let user = accounts[0];
+    let sessionId = 1;              // need to update this field accordingly
+    let ether = 1000000000000000000;
     console.log(`Using ${user}`);
 
     // manually deposit crowns to contract
+    // let depositAmount = 1;
     // await crowns.transfer(nftBurning.address, web3.utils.toWei(depositAmount.toString()),
     //     {from: accounts[0]});
     // console.log(`Transfered ${depositAmount} CWS`);
 
     // print balance before
     console.log("checking contract balance...");
-    let balanceBefore = Math.floor(parseInt(await crowns.balanceOf(nftBurning.address))/finney);
+    let balanceBefore = parseInt(await crowns.balanceOf(nftBurning.address))/ether;
     if (balanceBefore >0)
-        console.log(`contract balance before calling withdraw function is ${balanceBefore} CWS (/1000)`);
-    console.log("contract balance is 0");
+        console.log(`contract balance before calling withdraw function is ${balanceBefore} CWS`);
+    else
+        console.log("contract balance is 0");
 
     // call withdraw
     console.log("attemping to withdraw...")
     let withdrawn = await nftBurning.withdraw(sessionId, {from: user}).catch(console.error);
+    console.log("successfully withdrawn crowns")
 
     // print balance after
     console.log("checking contract balance...");
-    let balanceAfter = Math.floor(parseInt(await crowns.balanceOf(nftBurning.address))/finney);
+    let balanceAfter = parseInt(await crowns.balanceOf(nftBurning.address))/ether;
     if (balanceAfter >0)
-        console.log(`contract balance after calling withdraw function is ${balanceAfter} CWS (/1000)`);
-    console.log("contract balance is 0");
+        console.log(`contract balance after calling withdraw function is ${balanceAfter} CWS`);
+    else
+        console.log("contract balance is 0");
 
 
 }.bind(this);

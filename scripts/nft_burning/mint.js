@@ -16,38 +16,38 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0xE0C0d4b1306B490D1Fc2de773DAC47ce82415608");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let nftBurning = await NftBurning.at("0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf");
+    let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");
+    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
+    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
 
 
     // global variables
-    let user = accounts[1];
+    let user = accounts[0];
     let owner = accounts[0];
-    let stakedInt = "0";        //remember to update accordingly or verification will fail
-    let totalStaked = web3.utils.toWei(stakedInt, "milli");
-    let sessionId = 3;
+    let imgId = 1;
     let quality = 3;
     let depositInt = "1";
     let depositAmount = web3.utils.toWei(depositInt, "ether");
+    let ether = 1000000000000000000;
+
 
 
     // return current account and sessionId
     console.log(`Using ${user}`);
-    let lastSessionId = await nftBurning.lastSessionId.call();
-    console.log("current session id: " ,parseInt(lastSessionId));
+    let sessionId = await nftBurning.lastSessionId.call();
+    sessionId = parseInt(sessionId);
+    console.log("current session id: " ,sessionId);
 
 
-    // return current account and lastSessionId
-    console.log(`Fetching users totalStaked amount per session`);
-    let staked = await nftBurning.totalStakedBalanceOf(sessionId, user);
-    console.log("Users total staked balance: " ,parseInt(staked));
+    // return user totalStaked balance per sessionId
+    let totalStaked = parseInt(await nftBurning.totalStakedBalanceOf(sessionId, user)).toString();
+    console.log(`User staked ${totalStaked / ether} CWS in session ${sessionId}`);
 
 
     // fetch nftIds
     let nftIds = new Array(5);
-    console.log(`Fetching the nft Ids`);
+    console.log(`Fetching the nft Ids:`);
     for(let index = 0; index < 5; index++){
       let tokenId = await nft.tokenOfOwnerByIndex(user, index);
       nftIds[index] = parseInt(tokenId.toString());
@@ -55,9 +55,10 @@ let init = async function(networkId) {
       console.log(`Nft at index ${index} has id ${nftIds[index]}`);
     }
 
-    // known nft ids
-    // let nftIds = [708 ,709, 710, 711, 891];
-    // console.log(nftIds);
+    // or set values manually
+    // let sessionId = 1;
+    // let totalStaked = web3.utils.toWei("1000", "milli");
+    // let nftIds = [1565, 1265, 1126, 1125, 1124];
 
 
     // approve transfer of nfts
@@ -74,16 +75,17 @@ let init = async function(networkId) {
     console.log("approving nftBurning to spend crowns...")
     await crowns.approve(nftBurning.address, depositAmount, {from:user})
     .catch(console.error);
-    console.log("checking if crowns are approved...")
+    console.log("checking if crowns are approved ?")
     let allowance = await crowns.allowance(user, nftBurning.address);
-    allowance = parseInt(allowance).toString() / 1000000000000000000;
+    allowance = parseInt(allowance).toString() / ether;
     console.log(`nftBurning was approved to spend ${allowance} crowns`);
 
 
     // signature part
+    console.log("making signature..");
     let bytes32 = web3.eth.abi.encodeParameters(
-      ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
-      [nftIds[0], nftIds[1], nftIds[2], nftIds[3], nftIds[4], totalStaked]);
+      ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"],
+      [nftIds[0], nftIds[1], nftIds[2], nftIds[3], nftIds[4], totalStaked, imgId]);
 
       let bytes1 = web3.utils.bytesToHex([quality]);
 	    let str = bytes32 + bytes1.substr(2);
@@ -106,6 +108,7 @@ let init = async function(networkId) {
         sessionId,
         nftIds,
         quality,
+        imgId,
         v,
         r,
         s,
