@@ -37,18 +37,12 @@ module.exports = {
 		    // https://github.com/trufflesuite/truffle/issues/3008
 		},
 	  	bsctestnet: {
-		    provider: () => new HDWalletProvider(process.env.MNEMONIC, "https://data-seed-prebsc-2-s3.binance.org:8545", 0, 5),
+		    provider: () => new HDWalletProvider(process.env.MNEMONIC, "https://data-seed-prebsc-2-s3.binance.org:8545"),
 		    network_id: 97,
 		    confirmations: 10,
 		    timeoutBlocks: 200,
 		    skipDryRun: true
 	    },
-      // Moonbase Alpha TestNet
-      moonbase: {
-        provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://moonbeam-alpha.api.onfinality.io/rpc?apikey=79d44cff-f2bd-410a-9a27-05d86a57a353`),
-        network_id: 1287,
-        gas: 13000000
-      },
       ganache: {
         host: "localhost",
         port: 9545,
