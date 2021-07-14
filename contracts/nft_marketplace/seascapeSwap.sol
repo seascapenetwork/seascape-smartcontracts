@@ -11,7 +11,9 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 import "./Crowns.sol";
 
-/// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
+/// @title Nft Swap is a part of Seascape marketplace platform.
+/// It allows users to obtain desired nfts in exchange for their offered nfts + optional bounty
+/// Seller has to pay a fee in order to
 /// @author Nejc Schneider
 contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     using SafeERC20 for IERC20;
@@ -21,13 +23,13 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
     /// @notice individual offer related data
     struct OfferObject{
-        uint256 offerId;                        // offer ID
+        uint256 offerId;                   // offer ID
         uint8 offeredTokensAmount;         // sum of offered tokens
         OfferedToken[5] offeredTokens;     // offered tokens data
         RequestedToken[5] requestedTokens; // requested tokensdata
         uint256 bounty;                    // reward for the buyer
-        address currency;                  //
-        uint256 offerFee;                  // amount of fee at the time offer was created
+        address bountyAddress;             // address of currency for bounty
+        uint256 swapFee;                  // amount of fee at the time offer was created
     }
     /// @notice individual offered token related data
     struct offeredToken{
@@ -45,7 +47,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @dev keep count of OfferObject amount
     uint256 public offersAmount;
     /// @dev fee for making an offer
-    uint256 offerFee;
+    uint256 swapFee;
     /// @dev maximum amount of offered Tokens
     uint256 maxOfferedTokens;
     /// @dev maximum amount of requested Tokens
@@ -59,16 +61,23 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     mapping(address => bool) public supportedCurrency;
 
     event Offer(
+        uint256 indexed offerId,
+        address seller,
+        uint256 swapFee,
+        uint256 [5] offeredTokenIds,
     );
     event AcceptOffer(
+        uint256 indexed offerId,
+        address buyer,
+        uint256 bounty,
+        address bountyAddress,
     );
-    event CancelOffer(
-    );
+    event CancelOffer(uint256 indexed offerId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
-    /// @param _offerFee - fee amount
-    constructor(uint256 _offerFee) public {
-        offerFee = _offerFee;
+    /// @param _swapFee - fee amount
+    constructor(uint256 _swapFee) public {
+        swapFee = _swapFee;
     }
 
     //--------------------------------------------------
@@ -111,8 +120,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
     /// @notice change fee rate
     /// @param _rate amount value. Actual rate in percent = _rate / 10
-    function setOfferFee(uint256 _offerFee) external onlyOwner {
-        offerFee = _offerFee;
+    function setswapFee(uint256 _swapFee) external onlyOwner {
+        swapFee = _swapFee;
     }
 
     /// @notice returns sales amount
@@ -139,17 +148,6 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     // Public methods
     //--------------------------------------------------
 
-    /// @notice cancel the offer
-    /// @param _tokenId nft unique ID
-    /// @param _nftAddress nft token address
-    function cancelOffer(uint _offerId, address _nftAddress) public {
-        OfferObject storage obj = offerObjects[_nftAddress][_offerId];
-        require(tradeEnabled, "trade is disabled");
-        // require offer.seller to be msg.sender
-
-        emit OfferCanceled();
-    }
-
     /// @notice create a new offer
     /// @param _offeredTokensAmount how many nfts to offer
     /// @param _offeredTokens array of (up to) five objects with nftData
@@ -168,19 +166,45 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         public
         returns(uint)
     {
+        /// require statements
         require(salesEnabled, "trade is disabled");
 
+        // verify nfts ids and ownership -> NO NEED ?
+        for (uint _index=0; _index < 5; _index++) {
+            require(_nfts[_index] > 0, "Nft id must be greater than 0");
+            require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
+        }
 
+        /// make transactions
+
+        // send 1-5 nfts to smart contract
+        for (uint index=0; index < 5; index++) {
+            // if nft[index] is null, loop should break.
+            if(_offeredTokens[index] == null)
+                break;
+            // send nfts to contract
+            IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
+        }
+
+        // send swapFee + _bounty to contract
+        IERC20(crowns).safeTransferFrom(msg.sender, address(this), swapFee + _bounty);
+
+
+
+        /// update states
         offersAmount.increment();;
 
-        offerObjects[_nftAddress][_offerId] = OfferObject(
+        offerObjects[_nftAddress][offersAmount] = OfferObject(
+            offersAmount,
             _offeredTokensAmount,
-            _offeredTokens,
-            _requestdTokensAmount,
-            _requestedTokens,
+            _offeredTokens[5],
+            _requestedTokens[5],
             _bounty,
-            _currency,
+            _bountyAddress,
+            _swapFee,
         );
+
+        /// emit events
 
         emit Offer();
 
@@ -213,11 +237,23 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         emit AcceptOffer();
     }
 
+    /// @notice cancel the offer
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
+    function cancelOffer(uint _offerId, address _nftAddress) public {
+        OfferObject storage obj = offerObjects[_nftAddress][_offerId];
+        require(tradeEnabled, "trade is disabled");
+        // require offer.seller to be msg.sender
+
+        emit OfferCanceled();
+    }
+
+
     /// @dev fetch offer object at offerId and nftAddress
     /// @param _offerId unique offer ID
     /// @param _nftAddress nft token address
     /// @return OfferObject at given index
-    function getOffers(uint _offerId, address _nftAddress)
+    function getOffer(uint _offerId, address _nftAddress)
         public
         view
         returns(OfferObject memory)

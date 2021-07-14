@@ -6,15 +6,15 @@ pragma experimental ABIEncoderV2;
 contract NftSwapParams{
 
     // takes in pramams and converts to seascape
-    function isValidParams(bytes) returns (bool){
-      arraywithParams = this.decodeParamaters();
-    	//check if signature is valid
-      // isValid = ecrecover
+    function isValidParams(bytes encodedParams) returns (bool){
+      arrayWithParams = this.decodeParamaters(encodedParams);
+    	// check if signature is valid
+      // const isValid = ecrecover (arrayWithParams)
     	return isValid;
     }
 
     function encodeParams (uint imgId, uint gen, uint8 quality, bytes32 signature) returns (bytes){
-      // bytes messageNoPrefix = abi.encode(uint)
+      // bytes messageNoPrefix = abi.encode(imgId, gen, quality, signature)
       // return messageNoPrefix;
     }
 
