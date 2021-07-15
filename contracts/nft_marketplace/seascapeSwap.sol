@@ -174,19 +174,28 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         require(_requestdTokensAmount > 0, "Should require at least one nft");
         require(_requestdTokensAmount <= maxRequestedTokens, "Should not require more than maxRequestedTokens")
 
-
-
-
-
-        // verify nft oddresses and offered nft ids
-        for (uint _index=0; _index < maxOfferedTokens; _index++) {
+        // verify offered nft oddresses and ids
+        for (uint index=0; index < maxOfferedTokens; index++) {
+            // edit here
+            // the following checks should only apply if slot at index is filled
             require(_offeredTokens[index].tokenId > 0, "Nft id must be greater than 0");
             require(supportedNft[_offeredTokens[index].tokenAddress], "offered nft address unsupported");
-            require(supportedNft[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
         }
 
-        /// make transactions
 
+        // verify requested nft oddresses and parameters
+        for (uint _index=0; _index < maxOfferedTokens; _index++) {
+            // edit here
+            // the following checks should only apply if slot at index is filled
+            require(supportedNft[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
+            // edit here
+            // NftSwapParams part
+            swapParamsInterface requestdToken = new swapParamsInterface (requestdTokens.tokenAddress)
+            require(call requestdToken.isValidParams(requestdTokens.tokenParameters)
+        }
+
+
+        /// make transactions
         // send 1-5 nfts to smart contract
         for (uint index=0; index < maxOfferedTokens; index++) {
             // edit here
@@ -208,8 +217,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         offerObjects[_nftAddress][offersAmount] = OfferObject(
             offersAmount,
             _offeredTokensAmount,
-            _offeredTokens[5], // modify here
-            _requestedTokens[5], // modify here
+            _offeredTokens[5], // edit here
+            _requestedTokens[5], // edit here
             _bounty,
             _currency,
             swapFee,
@@ -217,6 +226,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
         /// emit events
 
+        // edit here
         emit Offer(
             offersAmount,
             msg.seller,
