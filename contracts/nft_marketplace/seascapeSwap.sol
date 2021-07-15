@@ -28,7 +28,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         OfferedToken[5] offeredTokens;     // offered tokens data
         RequestedToken[5] requestedTokens; // requested tokensdata
         uint256 bounty;                    // reward for the buyer
-        address bountyAddress;             // address of currency for bounty
+        address currency;                  // currency is used both for offerFee and bounty
         uint256 swapFee;                  // amount of fee at the time offer was created
     }
     /// @notice individual offered token related data
@@ -70,7 +70,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         uint256 indexed offerId,
         address buyer,
         uint256 bounty,
-        address bountyAddress,
+        address currency,
     );
     event CancelOffer(uint256 indexed offerId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
@@ -124,8 +124,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         swapFee = _swapFee;
     }
 
-    /// @notice returns sales amount
-    /// @return total amount of sales objects
+    /// @notice returns amount of offers
+    /// @return total amount of offer objects
     function getOffersAmount() external view returns(uint) { return offersAmount; }
 
     /// @notice change max amount of nfts seller can offer
@@ -168,45 +168,65 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     {
         /// require statements
         require(salesEnabled, "trade is disabled");
+        require(supportedCurrency[_currency], "currency not supported");
+        require(_offeredTokensAmount > 0, "Should offer at least one nft");
+        require(_offeredTokensAmount <= maxOfferedTokens, "Should not offer more than maxOfferedTokens");
+        require(_requestdTokensAmount > 0, "Should require at least one nft");
+        require(_requestdTokensAmount <= maxRequestedTokens, "Should not require more than maxRequestedTokens")
 
-        // verify nfts ids and ownership -> NO NEED ?
-        for (uint _index=0; _index < 5; _index++) {
-            require(_nfts[_index] > 0, "Nft id must be greater than 0");
-            require(nft.ownerOf(_nfts[_index]) == msg.sender, "Nft is not owned by caller");
+
+
+
+
+        // verify nft oddresses and offered nft ids
+        for (uint _index=0; _index < maxOfferedTokens; _index++) {
+            require(_offeredTokens[index].tokenId > 0, "Nft id must be greater than 0");
+            require(supportedNft[_offeredTokens[index].tokenAddress], "offered nft address unsupported");
+            require(supportedNft[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
         }
 
         /// make transactions
 
         // send 1-5 nfts to smart contract
-        for (uint index=0; index < 5; index++) {
-            // if nft[index] is null, loop should break.
-            if(_offeredTokens[index] == null)
-                break;
+        for (uint index=0; index < maxOfferedTokens; index++) {
+            // edit here
+            // if there is no nft at index, loop should break.
+            // if(_offeredTokens[index] == null)
+            //    break;
             // send nfts to contract
-            IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
+            IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
         }
 
         // send swapFee + _bounty to contract
-        IERC20(crowns).safeTransferFrom(msg.sender, address(this), swapFee + _bounty);
-
+        IERC20(_currency).safeTransferFrom(msg.sender, address(this), swapFee + _bounty);
 
 
         /// update states
-        offersAmount.increment();;
+
+        offersAmount.increment();
 
         offerObjects[_nftAddress][offersAmount] = OfferObject(
             offersAmount,
             _offeredTokensAmount,
-            _offeredTokens[5],
-            _requestedTokens[5],
+            _offeredTokens[5], // modify here
+            _requestedTokens[5], // modify here
             _bounty,
-            _bountyAddress,
-            _swapFee,
+            _currency,
+            swapFee,
         );
 
         /// emit events
 
-        emit Offer();
+        emit Offer(
+            offersAmount,
+            msg.seller,
+            swapFee,
+            _offeredTokens[0].tokenId,
+            _offeredTokens[1].tokenId,
+            _offeredTokens[2].tokenId,
+            _offeredTokens[3].tokenId,
+            _offeredTokens[4].tokenId
+          );
 
         return offersAmount;
     }
