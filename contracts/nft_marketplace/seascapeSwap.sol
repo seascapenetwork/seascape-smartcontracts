@@ -28,7 +28,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         OfferedToken[5] offeredTokens;     // offered tokens data
         RequestedToken[5] requestedTokens; // requested tokensdata
         uint256 bounty;                    // reward for the buyer
-        address currency;                  // currency is used both for offerFee and bounty
+        address bountyAddress;             // currency address for paying bounties
         address payable seller;            // seller's address
         uint256 swapFee;                   // amount of fee at the time offer was created
         bool active;                       // true = offer is open; false = offer canceled or accepted
@@ -59,8 +59,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @param supportedNft address => (offerId => OfferObject)
     mapping(address => mapping(uint256 => OfferObject)) offerObjects;
     /// @dev supported ERC721 and ERC20 contracts
-    mapping(address => bool) public supportedNft;
-    mapping(address => bool) public supportedCurrency;
+    mapping(address => bool) public supportedNftAddress;
+    mapping(address => bool) public supportedBountyAddress;
 
     event Offer(
         uint256 indexed offerId,
@@ -72,7 +72,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         uint256 indexed offerId,
         address buyer,
         uint256 bounty,
-        address currency,
+        address bountyAddress,
     );
     event CancelOffer(uint256 indexed offerId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
@@ -92,32 +92,34 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
     /// @notice add supported nft token
     /// @param _nftAddress ERC721 contract address
-    function addSupportedNft(address _nftAddress) external onlyOwner {
+    function enableSupportedNftAddress(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportedNft[_nftAddress] = true;
+        require(!supportedNftAddress[_bountyAddress], "nft address already enabled");
+        supportedNftAddress[_nftAddress] = true;
     }
 
     /// @notice disable supported nft token
     /// @param _nftAddress ERC721 contract address
-    function removeSupportedNft(address _nftAddress) external onlyOwner {
+    function disableSupportedNftAddress(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportedNft[_nftAddress] = false;
+        require(supportedNftAddress[_bountyAddress], "nft address already disabled");
+        supportedNftAddress[_nftAddress] = false;
     }
 
-    /// @notice add supported currency token
-    /// @param _currencyAddress ERC20 contract address
-    function addSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
-        require(!supportedCurrency[_currencyAddress], "currency already supported");
-        supportedCurrency[_currencyAddress] = true;
+    /// @notice add supported currency address for bounty
+    /// @param _bountyAddress ERC20 contract address
+    function addSupportedBountyAddress(address _bountyAddress) external onlyOwner {
+        require(_bountyAddress != address(0x0), "invalid address");
+        require(!supportedBountyAddress[_bountyAddress], "bounty already supported");
+        supportedBountyAddress[_bountyAddress] = true;
     }
 
-    /// @notice disable supported currency token
-    /// @param _currencyAddress ERC20 contract address
-    function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
-        require(supportedCurrency[_currencyAddress], "currency already removed");
-        supportedCurrency[_currencyAddress] = false;
+    /// @notice disable supported currency address for bounty
+    /// @param _bountyAddress ERC20 contract address
+    function removeSupportedBountyAddress(address _bountyAddress) external onlyOwner {
+        require(_bountyAddress != address(0x0), "invalid address");
+        require(supportedBountyAddress[_bountyAddress], "bounty already removed");
+        supportedBountyAddress[_bountyAddress] = false;
     }
 
     /// @notice change fee rate
@@ -155,7 +157,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @param _offeredTokens array of (up to) five objects with nftData
     /// @param _requestdTokensAmount amount of required nfts
     /// @param _bounty how many cws to offer
-    /// @param _currency cws (or other currency) token address
+    /// @param _bountyAddress currency address for bounty
     /// @return salesAmount total amount of sales
     function offer(
         uint256 _offeredTokensAmount,
@@ -163,14 +165,14 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         uint256 _requestdTokensAmount,
         RequestedToken [5] memory _requestedTokens,
         uint256 _bounty,
-        address _currency
+        address _bountyAddress
     )
         public
         returns(uint)
     {
         /// require statements
         require(tradeEnabled, "trade is disabled");
-        require(supportedCurrency[_currency], "currency not supported");
+        require(supportedBountyAddress[_bountyAddress], "bounty address not supported");
         require(_offeredTokensAmount > 0, "Should offer at least one nft");
         require(_offeredTokensAmount <= maxOfferedTokens, "Should not offer more than maxOfferedTokens");
         require(_requestdTokensAmount > 0, "Should require at least one nft");
@@ -181,7 +183,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
             // edit here
             // the following checks should only apply if slot at index is filled
             require(_offeredTokens[index].tokenId > 0, "Nft id must be greater than 0");
-            require(supportedNft[_offeredTokens[index].tokenAddress], "Offered nft address unsupported");
+            require(supportedNftAddress[_offeredTokens[index].tokenAddress], "Offered nft address unsupported");
         }
 
 
@@ -189,7 +191,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         for (uint _index=0; _index < maxOfferedTokens; _index++) {
             // edit here
             // the following checks should only apply if slot at index is filled
-            require(supportedNft[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
+            require(supportedNftAddress[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
             // edit here
             // NftSwapParams part
             swapParamsInterface requestdToken = new swapParamsInterface (requestdTokens.tokenAddress)
@@ -209,7 +211,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         }
 
         // send swapFee + _bounty to contract
-        IERC20(_currency).safeTransferFrom(msg.sender, address(this), swapFee + _bounty);
+        IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), swapFee + _bounty);
 
 
         /// update states
@@ -222,7 +224,7 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
             _offeredTokens[5], // edit here
             _requestedTokens[5], // edit here
             _bounty,
-            _currency,
+            _bountyAddress,
             msg.sender,
             swapFee,
             true
@@ -248,7 +250,6 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @notice make a trade
     /// @param _offerId offer unique ID
     /// @param _nftAddress nft token address
-    /// @param _currency currency token address
     function acceptOffer(
         uint256 _offerId,
         uint256 _requestdTokensAmount,
@@ -267,13 +268,13 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         require(tradeEnabled, "trade is disabled");
         require(obj.active, "offer canceled or sold");
         // require(msg.sender != obj.seller, "cant buy self-made offer");
-
         // require that requested nfts are owned by buyer
-        // require digital signature part verified
 
 
 
         /// digital signature part
+        // edit here
+
 
         /// make transactions
         // send 1-5 requestedTokens from SC to buyer
@@ -287,29 +288,21 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         }
 
 
-        // send obj.fee to
-
-
+        // spend obj.fee and send obj.bounty from SC to buyer
         crowns.spend(obj.offerFee);
-        if(obj.currency == crowns)
+        IERC20(obj.bountyAddress).safeTransfer(msg.sender, obj.bounty);
 
-        else
-            // send bounty from SC to buyer
-            IERC20(obj.currency).safeTransfer(msg.sender, obj.bounty);
-            safeTransfer(IERC20 token, address to, uint256 value)
-            //send nfts from buyer to seller
-            //spend feeAmount with crowns.spend()
-
-
-
-        /* IERC721 nft = IERC721(obj.nft);
-        nft.safeTransferFrom(address(this), msg.sender, obj.tokenId); */
 
         /// update states
         obj.active = false;
 
         /// emit events
-        emit AcceptOffer();
+        emit AcceptOffer(
+            obj.offerId,
+            msg.sender
+            obj.bounty
+            obj.
+            );
     }
 
     /// @notice cancel the offer
