@@ -24,7 +24,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @notice individual offer related data
     struct OfferObject{
         uint256 offerId;                   // offer ID
-        uint8 offeredTokensAmount;         // sum of offered tokens
+        uint8 offeredTokensAmount;         // total offered tokens
+        uint8 requestedTokensAmount;       // total requested tokens
         OfferedToken[5] offeredTokens;     // offered tokens data
         RequestedToken[5] requestedTokens; // requested tokensdata
         uint256 bounty;                    // reward for the buyer
@@ -194,13 +195,10 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
             require(_offeredTokens[index].tokenId > 0, "Nft id must be greater than 0");
             require(supportedNftAddress[_offeredTokens[index].tokenAddress], "Offered nft address unsupported");
         }
-        // verify requested nft oddresses and ids
+        // verify requested nft oddresses
         for (uint _index=0; _index < maxRequestedTokens; _index++) {
             // edit here
             // the following checks should only apply if slot at index is filled
-            // edit here
-            // dont have requestedTokens.tokenId implemented yet
-            require(_requestedTokens[index].tokenId > 0, "Nft id must be greater than 0");
             require(supportedNftAddress[_requestedTokens[index].tokenAddress], "requested nft address unsupported");
             // edit here
             // NftSwapParams part
@@ -209,16 +207,16 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         }
 
         /// make transactions
-        // send 1-5 nfts to smart contract
+        // send offered nfts to smart contract
         for (uint index=0; index < maxOfferedTokens; index++) {
             // edit here
             // if there is no nft at index, loop should break.
             // if(_offeredTokens[index] == null)
             //    break;
             // send nfts to contract
-            //IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
-            IERC721 nft = IERC721(_offeredTokens[index].tokenAddress);
-            nft.safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
+            IERC721(_offeredTokens[index].tokenAddress).safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
+            /* IERC721 nft = IERC721(_offeredTokens[index].tokenAddress);
+            nft.safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId); */
         }
 
         // send fee and  _bounty to contract
@@ -238,11 +236,14 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
         offersAmount.increment();
 
+        // edit here
+        // store nested structs to mapping properly
         offerObjects[_nftAddress][offersAmount] = OfferObject(
             offersAmount,
             _offeredTokensAmount,
-            _offeredTokens[5], // edit here
-            _requestedTokens[5], // edit here
+            _requestdTokensAmount,
+            _offeredTokens[5],
+            _requestedTokens[5],
             _bounty,
             _bountyAddress,
             msg.sender,
@@ -252,6 +253,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
         /// emit events
 
+        // edit here
+        // emit offeredTokens dnymically depending on size
         emit CreatedOffer(
             offersAmount,
             msg.seller,
@@ -270,11 +273,11 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @notice make a trade
     /// @param _offerId offer unique ID
     /// @param _nftAddress nft token address
-    function AcceptedOffer(
+    function acceptedOffer(
         uint256 _offerId,
         uint256 _requestdTokensAmount,
         uint256 _requestedTokenIds [5],
-        uint _requestedTokenAddress [5],
+        uint256 _requestedTokenAddress [5],
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -286,8 +289,9 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         OfferObject storage obj = offerObjects[_nftAddress][_offerId];
         require(tradeEnabled, "trade is disabled");
         require(obj.active, "offer canceled or sold");
+        require(_requestedTokensAmount == obj.requestedTokensAmount);
         // require(msg.sender != obj.seller, "cant buy self-made offer");
-        // require that requested nfts are owned by buyer
+        // require that requested nfts are owned by buyer ?
 
 
         /// digital signature part
@@ -295,20 +299,16 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
 
 
         /// make transactions
-        // send 1-5 requestedTokens from buyer to seller
-        for (uint index=0; index < obj.requestedTokensAmount; index++) {
-            // edit here
-            // we dont have the tokenId field on requestedToken !
-            require(obj.requestedTokens[index].tokenIds, _requestedTokenIds[index],
-               "Requested token Ids dont match");
-            require(_requestedTokenAddress[index] == obj.requestedTokens[index].tokenAddress);
+        // send requestedTokens from buyer to seller
+        for (uint index = 0; index < obj.requestedTokensAmount; index++) {
+            require(_requestedTokenAddress[index] == obj.requestedTokens[index].tokenAddress,
+                "Incorrect nft address");
             IERC721(_requestedTokenAddress[index])
                 .safeTransferFrom(msg.sender, obj.seller, _requestedTokenIds[index]);
         }
-        // send 1-5 offeredTokens from SC to buyer
-        for (uint index=0; index < obj.offeredTokensAmount; index++) {
-            // edit here
-            IERC721(obj.offeredTokens[index].tokenAddress).safeTransferFrom(address(this), msg.sender, _offeredTokens[index].tokenId);
+        // send offeredTokens from SC to buyer
+        for (uint index = 0; index < obj.offeredTokensAmount; index++) {
+            IERC721(obj.offeredTokens[index].tokenAddress).safeTransferFrom(address(this), msg.sender, obj.offeredTokens[index].tokenId);
             /* IERC721 nft = IERC721(obj.nft);
             nft.safeTransferFrom(address(this), msg.sender, obj.tokenId); */
         }
@@ -322,6 +322,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         obj.active = false;
 
         /// emit events
+        // edit here
+        // emit _requestedTokens dnymically depending on size
         emit AcceptedOffer(
             obj.offerId,
             msg.sender,
@@ -367,6 +369,8 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         obj.active = false;
 
         /// emit events
+        // edit here
+        // emit offeredTokens dnymically depending on size
         emit CanceledOffer(
             obj.offerId,
             obj.bounty,
