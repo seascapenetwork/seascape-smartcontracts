@@ -133,7 +133,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
         uint256 _sessionId = sessionId.current();
         sessions[_sessionId] = Session(
             _period,
-            _startTime+ _period,
+            _startTime,
             _generation,
             _interval,
             _fee,
@@ -293,7 +293,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of session to verify
     /// @return true if session is active
     function isActive(uint256 _sessionId) internal view returns(bool) {
-        if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+        if (now < sessions[_sessionId].startTime || now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
             return false;
 	      }
         return true;
