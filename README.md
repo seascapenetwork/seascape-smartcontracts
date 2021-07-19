@@ -12,7 +12,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus V2 (First Game): [0xa35abb86c53695bb1b23b55808b6c5871432c22c](https://etherscan.io/address/0xa35abb86c53695bb1b23b55808b6c5871432c22c)
  * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://etherscan.io/address/0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1)
- * Scape Forum (4th game):        [0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b](https://etherscan.io/address/0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b)
+ * Scape Forum (4th game):        [0x0adf9a1924e51abc3f14552affb00c489a4ed2dc](https://etherscan.io/address/0x0adf9a1924e51abc3f14552affb00c489a4ed2dc)
 
 ### Binance Smart chain network
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
@@ -22,7 +22,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus V2 (First Game): [0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B](https://bscscan.com/address/0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B)
  * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://bscscan.com/address/0x29b0d9a9a989e4651488d0002ebf79199ce1b7c1)
- * Scape Forum (4th game):        [0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b](https://bscscan.com/address/0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b)
+ * Scape Forum (4th game):        [0x31A5bD03f0583a7F720a6C1b595ec8b052871288](https://bscscan.com/address/0x31A5bD03f0583a7F720a6C1b595ec8b052871288)
 
 ### Rinkeby test network
  * Crowns:                        [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
