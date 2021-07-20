@@ -12,7 +12,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus V2 (First Game): [0xa35abb86c53695bb1b23b55808b6c5871432c22c](https://etherscan.io/address/0xa35abb86c53695bb1b23b55808b6c5871432c22c)
  * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://etherscan.io/address/0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1)
- * Scape Forum (4th game):        [0x0adf9a1924e51abc3f14552affb00c489a4ed2dc](https://etherscan.io/address/0x0adf9a1924e51abc3f14552affb00c489a4ed2dc)
+ * Scape Forum (4th game):        [0x031F40ed49047dAfF336aC54372816fE5e724A72](https://etherscan.io/address/0x031F40ed49047dAfF336aC54372816fE5e724A72)
 
 ### Binance Smart chain network
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
