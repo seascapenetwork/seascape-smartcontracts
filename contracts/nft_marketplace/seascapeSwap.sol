@@ -170,15 +170,18 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @return salesAmount total amount of sales
     function createOffer(
         uint256 _offeredTokensAmount,
-        OfferedToken [] memory _offeredTokens,
+        OfferedToken [5] memory _offeredTokens,
         uint256 _requestedTokensAmount,
-        RequestedToken [] memory _requestedTokens,
+        RequestedToken [5] memory _requestedTokens,
         uint256 _bounty,
         address _bountyAddress
     )
         public
         returns(uint)
     {
+        /// declare local vars
+        uint8 memory tokensCounter;
+
         /// require statements
         // require _offeredTokens.length == _offeredTokensAmount
         require(_offeredTokens.length == _offeredTokensAmount)
@@ -190,33 +193,39 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         require(supportedBountyAddress[_bountyAddress], "bounty address not supported");
         require(crowns.balanceOf(msg.sender) >= fee, "not enough CWS to pay the fee");
         require(tradeEnabled, "trade is disabled");
+
+        /// input token verification
         // verify offered nft oddresses and ids
-        for (uint index=0; index < maxOfferedTokens; index++) {
-            // edit here
-            // the following checks should only apply if slot at index is filled
+        for (uint index = 0; index < maxOfferedTokens; index++) {
+            // the following checks should only apply if slot at index is filled.
+            if(_offeredTokens[index].tokenId == 0 || _offeredTokens[index].tokenAddress == address(0))
+                  break;
             require(_offeredTokens[index].tokenId > 0, "nft id must be greater than 0");
             require(supportedNftAddress[_offeredTokens[index].tokenAddress],
                 "offered nft address unsupported");
+            tokensCounter.increment();
         }
+        require(tokensCounter == _offeredTokensAmount, "offered nft amounts mismatch");
+        tokensCounter = 0;
         // verify requested nft oddresses
-        for (uint _index=0; _index < maxRequestedTokens; _index++) {
-            // edit here
+        for (uint _index = 0; _index < maxRequestedTokens; _index++) {
             // the following checks should only apply if slot at index is filled
+            if(_requestedTokens[index].tokenAddress == address(0))
+                  break;
             require(supportedNftAddress[_requestedTokens[index].tokenAddress],
                 "requested nft address unsupported");
+            tokensCounter.increment();
             // edit here
             // NftSwapParams part
             swapParamsInterface requestdToken = new swapParamsInterface (requestedTokens.tokenAddress);
             require(call requestdToken.isValidParams(requestedTokens.tokenParameters);
         }
+        require(tokensCounter == _offeredTokensAmount, "requested nft amounts mismatch");
+
 
         /// make transactions
         // send offered nfts to smart contract
-        for (uint index=0; index < maxOfferedTokens; index++) {
-            // edit here
-            // if there is no nft at index, loop should break.
-            // if(_offeredTokens[index] == null)
-            //    break;
+        for (uint index = 0; index < _offeredTokensAmount; index++) {
             // send nfts to contract
             IERC721(_offeredTokens[index].tokenAddress)
                 .safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
