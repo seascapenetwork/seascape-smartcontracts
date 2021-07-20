@@ -170,9 +170,9 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
     /// @return salesAmount total amount of sales
     function createOffer(
         uint256 _offeredTokensAmount,
-        OfferedToken [5] memory _offeredTokens,
+        OfferedToken [] memory _offeredTokens,
         uint256 _requestedTokensAmount,
-        RequestedToken [5] memory _requestedTokens,
+        RequestedToken [] memory _requestedTokens,
         uint256 _bounty,
         address _bountyAddress
     )
@@ -180,8 +180,11 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
         returns(uint)
     {
         /// require statements
+        // require _offeredTokens.length == _offeredTokensAmount
+        require(_offeredTokens.length == _offeredTokensAmount)
         require(_offeredTokensAmount > 0, "should offer at least one nft");
         require(_offeredTokensAmount <= maxOfferedTokens, "exceeded maxOfferedTokens limit");
+        // require _requestedTokens.length == _requestedTokensAmount
         require(_requestedTokensAmount > 0, "should require at least one nft");
         require(_requestedTokensAmount <= maxRequestedTokens, "cant exceed maxRequestedTokens");
         require(supportedBountyAddress[_bountyAddress], "bounty address not supported");
@@ -221,15 +224,12 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
             nft.safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId); */
         }
         // send fee and  _bounty to contract
-        if (_bounty > 0) {
-            if (crowns.address == _bountyAddress) {
-                crowns.transferFrom(msg.sender, address(this), obj.fee + _bounty);
-            } else {
+        if (_bounty > 0 && crowns.address == _bountyAddress)
+            crowns.transfer(address(this), obj.fee + _bounty);
+        else {
+            if (_bounty > 0)
                 IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), _bounty);
-                crowns.transfer(msg.sender, obj.fee);
-            }
-        } else {
-            crowns.transferFrom(msg.sender, address(this), obj.fee);
+            crowns.transfer(address(this), obj.fee);
         }
 
         /// update states
@@ -351,18 +351,12 @@ contract NftMarket is IERC721Receiver,  Crowns, Ownable {
             nft.safeTransferFrom(address(this), obj.seller, obj.offeredTokens[index].tokenId); */
         }
         // send crowns and bounty from SC to seller
-        crowns.transfer(msg.sender, obj.fee);
-        IERC20(obj.bountyAddress).safeTransfer(msg.sender, obj.bounty);
-        // send fee and bounty back to seller
-        if (obj.bounty > 0) {
-            if (crowns.address == obj.bountyAddress) {
-                crowns.transfer(msg.sender, obj.fee + _bounty);
-            } else {
-                IERC20(_bountyAddress).safeTransfer(msg.sender,  _bounty);
-                crowns.transfer(msg.sender, obj.fee);
-            }
-        } else {
-            crowns.transfer(msg.sender, obj.fee);
+        if (obj.bounty > 0 && crowns.address == _bountyAddress)
+            crowns.transferFrom(address(this), msg.sender, obj.fee + _bounty);
+        else {
+            if (_bounty > 0)
+                IERC20(_bountyAddress).safeTransferFrom(address(this), msg.sender, _bounty);
+            crowns.transferFrom(address(this), msg.sender, obj.fee);
         }
 
         /// update states
