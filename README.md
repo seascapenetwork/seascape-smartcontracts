@@ -32,7 +32,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Brawl (Second game):       [0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa](https://rinkeby.etherscan.io/address/0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa)
  * Staking Saloon (Third game):   [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
  * Nft Market:                    [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
- * Scape Forum (Fourth game):     [0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f](https://rinkeby.etherscan.io/address/0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f)
+ * Scape Forum (Fourth game):     [0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A](https://rinkeby.etherscan.io/address/0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
@@ -42,7 +42,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (Third game):   [0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5](https://testnet.bscscan.com/address/0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5)
  * Nft Market:                    [0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f](https://testnet.bscscan.com/address/0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f)
- * Scape Forum (Fourth game):     [0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf](https://testnet.bscscan.com/address/0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf)
+ * Scape Forum (Fourth game):     [0xe796e2821fB06fCB66ca474dE4B6503f6f3e0A23](https://testnet.bscscan.com/address/0xe796e2821fB06fCB66ca474dE4B6503f6f3e0A23)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
