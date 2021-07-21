@@ -1,12 +1,16 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
+// import interface
+
+
 /// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
 /// @author Nejc Schneider
-contract NftSwapParams{
+contract ScapeNftSwapParams{
 
     // takes in pramams and converts to seascape
-    function isValidParams(bytes encodedParams) returns (bool){
+    // todo check if needs override
+    function isValidParams(bytes encodedParams) override returns (bool){
       arrayWithParams = this.decodeParamaters(encodedParams);
     	// check if signature is valid
       // const isValid = ecrecover (arrayWithParams)
