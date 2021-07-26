@@ -12,7 +12,7 @@ import "./Crowns.sol";
 
 /// @title Nft Swap is a part of Seascape marketplace platform.
 /// It allows users to obtain desired nfts in exchange for their offered nfts,
-/// fee and an optional bounty
+/// a fee and an optional bounty
 /// @author Nejc Schneider
 contract NftSwap is Crowns, Ownable, IERC721Receiver {
     using SafeERC20 for IERC20;
@@ -34,22 +34,22 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
         uint256 fee;                       // fee amount at the time offer was created
     }
     /// @notice individual offered token related data
-    struct offeredToken{
+    struct OfferedToken{
         uint256 tokenId;                    // offered token id
         address tokenAddress;               // offered token address
     }
     /// @notice individual requested token related data
-    struct requestedToken{
+    struct RequestedToken{
         address tokenAddress;              // requested token address
         bytes tokenParams;                 // requested token Params - metadata
     }
 
 
-    /// @dev keep count of OfferObject amount
+    /// @dev keep count of offers (aka offerIds)
     uint256 offersAmount;
-    /// @notice enable/disable offers
+    /// @notice enable/disable creating and accepting offer.
     bool public tradeEnabled;
-    /// @dev fee for making an offer
+    /// @dev fee for creating an offer
     uint256 public fee;
     /// @dev maximum amount of offered Tokens
     uint256 public maxOfferedTokens;
@@ -59,9 +59,10 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     /// @dev store offer objects.
     /// @param offerId => OfferObject
     mapping(uint256 => OfferObject) offerObjects;
-    /// @dev supported ERC721 and ERC20 contracts
+    /// @dev parse metadata contract addresses (1 per individual nftSeries)
     /// @param nftAddress => nftSwapParams contract address
     mapping(address => address) public nftSwapParamsAddresses;
+    /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedBountyAddresses;
     mapping(address => address) public supportedNftAddresses;
 
@@ -168,7 +169,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
 
     /// @notice change max amount of nfts seller can offer
     /// @param _amount desired limit should be in range 1 - 5
-    function setMaxOfferedTokens (uint256 _amount) external onlyOwner {
+    function setOfferedTokensAmount (uint256 _amount) external onlyOwner {
         require(_amount > 0, "amount should be at least 1");
         require(_amount < 6, "amount should be 5 or less");
         maxOfferedTokens = _amount;
@@ -176,7 +177,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
 
     /// @notice change max amount of nfts seller can request
     /// @param _amount desired limit should be in range 1 - 5
-    function setMaxRequestedTokens  (uint256 _amount) external onlyOwner {
+    function setRequestedTokensAmount  (uint256 _amount) external onlyOwner {
         require(_amount > 0, "amount should be at least 1");
         require(_amount < 6, "amount should be 5 or less");
         maxRequestedTokens = _amount;
@@ -254,10 +255,10 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
             address swapParamsAddress = supportedNftAddresses[_requestedTokens[index].tokenAddress];
             require(swapParamsAddress != address(0),
                 "requested nft address unsupported");
-            // edit here -> move signature here
+            // verify nft parameters
             NftSwapParamsInterface requestdToken = NftSwapParamsInterface (swapParamsAddress);
             require(requestdToken.isValidParams(requestedTokens.tokenParameters),
-                "nft parameters are invalid");
+                "required nft params are invalid");
         }
 
         /// make transactions
@@ -319,7 +320,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
         uint256 _offerId,
         uint256 _requestedTokensAmount,
         uint256 _requestedTokenIds [5],
-        uint256 _requestedTokenAddress [5],
+        uint256 _requestedTokenAddresses [5],
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -342,7 +343,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
             _offerId,
             _requestedTokensAmount,
             _requestedTokenIds [5],
-            _requestedTokenAddress [5]
+            _requestedTokenAddresses [5]
         ));
         bytes32 _message = keccak256(abi.encodePacked(
             "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
@@ -352,9 +353,9 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
         /// make transactions
         // send requestedTokens from buyer to seller
         for (uint index = 0; index < obj.requestedTokensAmount; index++) {
-            require(_requestedTokenAddress[index] == obj.requestedTokens[index].tokenAddress,
+            require(_requestedTokenAddresses[index] == obj.requestedTokens[index].tokenAddress,
                 "wrong requested token address");
-            IERC721(_requestedTokenAddress[index])
+            IERC721(_requestedTokenAddresses[index])
                 .safeTransferFrom(msg.sender, obj.seller, _requestedTokenIds[index]);
         }
         // send offeredTokens from SC to buyer
@@ -389,7 +390,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     function CancelOffer(uint _offerId) public {
         OfferObject storage obj = offerObjects[_offerId];
         // edit here: check that obj at index (still) exists ^^
-        require(obj.seller == msg.sender, "sender not author of offer");
+        require(obj.seller == msg.sender, "sender is not creator of offer");
 
         /// make transactions
         // send the offeredTokens from SC to seller
@@ -415,7 +416,6 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
             obj.seller
         );
     }
-
 
     /// @dev fetch offer object at offerId and nftAddress
     /// @param _offerId unique offer ID
