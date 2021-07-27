@@ -115,7 +115,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     /// @notice add supported nft contract
     /// @param _nftAddress ERC721 contract address
     // @param _nftSwapParams contract address
-    function enableSupportedNftAddresses(
+    function enableSupportedNftAddress(
         address _nftAddress,
         address _nftSwapParamsAddress
     )
@@ -133,7 +133,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
 
     /// @notice disable supported nft token
     /// @param _nftAddress ERC721 contract address
-    function disableSupportedNftAddresses(address _nftAddress) external onlyOwner {
+    function disableSupportedNftAddress(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
         require(supportedNftAddresses[_nftAddress] != address(0),
             "nft address already disabled");
