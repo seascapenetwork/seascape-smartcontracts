@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 
 /// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
 /// @author Nejc Schneider
-contract ScapeNftSwapParams{
+contract ScapeNftSwapParams is Ownable{
 
     // takes in pramams and converts to seascape
     // todo check if needs override

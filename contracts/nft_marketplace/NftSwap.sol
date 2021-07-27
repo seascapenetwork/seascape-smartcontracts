@@ -307,7 +307,7 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
             _offeredTokens[2].tokenId,
             _offeredTokens[3].tokenId,
             _offeredTokens[4].tokenId,
-            _requestedTokens [5],
+            _requestedTokens [5]
           );
 
         return offersAmount;
@@ -319,8 +319,8 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     function acceptOffer(
         uint256 _offerId,
         uint256 _requestedTokensAmount,
-        uint256 _requestedTokenIds [5],
-        uint256 _requestedTokenAddresses [5],
+        uint256[5] _requestedTokenIds,
+        uint256[5] _requestedTokenAddresses,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
