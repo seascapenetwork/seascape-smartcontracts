@@ -94,14 +94,14 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     );
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
-    /// @param _feeAmount - fee amount
+    /// @param _feeRate - fee amount
     /// @param _crownsAddress staking currency address
     /// @param _nftAddress initial nft collection token address (Scapes)
-    constructor(uint256 _feeAmount, address _crownsAddress, address _nftAddress) public {
+    constructor(uint256 _feeRate, address _crownsAddress, address _nftAddress) public {
         /// @dev set crowns is defined in Crowns.sol
         setCrowns(_crownsAddress);
         nft = SeascapeNft(_nftAddress);
-        fee = _feeAmount;
+        fee = _feeRate;
     }
 
     //--------------------------------------------------
@@ -158,9 +158,9 @@ contract NftSwap is Crowns, Ownable, IERC721Receiver {
     }
 
     /// @notice change fee amount
-    /// @param _feeAmount set fee to this value.
-    function setFee(uint256 _feeAmount) external onlyOwner {
-        fee = _feeAmount;
+    /// @param _feeRate set fee to this value.
+    function setFee(uint256 _feeRate) external onlyOwner {
+        fee = _feeRate;
     }
 
     /// @notice returns amount of offers
