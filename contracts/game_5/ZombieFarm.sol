@@ -63,7 +63,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
     function startSession(uint256 startTime, uint256 period, uint8 grandRewardId, bytes calldata rewardData, uint8 levelAmount) external onlyOwner {
         require(supportedRewards[grandRewardId] != address(0), "grandRewardId");
-        
+
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
         ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[grandRewardId]);
         require(reward.isValidData(rewardData), "Invalid reward data");
@@ -114,6 +114,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
+    /// @dev _address of the reward type.
+    /// @notice WARNING! Please be careful when adding the reward type. It should be address of the deployed reward
     function addSupportedReward(address _address) external onlyOwner {
         require(_address != address(0), "_address");
         require(rewardAddresses[_address] == 0, "already added reward");
