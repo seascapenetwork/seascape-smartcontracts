@@ -11,7 +11,6 @@ import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract ScapeNftReward is ZombieFarmRewardInterface {
 
     address factory;
-    address scape;
     address zombieFarm;
     /// @dev The account that keeps all ERC20 tokens
     address pool;
@@ -37,14 +36,12 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
 
-    constructor (address _factory, address _nft, address _zombieFarm, address _pool) public {
+    constructor (address _factory, address _zombieFarm, address _pool) public {
         require(_factory != address(0), "_factory");
-        require(_nft != address(0), "_nft");
         require(_zombieFarm != address(0), "_zombieFarm");
         require(_pool != address(0), "_pool");
 
         factory = _factory;
-        scape = _nft;
         zombieFarm = _zombieFarm;
         pool = _pool;
     }

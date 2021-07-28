@@ -1,11 +1,19 @@
 var ZombieFarm = artifacts.require("./ZombieFarm.sol");
-var Crowns = artifacts.require("./CrownsToken.sol");
+var ScapeNftReward = artifacts.require("./ScapeNftReward.sol");
 var Factory = artifacts.require("./NftFactory.sol");
-var Nft = artifacts.require("./SeascapeNft.sol");
+
+async function getAccount(id) {
+    let accounts = await web3.eth.getAccounts();
+    return accounts[id];
+}
 
 module.exports = async function(deployer, network) {
-    if (network == "ganache") {
+    if (network == "development") {
+        let pool = await getAccount(0);
+
         await deployer.deploy(ZombieFarm);
-		console.log("ZombieFarm contract was deployed at address: "+ZombieFarm.address);
+        await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
+		console.log("ZombieFarm contract was deployed at address: " + ZombieFarm.address);
+		console.log("ScapeNftReward contract was deployed at address: " + ScapeNftReward.address);
     }
 };

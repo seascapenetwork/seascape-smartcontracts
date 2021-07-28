@@ -40,12 +40,12 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
 
     uint16 public supportedRewardsAmount;
-    mapping(uint16 => address) supportedRewards;
-    mapping(address => uint16) rewardAddresses;
+    mapping(uint16 => address) public supportedRewards;
+    mapping(address => uint16) public rewardAddresses;
 
     uint32 public supportedChallengesAmount;
-    mapping(uint32 => address) supportedChallenges;
-    mapping(address => uint32) challengeAddresses;
+    mapping(uint32 => address) public supportedChallenges;
+    mapping(address => uint32) public challengeAddresses;
 
     // events
     //    AddSupportedReward
@@ -69,7 +69,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(reward.isValidData(rewardData), "Invalid reward data");
 
         require(levelAmount > 0 && levelAmount <= MAX_LEVEL, "level amount");
-        require(!isActive(lastSessionId), "already active");
+        require(!isActive(lastSessionId), "isActive");
 
         require(startTime > now, "start time");
         require(period > 0, "period");
