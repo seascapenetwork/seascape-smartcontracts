@@ -10,7 +10,7 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../seascape_nft/NftFactory.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 
-import "ZombieFarmRewardI.sol";
+import "./ZombieFarmRewardInterface.sol";
 
 
 contract ZombieFarm is Ownable, IERC721Receiver{
@@ -52,6 +52,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         // Check that rewardData is parsable:
         ZombieFarmRewardI reward = supportedRewards[grandRewardId];
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[grandRewardId]);
         require(reward.isValidData(rewardData), "Invalid reward data");
 
         // make sure that level amount is greater or equal to 1 and less than or equal to MAX_LEVEL
