@@ -39,18 +39,19 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     // Supported Rewards given to players after completing all levels or all challenges in the level
     //
 
-    uint8 public supportedRewardsAmount;
-    mapping(uint8 => address) supportedRewards;
-    mapping(address => uint8) rewardAddresses;
+    uint16 public supportedRewardsAmount;
+    mapping(uint16 => address) supportedRewards;
+    mapping(address => uint16) rewardAddresses;
 
-    uint8 public supportedChallengesAmount;
-    mapping(uint8 => address) supportedChallenges;
-    mapping(address => uint8) challengeAddresses;
+    uint32 public supportedChallengesAmount;
+    mapping(uint32 => address) supportedChallenges;
+    mapping(address => uint32) challengeAddresses;
 
     // events
     //    AddSupportedReward
     event StartSession(uint8 indexed sessionId, uint256 startTime, uint256 period, 
         uint8 levelAmount, uint8 grandRewardId);
+    event AddSupportedReward(uint16 indexed rewardId, address indexed rewardAdress);
 
     constructor() public {}
 
@@ -61,6 +62,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //////////////////////////////////////////////////////////////////////////////////
 
     function startSession(uint256 startTime, uint256 period, uint8 grandRewardId, bytes calldata rewardData, uint8 levelAmount) external onlyOwner {
+        require(supportedRewards[grandRewardId] != address(0), "grandRewardId");
+        
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
         ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[grandRewardId]);
         require(reward.isValidData(rewardData), "Invalid reward data");
@@ -111,12 +114,15 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    function addSupportedReward(uint8 _id, address _address) external onlyOwner {
-        // make sure that id in supportedRewards assigned to 0x0000000000000
-        // make sure that rewardAddress[_address] is assigned to 0
-        // make sure that _address is not 0x0000000
-        // make sure that _id is greater than 0
-        // emit AddSupportedReward event
+    function addSupportedReward(address _address) external onlyOwner {
+        require(_address != address(0), "_address");
+        require(rewardAddresses[_address] == 0, "already added reward");
+
+        supportedRewardsAmount = supportedRewardsAmount + 1;
+        supportedRewards[supportedRewardsAmount] = _address;
+        rewardAddresses[_address] = supportedRewardsAmount;
+
+        emit AddSupportedReward(supportedRewardsAmount, _address);
     }
 
 
