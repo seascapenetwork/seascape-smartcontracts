@@ -7,5 +7,9 @@ interface ZombieFarmRewardInterface {
     /**
      * @dev Returns the validation of reward.
      */
-    function isValidData(byte[] calldata data) external view returns (bool);
+    function isValidData(bytes calldata data) external view returns (bool);
+
+    function saveReward(uint256 sessionId, uint8 rewardType, bytes calldata data) external;
+
+    function reward(uint256 sessionId, uint8 rewardType, address owner) external;
 }
