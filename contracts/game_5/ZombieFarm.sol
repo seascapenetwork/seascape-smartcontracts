@@ -36,8 +36,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     }
     mapping(uint256 => Session) public sessions;
     /// @dev There could be only one challenge category per level.
-    /// mapping structure: session -> level -> challenge id = true|false
-    mapping(uint256 => mapping(uint8 => mapping(uint32 => bool))) public levelChallenges;
+    /// mapping structure: session -> challenge id = true|false
+    mapping(uint256 => mapping(uint32 => bool)) public sessionChallenges;
 
     //
     // Supported Rewards given to players after completing all levels or all challenges in the level
@@ -138,7 +138,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[id]);
             (actualId[i], levelId[i]) = challenge.getIdAndLevel(i, data);
 
-            require(levelChallenges[sessionId][levelId[i]][actualId[i]] == false, "levelChallenge");
+            require(sessionChallenges[sessionId][actualId[i]] == false, "levelChallenge");
             require(levelId[i] > 0, "levelId==0");
             require(levelId[i] <= sessions[sessionId].levelAmount, "levelId");
             require(supportedChallenges[actualId[i]] != address(0), "id!=address");
@@ -148,6 +148,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         for (uint8 i = 0; i < challengesAmount; i++) {
             ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[actualId[i]]);
             challenge.saveChallenge(sessionId, i, data);
+
+            sessionChallenges[sessionId][actualId[i]] = true;
         }
     }
 
