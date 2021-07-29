@@ -11,6 +11,7 @@ import "./../seascape_nft/NftFactory.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 
 import "./ZombieFarmRewardInterface.sol";
+import "./ZombieFarmChallengeInterface.sol";
 
 
 contract ZombieFarm is Ownable, IERC721Receiver{
@@ -34,6 +35,9 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint8 rewardId;
     }
     mapping(uint256 => Session) public sessions;
+    /// @dev There could be only one challenge category per level.
+    /// mapping structure: session -> level -> challenge id = true|false
+    mapping(uint256 => mapping(uint8 => mapping(uint32 => bool))) public levelChallenges;
 
     //
     // Supported Rewards given to players after completing all levels or all challenges in the level
@@ -45,13 +49,14 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
     uint32 public supportedChallengesAmount;
     mapping(uint32 => address) public supportedChallenges;
-    mapping(address => uint32) public challengeAddresses;
 
+    //
     // events
-    //    AddSupportedReward
+    //
     event StartSession(uint8 indexed sessionId, uint256 startTime, uint256 period, 
         uint8 levelAmount, uint8 grandRewardId);
     event AddSupportedReward(uint16 indexed rewardId, address indexed rewardAdress);
+    event AddSupportedChallenge(uint32 indexed challengeId, address indexed challengeAddress);
 
     constructor() public {}
 
@@ -75,7 +80,13 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(period > 0, "period");
 
         lastSessionId = lastSessionId + 1;
-        sessions[lastSessionId] = Session(startTime, period, levelAmount, grandRewardId);
+
+        Session storage session = sessions[lastSessionId];
+
+        session.startTime = startTime;
+        session.period = period;
+        session.levelAmount = levelAmount;
+        session.rewardId = grandRewardId;
 
         reward.saveReward(lastSessionId, 0, rewardData);
 
@@ -87,6 +98,13 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             return false;
         }
         return (now >= sessions[sessionId].startTime && now <= sessions[sessionId].startTime + sessions[sessionId].period);
+    }
+
+    function isStarting(uint8 sessionId) internal view returns(bool) {
+        if (sessionId == 0) {
+            return false;
+        }
+        return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
     }
 
     function lastSession() external view returns(uint8, uint256, uint256, uint8, uint8) {
@@ -102,10 +120,47 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //////////////////////////////////////////////////////////////////////////////////
     
     /// @notice Add possible challenge options to the level
-    function addChallenges(uint8 sessionId, uint8 levelId, uint8 challengesAmount, 
-        uint8[] calldata challengeIds, byte[MAX_CHALLENGES][] calldata challengeData) external onlyOwner {
-        // make sure that session is enabled. Not necessary that its active. For example session.startTime is greater than current time
-        // make sure that level challenges were not added to the level
+    /// @param sessionId the session for which its added
+    /// @param challengesAmount amount that is added
+    /// @param id. (It should be same to determine the category of all challenges).
+    /// @param data of all challenge parameters
+    function addChallenges(uint8 sessionId, uint8 challengesAmount, uint32 id, bytes calldata data) external onlyOwner {
+        require(isStarting(sessionId), "sessionId");
+        require(challengesAmount > 0 && challengesAmount <= 5, "challengesAmount");
+
+        require(id > 0, "id==0");
+        require(supportedChallenges[id] != address(0), "id!=address");
+
+        uint32[5] memory actualId;
+        uint8[5] memory levelId;
+
+        for (uint8 i = 0; i < challengesAmount; i++) {
+            ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[id]);
+            (actualId[i], levelId[i]) = challenge.getIdAndLevel(i, data);
+
+            require(levelChallenges[sessionId][levelId[i]][actualId[i]] == false, "levelChallenge");
+            require(levelId[i] > 0, "levelId==0");
+            require(levelId[i] <= sessions[sessionId].levelAmount, "levelId");
+            require(supportedChallenges[actualId[i]] != address(0), "id!=address");
+        }
+
+        for (uint8 i = 0; i < challengesAmount; i++) {
+            ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[actualId[i]]);
+            challenge.saveChallenge(sessionId, i, data);
+        }
+    }
+
+    function addSupportedChallenge(address _address, bytes calldata _data) external onlyOwner {
+        require(_address != address(0), "_address");
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(_address);
+
+        supportedChallengesAmount = supportedChallengesAmount + 1;
+        supportedChallenges[supportedChallengesAmount] = _address;
+
+        challenge.newChallenge(supportedChallengesAmount + 1, _data);
+
+        emit AddSupportedChallenge(supportedChallengesAmount, _address);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
