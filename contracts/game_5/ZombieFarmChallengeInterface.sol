@@ -7,13 +7,13 @@ interface ZombieFarmChallengeInterface {
     /**
      * @dev Returns the validation of reward.
      */
-    function isValidData(uint8 offset, bytes calldata data) external view returns(bool);
-
     function newChallenge(uint32 id, bytes calldata data) external;
 
-    function saveChallenge(uint256 sessionId, uint8 offset, bytes calldata data) external;
+    function saveChallenge(uint256 sessionId, uint256 startTime, uint256 period, uint8 offset, bytes calldata data) external;
 
     function getIdAndLevel(uint8 offset, bytes calldata data) external view returns(uint32, uint8);
 
-    function reward(uint256 sessionId, uint8 rewardType, address owner) external;
+    function getLevel(uint256 sessionId, uint32 challengeId) external view returns(uint8);
+
+    function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;
 }

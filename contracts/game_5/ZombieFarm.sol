@@ -93,7 +93,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit StartSession(lastSessionId, startTime, period, levelAmount, grandRewardId);
     }
 
-    function isActive(uint8 sessionId) internal view returns(bool) {
+    function isActive(uint256 sessionId) internal view returns(bool) {
         if (sessionId == 0) {
             return false;
         }
@@ -145,9 +145,11 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             require(countChallenges(actualId[i], actualId) == 1, "same challenges arguments");
         }
 
+        Session storage session = sessions[sessionId];
+
         for (uint8 i = 0; i < challengesAmount; i++) {
             ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[actualId[i]]);
-            challenge.saveChallenge(sessionId, i, data);
+            challenge.saveChallenge(sessionId, session.startTime, session.period, i, data);
 
             sessionChallenges[sessionId][actualId[i]] = true;
         }
@@ -196,6 +198,32 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit AddSupportedReward(supportedRewardsAmount, _address);
     }
 
+    //////////////////////////////////////////////////////////////////////////////////
+    //
+    // Stake/Unstake
+    //
+    //////////////////////////////////////////////////////////////////////////////////
+
+    /// For example for single token challenge
+    ///     user deposits some token amount.
+    ///     the deposit checks whether it passes the min
+    ///     the deposit checks whether it not passes the max
+    ///     update the stake period
+    function stake(uint256 sessionId, uint32 challengeId, bytes calldata data, uint8 _v, bytes32 _r, bytes32 _s) external {
+        require(sessionId > 0 && challengeId > 0, "zero argument");
+        require(isActive(sessionId), "not active");
+        require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
+
+      	/// Verify that challenge is approved by central server.
+      	/// @dev message is generated as owner + session id + challenge id
+      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(msg.sender, sessionId, challengeId));
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+      	address _recover = ecrecover(_message, _v, _r, _s);
+      	require(_recover == owner(),  "not approved");
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeId);
+        challenge.stake(sessionId, challengeId, msg.sender, data);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////
 
