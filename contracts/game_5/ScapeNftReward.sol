@@ -28,12 +28,12 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
 	    _;
     }
 
-    mapping(uint256 => mapping(uint8 => Params)) public sessionRewards; 
+    mapping(uint256 => mapping(uint16 => Params)) public sessionRewards; 
 
-    event SaveReward(uint256 indexed sessionId, uint8 indexed rewardType, 
+    event SaveReward(uint256 indexed sessionId, uint16 indexed rewardType, 
         address indexed token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
 
-    event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
+    event RewardNft(uint256 indexed sessionId, uint16 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
 
     constructor (address _factory, address _zombieFarm, address _pool) public {
@@ -44,22 +44,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         factory = _factory;
         zombieFarm = _zombieFarm;
         pool = _pool;
-    }
-
-    function saveReward(uint256 sessionId, uint8 rewardType, bytes memory data) public override onlyZombieFarm {
-        require(isValidData(data), "scape reward:isvaliddata");
-
-        uint256 imgId;
-        uint256 generation;
-        uint8 quality;
-        address token;
-        uint256 amount;
-
-        (imgId, generation, quality, token, amount) = abi.decode(data, (uint256, uint256, uint8, address, uint256)); 
-
-        sessionRewards[sessionId][rewardType] = Params(imgId, generation, quality, token, amount);
-
-        emit SaveReward(sessionId, rewardType, token, generation, quality, imgId, amount);
     }
 
     function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {
@@ -83,6 +67,23 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         }
 
         return true;
+    }
+
+
+    function saveReward(uint256 sessionId, uint8 rewardType, bytes calldata data) external override onlyZombieFarm {
+        require(isValidData(data), "scape reward:isvaliddata");
+
+        uint256 imgId;
+        uint256 generation;
+        uint8 quality;
+        address token;
+        uint256 amount;
+
+        (imgId, generation, quality, token, amount) = abi.decode(data, (uint256, uint256, uint8, address, uint256)); 
+
+        sessionRewards[sessionId][rewardType] = Params(imgId, generation, quality, token, amount);
+
+        emit SaveReward(sessionId, rewardType, token, generation, quality, imgId, amount);
     }
 
     function reward(uint256 sessionId, uint8 rewardType, address owner) external override onlyZombieFarm {
