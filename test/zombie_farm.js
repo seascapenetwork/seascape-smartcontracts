@@ -1,6 +1,9 @@
+const { assert } = require("chai");
+
 var ZombieFarm = artifacts.require("./ZombieFarm.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 var ScapeNftReward = artifacts.require("./ScapeNftReward.sol");
+var SingleTokenChallenge = artifacts.require("./SingleTokenChallenge.sol");
 var Nft = artifacts.require("./SeascapeNft.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 
@@ -18,10 +21,12 @@ contract("Game 5: Zombie Farm", async accounts => {
   let levelAmount = 4;
   let imgId = 45;
   let quality = 5;
+  let rewardPool = 100;
 
   // imported contracts
   let zombieFarm = null;
   let scapeNftReward = null;
+  let singleTokenChallenge = null;
   let factory = null;
   let nft = null;
   let crowns = null;
@@ -79,6 +84,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     factory = await Factory.deployed();
     nft = await Nft.deployed();
     scapeNftReward = await ScapeNftReward.deployed();
+    singleTokenChallenge = await SingleTokenChallenge.deployed();
     crowns = await Crowns.deployed();
 
     gameOwner = accounts[0];
@@ -140,5 +146,47 @@ contract("Game 5: Zombie Farm", async accounts => {
     }catch(e){
       assert.equal(e.reason, "isActive");
     }
+  });
+
+  it("5. should add challenge types to the smartcontract", async () => {
+    let earn = crowns.address;
+    let stake = crowns.address;
+    let challengeData = web3.eth.abi.encodeParameters(
+      ['address', 'address'],
+      [earn, stake]
+    );
+
+    let preId = await zombieFarm.supportedChallengesAmount();
+
+    await zombieFarm.addSupportedChallenge(singleTokenChallenge.address, challengeData);
+
+    let id = await zombieFarm.supportedRewardsAmount();
+    let challengeAddress = await zombieFarm.supportedChallenges(id);
+
+    assert.equal(preId, 0, "challenges should be 0");
+    assert.equal(id, 1, "challenges should be 1 after addition");
+    assert.equal(challengeAddress, singleTokenChallenge.address, "challenge is not single token challenge");
+  });
+
+  it("6. should add challenge to the level", async () => {
+    let challengesAmount = 1;
+    let sessionId = 1;
+    let challengeId = 1;
+    let wei = web3.utils.toWei(rewardPool.toString(), "ether");
+
+    // challenge id, level id, reward
+    let data = web3.eth.abi.encodeParameters(
+      ['uint32[5]', 'uint8[5]', 'uint256[5]'],
+      [[challengeId, 0, 0, 0, 0], [1, 0, 0, 0, 0], [wei, 0, 0, 0, 0]]
+    );
+
+    let nonActive = await zombieFarm.sessionChallenges(sessionId, challengeId);
+
+    await zombieFarm.addChallenges(sessionId, challengesAmount, challengeId, data);
+
+    let active = await zombieFarm.sessionChallenges(sessionId, challengeId);
+
+    assert.equal(nonActive, false, "Should be non active");
+    assert.equal(active, true, "Should be active");
   });
 });

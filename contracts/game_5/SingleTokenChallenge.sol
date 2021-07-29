@@ -66,11 +66,12 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         Params storage challenge = challenges[id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        if (challenge.stake == address(0) || reward[offset] == 0 || levelId[offset] == 0 || sessionId == 0) {
-            revert();
-        }
+        require(challenge.stake != address(0), "single token.challenge is not existing");
+        require(reward[offset] > 0, "single token.reward==0");
+        require(levelId[offset] > 0, "single token.level==0");
+        require(sessionId > 0, "single oken.session id==0");
 
-        require(sessionChallenges[sessionId][levelId[offset]][id[offset]].totalReward > 0, "challenge in level");
+        require(sessionChallenges[sessionId][levelId[offset]][id[offset]].totalReward == 0, "challenge to level added before");
 
         sessionChallenges[sessionId][levelId[offset]][id[offset]] = SessionParams(reward[offset]);
     }
