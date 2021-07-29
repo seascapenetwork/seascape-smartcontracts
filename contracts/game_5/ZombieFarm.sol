@@ -142,12 +142,24 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             require(levelId[i] > 0, "levelId==0");
             require(levelId[i] <= sessions[sessionId].levelAmount, "levelId");
             require(supportedChallenges[actualId[i]] != address(0), "id!=address");
+            require(countChallenges(actualId[i], actualId) > 1, "same challenges");
         }
 
         for (uint8 i = 0; i < challengesAmount; i++) {
             ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[actualId[i]]);
             challenge.saveChallenge(sessionId, i, data);
         }
+    }
+
+    function countChallenges(uint32 challenge, uint32[5] memory ids) internal pure returns(uint8) {
+        uint8 count;
+        for (uint8 i = 0; i < 5; i++) {
+            if (ids[i] == challenge) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     function addSupportedChallenge(address _address, bytes calldata _data) external onlyOwner {
