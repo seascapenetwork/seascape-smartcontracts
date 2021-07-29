@@ -18,11 +18,16 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
     }
 
     struct SessionParams {
+        uint8 levelId;
         uint256 totalReward;
+        uint256 stakeAmount;        // Required amount to pass the level
+        uint256 stakePeriod;        // Duration after which challenge considered to be completed.
+        uint256 min;                // Min possible amount for staking. If 0, then no limit
+        uint256 max;                // Max posible amount for staking. If 0, then no limit
     }
 
     mapping(uint32 => Params) public challenges;
-    mapping(uint256 => mapping(uint8 => mapping(uint32 => SessionParams))) public sessionChallenges;
+    mapping(uint256 => mapping(uint32 => SessionParams)) public sessionChallenges;
 
     modifier onlyZombieFarm () {
 	    require(msg.sender == zombieFarm, "onlyZombieFarm");
@@ -60,8 +65,13 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint32[5] memory id;
         uint8[5] memory levelId;
         uint256[5] memory reward;
+        uint256[5] memory stakeAmount;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory min;       
+        uint256[5] memory max;
 
-        (id, levelId, reward) = abi.decode(data, (uint32[5], uint8[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, min, max) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
 
         Params storage challenge = challenges[id[offset]];
 
@@ -69,11 +79,18 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         require(challenge.stake != address(0), "single token.challenge is not existing");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
-        require(sessionId > 0, "single oken.session id==0");
+        require(sessionId > 0, "single token.session id==0");
+        require(stakeAmount[offset] > 0, "single token.stake amount==0");
+        require(stakePeriod[offset] > 0, "single token.stake period==0");
+        if (max[offset] != 0) {
+            require(min[offset] <= max[offset], "single token.min > max");
+            require(stakeAmount[offset] <= max[offset], "single token.stake > max");
+        }
+        require(sessionChallenges[sessionId][id[offset]].totalReward == 0, "challenge to level added before");
 
-        require(sessionChallenges[sessionId][levelId[offset]][id[offset]].totalReward == 0, "challenge to level added before");
-
-        sessionChallenges[sessionId][levelId[offset]][id[offset]] = SessionParams(reward[offset]);
+        sessionChallenges[sessionId][id[offset]] = SessionParams(levelId[offset], reward[offset],
+            stakeAmount[offset], stakePeriod[offset], min[offset], max[offset]
+        );
     }
 
     function stake(uint256 sessionId, uint8 levelId, bytes memory data) public onlyZombieFarm {
@@ -93,8 +110,13 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint32[5] memory id;
         uint8[5] memory levelId;
         uint256[5] memory reward;
+        uint256[5] memory stakeAmount;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory min;       
+        uint256[5] memory max;
 
-        (id, levelId, reward) = abi.decode(data, (uint32[5], uint8[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, min, max) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
 
         Params storage challenge = challenges[id[offset]];
 
@@ -109,8 +131,14 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint32[5] memory id;
         uint8[5] memory levelId;
         uint256[5] memory reward;
+        uint256[5] memory stakeAmount;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory min;       
+        uint256[5] memory max;
 
-        (id, levelId, reward) = abi.decode(data, (uint32[5], uint8[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, min, max) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
+
 
         return (id[offset], levelId[offset]);
     }
