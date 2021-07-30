@@ -114,7 +114,7 @@ contract("Game 5: Zombie Farm", async accounts => {
 
   //does not wait a week to see if session is closed
   it("3. should start a game session (event) for 1 week", async () => {
-    let startTime = Math.floor(Date.now()/1000) + 3;
+    let startTime = Math.floor(Date.now()/1000) + 5;
 
     let wei = web3.utils.toWei((grandAmound * 100).toString(), "ether");
 
@@ -195,5 +195,21 @@ contract("Game 5: Zombie Farm", async accounts => {
 
     assert.equal(nonActive, false, "Should be non active");
     assert.equal(active, true, "Should be active");
+  });
+
+  it("7. should stake some token", async () => {
+    // stake(uint256 sessionId, uint32 challengeId, bytes calldata data)
+
+    let amount = web3.utils.toWei("25", "ether");
+    //(amount) = abi.decode(data, (uint256)); 
+
+    await crowns.transfer(player, amount, {from: gameOwner});
+    await crowns.approve(singleTokenChallenge.address, amount, {from: player});
+
+    let sessionId = 1;
+    let challengeId = 1;
+    let data = web3.eth.abi.encodeParameters(['uint256'], [amount]);
+
+    await zombieFarm.stake(sessionId, challengeId, data, {from: player});
   });
 });
