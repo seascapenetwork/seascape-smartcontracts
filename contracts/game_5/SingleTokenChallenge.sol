@@ -345,11 +345,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory reward;
         uint256[5] memory stakeAmount;
         uint256[5] memory stakePeriod;
-        uint256[5] memory min;       
-        uint256[5] memory max;
+        uint256[5] memory multiplier;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, min, max) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
 
 
         return (id[offset], levelId[offset]);

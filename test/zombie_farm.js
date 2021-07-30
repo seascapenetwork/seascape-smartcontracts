@@ -23,8 +23,6 @@ contract("Game 5: Zombie Farm", async accounts => {
   let quality = 5;
   let rewardPool = 100;
   let stakeAmount = 20;
-  let min = 2;
-  let max = 100;
   let stakePeriod = 3600 * 5;
 
 
@@ -180,16 +178,13 @@ contract("Game 5: Zombie Farm", async accounts => {
     let wei = web3.utils.toWei(rewardPool.toString(), "ether");
 
     let stakeAmountWei = web3.utils.toWei(stakeAmount.toString(), "ether");
-    let minWei = web3.utils.toWei(min.toString(), "ether");
-    let maxWei = web3.utils.toWei(max.toString(), "ether");
-    let stakePeriod = 3600 * 5;
-    let multiply = 0.1 * 10000;
+    let multiply = parseInt(0.1 * 10000);
 
     // challenge id, level id, reward, stakeAmount, stakePeriod, min, max;
     let data = web3.eth.abi.encodeParameters(
-      ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]'],
+      ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]'],
       [[challengeId, 0, 0, 0, 0], [1, 0, 0, 0, 0], [wei, 0, 0, 0, 0],
-      [stakeAmountWei, 0, 0, 0, 0], [stakePeriod, 0, 0, 0, 0], [minWei, 0, 0, 0, 0], [maxWei, 0, 0, 0, 0]]
+      [stakeAmountWei, 0, 0, 0, 0], [stakePeriod, 0, 0, 0, 0], [multiply, 0, 0, 0, 0]]
     );
 
     let nonActive = await zombieFarm.sessionChallenges(sessionId, challengeId);
