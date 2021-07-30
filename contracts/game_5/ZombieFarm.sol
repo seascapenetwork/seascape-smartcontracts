@@ -39,6 +39,10 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     /// mapping structure: session -> challenge id = true|false
     mapping(uint256 => mapping(uint32 => bool)) public sessionChallenges;
 
+    /// @dev The list of challenges that user used.
+    /// mapping structure: session -> player -> level id = array[3]
+    mapping(uint256 => mapping(address => mapping(uint8 => uint32[3]))) public playerLevels;
+
     //
     // Supported Rewards given to players after completing all levels or all challenges in the level
     //
@@ -222,10 +226,50 @@ contract ZombieFarm is Ownable, IERC721Receiver{
       	require(_recover == owner(),  "not approved");
 
         ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeId);
+
+        // Level Id always will be valid as it was checked when Challenge added to Session 
+        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+
+        require(isLevelFull(sessionId, levelId, challengeId, msg.sender), "three options");
+
         challenge.stake(sessionId, challengeId, msg.sender, data);
+
+        fillLevel(sessionId, levelId, challengeId, msg.sender);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
+
+    function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal view returns(bool) {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        bool full = false;
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == challengeId) {
+                return true;
+            } else if (playerChallenges[i] > 0) {
+                full = true;
+            }
+        }
+        return full;
+    }
+
+    function fillLevel(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        uint8 empty = 0;
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == challengeId) {
+                return;
+            } else if (playerChallenges[i] == 0) {
+                empty = i;
+                break;
+            }
+        }
+
+        playerChallenges[empty] = challengeId;
+    }
 
     /// @dev encrypt token data
     /// @return encrypted data
