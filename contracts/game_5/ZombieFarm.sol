@@ -213,17 +213,11 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     ///     the deposit checks whether it passes the min
     ///     the deposit checks whether it not passes the max
     ///     update the stake period
-    function stake(uint256 sessionId, uint32 challengeId, bytes calldata data, uint8 _v, bytes32 _r, bytes32 _s) external {
+    function stake(uint256 sessionId, uint32 challengeId, bytes calldata data) external {
         require(sessionId > 0 && challengeId > 0, "zero argument");
         require(isActive(sessionId), "not active");
         require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
 
-      	/// Verify that challenge is approved by central server.
-      	/// @dev message is generated as owner + session id + challenge id
-      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(msg.sender, sessionId, challengeId));
-      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
-      	address _recover = ecrecover(_message, _v, _r, _s);
-      	require(_recover == owner(),  "not approved");
 
         ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeId);
 
