@@ -218,8 +218,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(isActive(sessionId), "not active");
         require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
 
-
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeId);
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[challengeId]);
 
         // Level Id always will be valid as it was checked when Challenge added to Session 
         uint8 levelId = challenge.getLevel(sessionId, challengeId);
