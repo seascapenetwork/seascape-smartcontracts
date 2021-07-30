@@ -183,6 +183,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     let minWei = web3.utils.toWei(min.toString(), "ether");
     let maxWei = web3.utils.toWei(max.toString(), "ether");
     let stakePeriod = 3600 * 5;
+    let multiply = 0.1 * 10000;
 
     // challenge id, level id, reward, stakeAmount, stakePeriod, min, max;
     let data = web3.eth.abi.encodeParameters(
