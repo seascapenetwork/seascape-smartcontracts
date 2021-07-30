@@ -224,7 +224,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         // Level Id always will be valid as it was checked when Challenge added to Session 
         uint8 levelId = challenge.getLevel(sessionId, challengeId);
 
-        require(isLevelFull(sessionId, levelId, challengeId, msg.sender), "three options");
+        require(!isLevelFull(sessionId, levelId, challengeId, msg.sender), "three options");
 
         challenge.stake(sessionId, challengeId, msg.sender, data);
 
@@ -240,7 +240,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         for (uint8 i = 0; i < 3; i++) {
             if (playerChallenges[i] == challengeId) {
-                return true;
+                return false;
             } else if (playerChallenges[i] > 0) {
                 full = true;
             }
