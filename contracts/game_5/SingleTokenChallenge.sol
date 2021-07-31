@@ -179,7 +179,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
             playerChallenge.claimedTime = block.timestamp;
 		}
 
-        uint256 total = amount + playerChallenge.amount;
+        uint256 total = amount + playerChallenge.amount + playerChallenge.overStakeAmount;
 
         // I add amount of deposits to session.amount
         // we add to total stakes, if user deposited >= stakeAmount.

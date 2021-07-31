@@ -212,6 +212,15 @@ contract("Game 5: Zombie Farm", async accounts => {
     let challengeId = 1;
     let data = web3.eth.abi.encodeParameters(['uint256'], [amount]);
 
+    let beforeSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+
     await zombieFarm.stake(sessionId, challengeId, data, {from: player});
+
+    let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+    let playerData = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
+    assert.equal(web3.utils.fromWei(playerData.amount), 20, "after staking amount should be 20");
+    assert.equal(web3.utils.fromWei(beforeSession.amount), 0, "before session amount should be 0");
+    assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
+  });
   });
 });
