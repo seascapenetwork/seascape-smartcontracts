@@ -305,7 +305,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         // I calculate previous claimed rewards
         // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
 		sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
-			sessionCap - (sessionChallenge.lastInterestUpdate * sessionChallenge.interestPerToken));
+			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
 
         // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
         // I update the session.lastInterestUpdate to now
