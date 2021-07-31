@@ -79,6 +79,9 @@ contract("Game 5: Zombie Farm", async accounts => {
     return [v, r, s];
   }
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
   // before player starts, need a few things prepare.
   // one of things to allow nft to be minted by nft factory
@@ -116,7 +119,7 @@ contract("Game 5: Zombie Farm", async accounts => {
   it("3. should start a game session (event) for 1 week", async () => {
     let startTime = Math.floor(Date.now()/1000) + 5;
 
-    let wei = web3.utils.toWei((grandAmound * 100).toString(), "ether");
+    let wei = web3.utils.toWei((grandAmound * 100000).toString(), "ether");
 
     crowns = await Crowns.deployed();
     await crowns.approve(zombieFarm.address, wei, {from: gameOwner});
@@ -178,7 +181,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     let wei = web3.utils.toWei(rewardPool.toString(), "ether");
 
     let stakeAmountWei = web3.utils.toWei(stakeAmount.toString(), "ether");
-    let multiply = parseInt(0.1 * 10000);
+    let multiply = parseInt(10 * 10000);
 
     let prevChallengeId = 0;
 
@@ -222,5 +225,64 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(web3.utils.fromWei(beforeSession.amount), 0, "before session amount should be 0");
     assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
   });
+
+  it("8. should unstake some token", async () => {
+    let amount = web3.utils.toWei("3", "ether");
+
+    let sessionId = 1;
+    let challengeId = 1;
+    let data = web3.eth.abi.encodeParameters(['uint256'], [amount]);
+
+    let prevPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
+
+    await zombieFarm.unstake(sessionId, challengeId, data, {from: player});
+
+    let afterPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
+    let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+
+    assert.equal(web3.utils.fromWei(prevPlayer.amount), 20, "Previous amount should be 20");
+    assert.equal(web3.utils.fromWei(prevPlayer.overStakeAmount), 5, "Previous over stake amount should be 5");
+    assert.equal(web3.utils.fromWei(afterPlayer.amount), 20, "after amount should be 20");
+    assert.equal(web3.utils.fromWei(afterPlayer.overStakeAmount), 2, "after over stake amount should be 2");
+    assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
+  });
+
+  it("9. should unstake after time progress and complete", async () => {
+    /// Stake more to speed up the time progress
+    let amount = web3.utils.toWei("2500", "ether");
+
+    await crowns.transfer(player, amount, {from: gameOwner});
+    await crowns.approve(singleTokenChallenge.address, amount, {from: player});
+
+    let sessionId = 1;
+    let challengeId = 1;
+    let data = web3.eth.abi.encodeParameters(['uint256'], [amount]);
+
+    await zombieFarm.stake(sessionId, challengeId, data, {from: player});
+
+    let beforeSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+    assert.equal(web3.utils.fromWei(beforeSession.amount), web3.utils.fromWei(beforeSession.stakeAmount), "adding more tokens over stakeAmount by the same player, should not change total staked token amount");
+
+    let prevPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
+
+    // wait for 3 seconds to increase time progress
+    await sleep(3000);
+
+    let unstakeAmount = web3.utils.toWei("3", "ether");
+    let unstakeData = web3.eth.abi.encodeParameters(['uint256'], [unstakeAmount]);
+
+    await zombieFarm.unstake(sessionId, challengeId, unstakeData, {from: player});
+
+    let afterPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
+    let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+
+    assert.equal(web3.utils.fromWei(prevPlayer.amount), "20", "Previous amount should be 20");
+    assert.equal(web3.utils.fromWei(prevPlayer.overStakeAmount), "2502", "Previous over stake amount should be 2502");
+    assert.equal(prevPlayer.completed, false, "Previous state of time progress should be not completed");
+    assert.equal(web3.utils.fromWei(afterPlayer.amount), "0", "after amount should be 0");
+    assert.equal(web3.utils.fromWei(afterPlayer.overStakeAmount), "0", "after over stake amount should be 0");
+    assert.equal(afterPlayer.completed, true, "after state of time progress should be completed");
+    assert.equal(web3.utils.fromWei(afterSession.amount), 0, "after session amount should be 0");
+
   });
 });

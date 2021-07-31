@@ -230,6 +230,26 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         fillLevel(sessionId, levelId, challengeId, msg.sender);
     }
 
+    /// Withdraws sum of tokens.
+    /// If withdraws before time period end, then withdrawing resets the time progress.
+    /// If withdraws after time period end, then withdrawing claims reward and sets the time to be completed.
+    function unstake(uint256 sessionId, uint32 challengeId, bytes calldata data) external {
+        require(sessionId > 0 && challengeId > 0, "zero argument");
+        require(sessions[sessionId].startTime > 0, "session not exists");
+        require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[challengeId]);
+        
+        // Level Id always will be valid as it was checked when Challenge added to Session 
+        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+
+        require(!isLevelFull(sessionId, levelId, challengeId, msg.sender), "three options");
+
+        challenge.unstake(sessionId, challengeId, msg.sender, data);
+
+        fillLevel(sessionId, levelId, challengeId, msg.sender);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal view returns(bool) {
