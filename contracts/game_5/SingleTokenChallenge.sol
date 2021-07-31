@@ -461,7 +461,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 		return true;
     }
 
-    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) public view returns(uint256) {	    
+    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {	    
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
