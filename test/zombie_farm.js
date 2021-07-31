@@ -123,6 +123,7 @@ contract("Game 5: Zombie Farm", async accounts => {
 
     crowns = await Crowns.deployed();
     await crowns.approve(zombieFarm.address, wei, {from: gameOwner});
+    await crowns.approve(singleTokenChallenge.address, wei, {from: gameOwner});
 
     // imgId, generation, quality, token, amount
     let rewardData = web3.eth.abi.encodeParameters(
