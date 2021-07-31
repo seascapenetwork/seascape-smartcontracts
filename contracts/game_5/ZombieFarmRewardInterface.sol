@@ -13,4 +13,6 @@ interface ZombieFarmRewardInterface {
     function saveRewards(uint256 sessionId, uint8 rewardAmount, bytes calldata data) external;
 
     function reward(uint256 sessionId, uint8 rewardType, address owner) external;
+
+    function getLevel(uint8 offset, bytes calldata data) external view returns(uint8);
 }

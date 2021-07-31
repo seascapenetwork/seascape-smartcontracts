@@ -400,6 +400,18 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         return time >= sessionChallenge.stakePeriod;
     }
 
+    function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker) external override view returns(bool) {
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+
+        if (playerChallenge.completed) {
+            return true;
+        }
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+
+        return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+    }
+
     function updateTimeProgress(SessionChallenge storage sessionChallenge, PlayerChallenge storage playerChallenge) internal {
         // update time progress
         // previous stake time

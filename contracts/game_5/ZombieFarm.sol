@@ -45,6 +45,10 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     /// @dev The list of challenges that user used.
     /// mapping structure: session -> player -> level id = array[3]
     mapping(uint256 => mapping(address => mapping(uint8 => uint32[3]))) public playerLevels;
+    /// @dev The list of rewards that user already claimed
+    /// mapping structure: session -> player -> reward type = bool
+    /// The reward types are, 0 = grand reward, non zero = level rewards
+    mapping(uint256 => mapping(address => mapping(uint8 => bool))) public playerRewards;
 
     //
     // Supported Rewards given to players after completing all levels or all challenges in the level
@@ -247,6 +251,24 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         }
     }
     
+    // Claim the reward for the lootbox
+    // Lootboxes are given when all three challenges are completed in the level.
+    function rewardLootBox(uint256 sessionId, uint8 levelId) external {
+        require(sessionId > 0, "session id=0");
+        require(levelId > 0 && levelId <= MAX_LEVEL, "session id=0");
+
+        require(!playerRewards[sessionId][msg.sender][levelId], "rewarded");
+        require(isLevelCompleted(sessionId, levelId, msg.sender), "not completed");
+
+        uint16 rewardId = sessionRewards[sessionId][levelId - 1];
+        require(rewardId > 0, "no reward added");
+
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
+        reward.reward(sessionId, levelId, msg.sender);
+
+        playerRewards[sessionId][msg.sender][levelId] = true;
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     //
     // Stake/Unstake
@@ -315,7 +337,24 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal view returns(bool) {
+    function isLevelCompleted(uint256 sessionId, uint8 levelId, address staker) internal view returns(bool) {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == 0) {
+                return false;
+            }
+
+            uint32 challengeId = playerChallenges[i];
+            address challengeAddress = supportedChallenges[challengeId];
+
+            ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
+            if (!challenge.isFullyCompleted(sessionId, challengeId, staker)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) public view returns(bool) {
         uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];

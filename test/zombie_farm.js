@@ -18,13 +18,12 @@ contract("Game 5: Zombie Farm", async accounts => {
   let generation = 0;
   let grandAmound = 100;
   let grandId = 1;
-  let levelAmount = 4;
+  let levelAmount = 1;
   let imgId = 45;
   let quality = 5;
   let rewardPool = 100;
   let stakeAmount = 20;
   let stakePeriod = 3600 * 5;
-
 
   // imported contracts
   let zombieFarm = null;
@@ -122,7 +121,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     let wei = web3.utils.toWei((grandAmound * 100000).toString(), "ether");
 
     crowns = await Crowns.deployed();
-    await crowns.approve(zombieFarm.address, wei, {from: gameOwner});
+    await crowns.approve(scapeNftReward.address, wei, {from: gameOwner});
     await crowns.approve(singleTokenChallenge.address, wei, {from: gameOwner});
 
     // imgId, generation, quality, token, amount
@@ -166,19 +165,21 @@ contract("Game 5: Zombie Farm", async accounts => {
     let preId = await zombieFarm.supportedChallengesAmount();
 
     await zombieFarm.addSupportedChallenge(singleTokenChallenge.address, challengeData);
+    // adding two more to test the level
+    await zombieFarm.addSupportedChallenge(singleTokenChallenge.address, challengeData);
+    await zombieFarm.addSupportedChallenge(singleTokenChallenge.address, challengeData);
 
-    let id = await zombieFarm.supportedRewardsAmount();
-    let challengeAddress = await zombieFarm.supportedChallenges(id);
+    let id = await zombieFarm.supportedChallengesAmount();
+    let challengeAddress = await zombieFarm.supportedChallenges(1);
 
     assert.equal(preId, 0, "challenges should be 0");
-    assert.equal(id, 1, "challenges should be 1 after addition");
+    assert.equal(id.toString(), "3", "challenges should be 3 after additions");
     assert.equal(challengeAddress, singleTokenChallenge.address, "challenge is not single token challenge");
   });
 
   it("6. should add rewards for all levels", async () => {
     let sessionId = 1;
     let wei = web3.utils.toWei(rewardPool.toString(), "ether");
-    let rewardAmount = 4;
     let rewardId = 1;
 
     //uint8[5] memory levelId, uint256[5]  imgId, uint256[5]  generation, uint8[5]  quality, address[5]  token, uint256[5]  amount;
@@ -195,9 +196,9 @@ contract("Game 5: Zombie Farm", async accounts => {
     );
     
     //addCategoryRewards(uint8 sessionId, uint8 rewardAmount, uint16 rewardId, bytes calldata data)
-    await zombieFarm.addCategoryRewards(sessionId, rewardAmount, rewardId, data);
+    await zombieFarm.addCategoryRewards(sessionId, levelAmount, rewardId, data);
 
-    for(var i = 0; i < rewardAmount; i++) {
+    for(var i = 0; i < levelAmount; i++) {
       let lootBoxId = await zombieFarm.sessionRewards(sessionId, i);
       assert.equal(lootBoxId, rewardId.toString(), "Reward is not set in sessions");
     }
@@ -205,7 +206,7 @@ contract("Game 5: Zombie Farm", async accounts => {
 
 
   it("7. should add challenge to the level", async () => {
-    let challengesAmount = 1;
+    let challengesAmount = 3;
     let sessionId = 1;
     let challengeId = 1;
     let wei = web3.utils.toWei(rewardPool.toString(), "ether");
@@ -218,18 +219,27 @@ contract("Game 5: Zombie Farm", async accounts => {
     // challenge id, level id, reward, stakeAmount, stakePeriod, min, max;
     let data = web3.eth.abi.encodeParameters(
       ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint32[5]'],
-      [[challengeId, 0, 0, 0, 0], [1, 0, 0, 0, 0], [wei, 0, 0, 0, 0],
-      [stakeAmountWei, 0, 0, 0, 0], [stakePeriod, 0, 0, 0, 0], [multiply, 0, 0, 0, 0], [prevChallengeId, 0, 0, 0, 0]]
+      [[challengeId, challengeId + 1, challengeId + 2, 0, 0], [1, 1, 1, 0, 0], [wei, wei, wei, 0, 0],
+      [stakeAmountWei, stakeAmountWei, stakeAmountWei, 0, 0], [stakePeriod, stakePeriod, stakePeriod, 0, 0], 
+      [multiply, multiply, multiply, 0, 0], [prevChallengeId, prevChallengeId, prevChallengeId, 0, 0]]
     );
 
     let nonActive = await zombieFarm.sessionChallenges(sessionId, challengeId);
+    let nonActive1 = await zombieFarm.sessionChallenges(sessionId, challengeId + 1);
+    let nonActive2 = await zombieFarm.sessionChallenges(sessionId, challengeId + 2);
 
     await zombieFarm.addChallenges(sessionId, challengesAmount, challengeId, data);
 
     let active = await zombieFarm.sessionChallenges(sessionId, challengeId);
+    let active1 = await zombieFarm.sessionChallenges(sessionId, challengeId + 1);
+    let active2 = await zombieFarm.sessionChallenges(sessionId, challengeId + 2);
 
     assert.equal(nonActive, false, "Should be non active");
+    assert.equal(nonActive1, false, "Should be non active");
+    assert.equal(nonActive2, false, "Should be non active");
     assert.equal(active, true, "Should be active");
+    assert.equal(active1, true, "Should be active");
+    assert.equal(active2, true, "Should be active");
   });
 
   it("8. should stake some token", async () => {
@@ -295,15 +305,18 @@ contract("Game 5: Zombie Farm", async accounts => {
   it("11. should unstake after time progress and complete", async () => {
     /// Stake more to speed up the time progress
     let amount = web3.utils.toWei("2500", "ether");
+    let totalAmount = web3.utils.toWei((2500 * 3).toString(), "ether");
 
-    await crowns.transfer(player, amount, {from: gameOwner});
-    await crowns.approve(singleTokenChallenge.address, amount, {from: player});
+    await crowns.transfer(player, totalAmount, {from: gameOwner});
+    await crowns.approve(singleTokenChallenge.address, totalAmount, {from: player});
 
     let sessionId = 1;
     let challengeId = 1;
     let data = web3.eth.abi.encodeParameters(['uint256'], [amount]);
 
     await zombieFarm.stake(sessionId, challengeId, data, {from: player});
+    await zombieFarm.stake(sessionId, challengeId + 1, data, {from: player});
+    await zombieFarm.stake(sessionId, challengeId + 2, data, {from: player});
 
     let beforeSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
     assert.equal(web3.utils.fromWei(beforeSession.amount), web3.utils.fromWei(beforeSession.stakeAmount), "adding more tokens over stakeAmount by the same player, should not change total staked token amount");
@@ -317,6 +330,8 @@ contract("Game 5: Zombie Farm", async accounts => {
     let unstakeData = web3.eth.abi.encodeParameters(['uint256'], [unstakeAmount]);
 
     await zombieFarm.unstake(sessionId, challengeId, unstakeData, {from: player});
+    await zombieFarm.unstake(sessionId, challengeId + 1, unstakeData, {from: player});
+    await zombieFarm.unstake(sessionId, challengeId + 2, unstakeData, {from: player});
 
     let afterPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
     let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
@@ -329,5 +344,19 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(afterPlayer.completed, true, "after state of time progress should be completed");
     assert.equal(web3.utils.fromWei(afterSession.amount), 0, "after session amount should be 0");
 
+  });
+
+  it("12. should reward user with level 1 loot box", async () => {
+    let sessionId = 1;
+    let levelId = 1;
+
+    let beforeRewarded = await zombieFarm.playerRewards(sessionId, player, levelId);
+
+    await zombieFarm.rewardLootBox(sessionId, levelId, {from: player});
+
+    let afterRewarded = await zombieFarm.playerRewards(sessionId, player, levelId);
+
+    assert.equal(beforeRewarded, false, "shouldn't be rewarded with lootbox before rewarding");
+    assert.equal(afterRewarded, true, "should be market as rewarded after rewarding by loot box");
   });
 });
