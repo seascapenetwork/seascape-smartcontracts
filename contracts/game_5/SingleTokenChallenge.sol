@@ -394,7 +394,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerToken
-		if (isActive(sessionId, challengeId) == false) {
+		if (isActive(sessionChallenge.startTime, sessionChallenge.endTime) == false) {
 			playerChallenge.claimedTime = sessionChallenge.endTime;
 		} else {
 			playerChallenge.claimedTime = block.timestamp;
@@ -412,7 +412,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 		return true;
     }
 
-    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {	    
+    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) public view returns(uint256) {	    
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
@@ -422,7 +422,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 		}
 
 		uint256 sessionCap = block.timestamp;
-		if (isActive(sessionId, challengeId) == false) {
+		if (isActive(sessionChallenge.startTime, sessionChallenge.endTime) == false) {
 			sessionCap = sessionChallenge.endTime;
 
 			// claimed after session expire, means no any claimables

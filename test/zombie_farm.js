@@ -207,7 +207,6 @@ contract("Game 5: Zombie Farm", async accounts => {
     // stake(uint256 sessionId, uint32 challengeId, bytes calldata data)
 
     let amount = web3.utils.toWei("25", "ether");
-    //(amount) = abi.decode(data, (uint256)); 
 
     await crowns.transfer(player, amount, {from: gameOwner});
     await crowns.approve(singleTokenChallenge.address, amount, {from: player});
