@@ -251,11 +251,12 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 
         if (playerChallenge.amount == sessionChallenge.stakeAmount) {
             if (playerChallenge.stakedTime > 0) {
-                time = time + (currentTime - playerChallenge.stakedTime);
-            }
-
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply);
+                uint256 duration = (currentTime - playerChallenge.stakedTime);
+                time = time + duration;
+            
+                if (playerChallenge.overStakeAmount > 0) {
+                    time = time + (duration * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
+                }
             }
         }
 
@@ -269,7 +270,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
             uint256 time = block.timestamp - playerChallenge.stakedTime;
 
             if (playerChallenge.overStakeAmount > 0) {
-                time = time + ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply);
+                time = time + (time * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
             }
 
             playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
