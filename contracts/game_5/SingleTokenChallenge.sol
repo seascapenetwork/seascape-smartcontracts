@@ -112,12 +112,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = 
             abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
 
-        Params storage challenge = challenges[id[offset]];
-
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        require(challenge.stake != address(0), "single token.challenge is not existing");
+        require(challenges[id[offset]].stake != address(0), "single token.challenge is not existing");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
