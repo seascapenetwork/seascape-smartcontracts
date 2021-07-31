@@ -316,15 +316,18 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     ///////////////////////////////////////////////////////////////////////////////////
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal view returns(bool) {
+
+    function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) public view returns(bool) {
         uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
 
-        bool full = false;
+        bool full = true;
 
         for (uint8 i = 0; i < 3; i++) {
+            // already added stake can be used again.
             if (playerChallenges[i] == challengeId) {
                 return false;
-            } else if (playerChallenges[i] > 0) {
-                full = true;
+            } else if (playerChallenges[i] == 0) {
+                full = false;
             }
         }
         return full;
