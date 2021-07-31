@@ -243,9 +243,27 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         // Level Id always will be valid as it was checked when Challenge added to Session 
         uint8 levelId = challenge.getLevel(sessionId, challengeId);
 
-        require(!isLevelFull(sessionId, levelId, challengeId, msg.sender), "three options");
+        require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "no staked");
 
         challenge.unstake(sessionId, challengeId, msg.sender, data);
+    }
+
+    // Claims earned tokens till today.
+    // If claims before the time period, then it's just a claim.
+    // If claims after the time period, then it withdraws staked tokens and sets the time to be completed.
+    function claim(uint256 sessionId, uint32 challengeId, bytes calldata data) external {
+        require(sessionId > 0 && challengeId > 0, "zero argument");
+        require(sessions[sessionId].startTime > 0, "session not exists");
+        require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(supportedChallenges[challengeId]);
+        
+        // Level Id always will be valid as it was checked when Challenge added to Session 
+        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+
+        require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "no staked");
+
+        challenge.claim(sessionId, challengeId, msg.sender, data);
 
         fillLevel(sessionId, levelId, challengeId, msg.sender);
     }
@@ -265,6 +283,18 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             }
         }
         return full;
+    }
+
+    function isChallengeInLevel(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal view returns(bool) {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == challengeId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function fillLevel(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker) internal {

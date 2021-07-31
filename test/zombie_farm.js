@@ -247,7 +247,23 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
   });
 
-  it("9. should unstake after time progress and complete", async () => {
+  it("9. should claim earned tokens", async () => {
+    let data = "0x00";
+    let sessionId = 1;
+    let challengeId = 1;
+
+    let beforeSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+
+    await sleep(2000);
+
+    await zombieFarm.claim(sessionId, challengeId, data, {from: player});
+
+    let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
+
+    assert.notEqual(parseFloat(web3.utils.fromWei(beforeSession.claimed)), parseFloat(web3.utils.fromWei(afterSession.claimed)), "after claiming, the claimed amount should increase");
+  });
+
+  it("10. should unstake after time progress and complete", async () => {
     /// Stake more to speed up the time progress
     let amount = web3.utils.toWei("2500", "ether");
 

@@ -78,6 +78,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
     event Stake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
     event Unstake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
+    event Claim(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
 
     constructor (address _zombieFarm, address _pool) public {
         require(_zombieFarm != address(0), "_zombieFarm");
@@ -295,6 +296,54 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         }
     }
 
+    function claim(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
+        /// General information regarding the Staking token and Earning token
+        Params storage challenge = challenges[challengeId];
+
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        require(sessionChallenge.levelId > 0, "single token:no exist session");
+
+        /// Player parameters
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        require(!playerChallenge.completed, "completed and claimed");
+        require(playerChallenge.amount > 0, "no stake");
+
+        updateInterestPerToken(sessionChallenge);
+
+        // before updating player's challenge parameters, we auto-claim earned tokens till now.
+		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
+			_claim(sessionId, challengeId, staker);
+            playerChallenge.claimedTime = block.timestamp;
+		}
+
+		IERC20 _token = IERC20(challenge.stake);		
+
+        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
+            isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
+            
+            uint256 totalStake = playerChallenge.amount + playerChallenge.overStakeAmount;
+
+            playerChallenge.amount = 0;
+            playerChallenge.overStakeAmount = 0;
+            playerChallenge.stakedTime = 0;
+            playerChallenge.stakedDuration = 0;
+
+            playerChallenge.completed = true;
+
+            sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
+
+            updateInterestPerToken(sessionChallenge);
+
+            /// Transfer tokens to the Smartcontract
+            /// TODO add stake holding option. The stake holding option earns a passive income
+            /// by user provided tokens.
+            require(_token.balanceOf(address(this)) >= totalStake,                 "not enough");
+            require(_token.transfer(staker, totalStake), "transfer");
+
+       		emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
+        }
+    }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
