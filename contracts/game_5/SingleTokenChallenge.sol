@@ -22,6 +22,8 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 
     struct SessionChallenge {
         uint8 levelId;
+        uint32 prevChallengeId;    // This is the previous challenge id if level is 
+
         uint256 totalReward;
         uint256 stakeAmount;        // Required amount to pass the level
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
@@ -39,6 +41,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
 		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+        
     }
 
     struct PlayerChallenge {
@@ -104,9 +107,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory stakePeriod;
         // multipliers could be 0.
         uint256[5] memory multiplier;
+        uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
 
         Params storage challenge = challenges[id[offset]];
 
@@ -121,6 +125,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         require(stakePeriod[offset] > 0, "single token.stake period==0");
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
+        if (prevChallengeId[offset] > 0) {
+            require(challenges[prevChallengeId[offset]].stake != address(0), "prev");
+        }
 
         session.levelId = levelId[offset];
         session.totalReward = reward[offset];
@@ -131,6 +138,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         session.endTime = startTime + period;
 		session.rewardUnit = reward[offset] / period;	
         session.lastInterestUpdate = startTime;
+        session.prevChallengeId = prevChallengeId[offset];
     }
 
     function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
@@ -144,6 +152,12 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "completed");
+
+        // Previous Challenge should be completed
+        if (sessionChallenge.prevChallengeId > 0) {
+            PlayerChallenge storage playerPrevChallenge = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
+            require(playerPrevChallenge.completed || isCompleted(sessionChallenge, playerPrevChallenge, now), "prev not completed");
+        }
 
         /// Staking amount
         uint256 amount;
@@ -346,9 +360,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory stakeAmount;
         uint256[5] memory stakePeriod;
         uint256[5] memory multiplier;
+        uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = 
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
 
 
         return (id[offset], levelId[offset]);

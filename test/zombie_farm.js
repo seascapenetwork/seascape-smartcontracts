@@ -180,11 +180,13 @@ contract("Game 5: Zombie Farm", async accounts => {
     let stakeAmountWei = web3.utils.toWei(stakeAmount.toString(), "ether");
     let multiply = parseInt(0.1 * 10000);
 
+    let prevChallengeId = 0;
+
     // challenge id, level id, reward, stakeAmount, stakePeriod, min, max;
     let data = web3.eth.abi.encodeParameters(
       ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]'],
       [[challengeId, 0, 0, 0, 0], [1, 0, 0, 0, 0], [wei, 0, 0, 0, 0],
-      [stakeAmountWei, 0, 0, 0, 0], [stakePeriod, 0, 0, 0, 0], [multiply, 0, 0, 0, 0]]
+      [stakeAmountWei, 0, 0, 0, 0], [stakePeriod, 0, 0, 0, 0], [multiply, 0, 0, 0, 0], [prevChallengeId, 0, 0, 0, 0]]
     );
 
     let nonActive = await zombieFarm.sessionChallenges(sessionId, challengeId);
