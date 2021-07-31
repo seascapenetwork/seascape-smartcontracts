@@ -32,13 +32,13 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint256 startTime;
         uint256 period;
         uint8 levelAmount;
-        uint8 rewardId;
+        uint16 rewardId;
     }
     mapping(uint256 => Session) public sessions;
     /// @dev There could be only one challenge category per level.
     /// mapping structure: session -> challenge id = true|false
     mapping(uint256 => mapping(uint32 => bool)) public sessionChallenges;
-    /// @notice There are level rewards (loot boxes)
+    /// @notice There are level rewards for each season (loot boxes)
     /// mapping structure: session = levels[5]
     mapping(uint256 => uint16[5]) public sessionRewards;
 
@@ -65,7 +65,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     // events
     //
     event StartSession(uint8 indexed sessionId, uint256 startTime, uint256 period, 
-        uint8 levelAmount, uint8 grandRewardId);
+        uint8 levelAmount, uint16 grandRewardId);
     event AddSupportedReward(uint16 indexed rewardId, address indexed rewardAdress);
     event AddSupportedChallenge(uint32 indexed challengeId, address indexed challengeAddress);
 
@@ -77,7 +77,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    function startSession(uint256 startTime, uint256 period, uint8 grandRewardId, bytes calldata rewardData, uint8 levelAmount) external onlyOwner {
+    function startSession(uint256 startTime, uint256 period, uint16 grandRewardId, bytes calldata rewardData, uint8 levelAmount) external onlyOwner {
         require(supportedRewards[grandRewardId] != address(0), "grandRewardId");
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
@@ -118,7 +118,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
     }
 
-    function lastSession() external view returns(uint8, uint256, uint256, uint8, uint8) {
+    function lastSession() external view returns(uint8, uint256, uint256, uint8, uint16) {
         Session storage session = sessions[lastSessionId];
 
         return (lastSessionId, session.startTime, session.period, session.levelAmount, session.rewardId);
@@ -267,6 +267,25 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         reward.reward(sessionId, levelId, msg.sender);
 
         playerRewards[sessionId][msg.sender][levelId] = true;
+    }
+
+    function rewardGrand(uint256 sessionId) external {
+        require(sessionId > 0, "session id=0");
+        require(sessions[sessionId].startTime > 0, "no session");
+        require(!playerRewards[sessionId][msg.sender][0], "rewarded");
+
+        uint8 levelAmount = sessions[sessionId].levelAmount;
+
+        for (uint8 levelId = 1; levelId <= levelAmount; levelId++) {
+            require(isLevelCompleted(sessionId, levelId, msg.sender), "not completed");
+        }
+
+        uint16 rewardId = sessions[sessionId].rewardId;
+
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
+        reward.reward(sessionId, 0, msg.sender);
+
+        playerRewards[sessionId][msg.sender][0] = true;
     }
 
     //////////////////////////////////////////////////////////////////////////////////

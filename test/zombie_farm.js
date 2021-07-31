@@ -118,11 +118,12 @@ contract("Game 5: Zombie Farm", async accounts => {
   it("3. should start a game session (event) for 1 week", async () => {
     let startTime = Math.floor(Date.now()/1000) + 5;
 
-    let wei = web3.utils.toWei((grandAmound * 100000).toString(), "ether");
+    let wei = web3.utils.toWei(grandAmound.toString(), "ether");
+    let approveAmount = web3.utils.toWei((100000000).toString(), "ether");
 
     crowns = await Crowns.deployed();
-    await crowns.approve(scapeNftReward.address, wei, {from: gameOwner});
-    await crowns.approve(singleTokenChallenge.address, wei, {from: gameOwner});
+    await crowns.approve(scapeNftReward.address, approveAmount, {from: gameOwner});
+    await crowns.approve(singleTokenChallenge.address, approveAmount, {from: gameOwner});
 
     // imgId, generation, quality, token, amount
     let rewardData = web3.eth.abi.encodeParameters(
@@ -357,6 +358,20 @@ contract("Game 5: Zombie Farm", async accounts => {
     let afterRewarded = await zombieFarm.playerRewards(sessionId, player, levelId);
 
     assert.equal(beforeRewarded, false, "shouldn't be rewarded with lootbox before rewarding");
-    assert.equal(afterRewarded, true, "should be market as rewarded after rewarding by loot box");
+    assert.equal(afterRewarded, true, "should be marked as rewarded after rewarding by loot box");
+  });
+
+  it("13. should grand reward user", async () => {
+    let sessionId = 1;
+    let grandRewardType = 0;
+
+    let beforeRewarded = await zombieFarm.playerRewards(sessionId, player, grandRewardType);
+
+    await zombieFarm.rewardGrand(sessionId, {from: player});
+
+    let afterRewarded = await zombieFarm.playerRewards(sessionId, player, grandRewardType);
+
+    assert.equal(beforeRewarded, false, "shouldn't be rewarded with grand reward before rewarding");
+    assert.equal(afterRewarded, true, "should be marked as rewarded after rewarding by grand reward");
   });
 });
