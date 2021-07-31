@@ -38,6 +38,9 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     /// @dev There could be only one challenge category per level.
     /// mapping structure: session -> challenge id = true|false
     mapping(uint256 => mapping(uint32 => bool)) public sessionChallenges;
+    /// @notice There are level rewards (loot boxes)
+    /// mapping structure: session = levels[5]
+    mapping(uint256 => uint16[5]) public sessionRewards;
 
     /// @dev The list of challenges that user used.
     /// mapping structure: session -> player -> level id = array[3]
@@ -202,6 +205,48 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit AddSupportedReward(supportedRewardsAmount, _address);
     }
 
+    function countLevels(uint8 levelId, uint8[5] memory ids) internal pure returns(uint8) {
+        uint8 count;
+        for (uint8 i = 0; i < MAX_LEVEL; i++) {
+            if (ids[i] == levelId) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// @notice Add possible rewards for each level
+    /// @param sessionId the session for which its added
+    /// @param rewardAmount how many rewards of the same category is added
+    /// @param rewardId the id of the reward to determine the reward category
+    /// @param data of all rewards
+    function addCategoryRewards(uint8 sessionId, uint8 rewardAmount, uint16 rewardId, bytes calldata data) external onlyOwner {
+        require(isStarting(sessionId), "sessionId");
+        require(rewardId > 0, "reward id=0");
+        require(rewardAmount > 0 && rewardAmount <= 5, "0<reward amount<=5");
+        require(supportedRewards[rewardId] != address(0), "invalid reward");
+
+        uint8[MAX_LEVEL] memory levelId;
+
+        for (uint8 i = 0; i < rewardAmount; i++) {
+            ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
+            levelId[i] = reward.getLevel(i, data);
+
+            require(levelId[i] > 0, "levelId==0");
+            require(levelId[i] <= sessions[sessionId].levelAmount, "levelId");
+            require(countLevels(levelId[i], levelId) == 1, "same levels arguments");
+            require(sessionRewards[sessionId][levelId[i] - 1] == 0, "already set");
+        }
+
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
+        reward.saveRewards(sessionId, rewardAmount, data);
+
+        for (uint8 i = 0; i < rewardAmount; i++) {
+            sessionRewards[sessionId][levelId[i] - 1] = rewardId;
+        }
+    }
+    
     //////////////////////////////////////////////////////////////////////////////////
     //
     // Stake/Unstake

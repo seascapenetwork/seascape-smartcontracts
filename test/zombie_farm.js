@@ -175,7 +175,36 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(challengeAddress, singleTokenChallenge.address, "challenge is not single token challenge");
   });
 
-  it("6. should add challenge to the level", async () => {
+  it("6. should add rewards for all levels", async () => {
+    let sessionId = 1;
+    let wei = web3.utils.toWei(rewardPool.toString(), "ether");
+    let rewardAmount = 4;
+    let rewardId = 1;
+
+    //uint8[5] memory levelId, uint256[5]  imgId, uint256[5]  generation, uint8[5]  quality, address[5]  token, uint256[5]  amount;
+    let data = web3.eth.abi.encodeParameters(
+      ['uint8[5]', 'uint256[5]', 'uint256[5]', 'uint8[5]', 'address[5]', 'uint256[5]'],
+      [
+        [1, 2, 3, 4, 0], 
+        [imgId, imgId + 1, imgId -1, imgId + 2, 0], 
+        [generation, generation, generation, generation, 0], 
+        [quality, 1, 2, 3, 0], 
+        [crowns.address, crowns.address, crowns.address, crowns.address, zombieFarm.address], 
+        [wei, wei, wei, wei, 0]
+      ]
+    );
+    
+    //addCategoryRewards(uint8 sessionId, uint8 rewardAmount, uint16 rewardId, bytes calldata data)
+    await zombieFarm.addCategoryRewards(sessionId, rewardAmount, rewardId, data);
+
+    for(var i = 0; i < rewardAmount; i++) {
+      let lootBoxId = await zombieFarm.sessionRewards(sessionId, i);
+      assert.equal(lootBoxId, rewardId.toString(), "Reward is not set in sessions");
+    }
+  });
+
+
+  it("7. should add challenge to the level", async () => {
     let challengesAmount = 1;
     let sessionId = 1;
     let challengeId = 1;
@@ -203,7 +232,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(active, true, "Should be active");
   });
 
-  it("7. should stake some token", async () => {
+  it("8. should stake some token", async () => {
     // stake(uint256 sessionId, uint32 challengeId, bytes calldata data)
 
     let amount = web3.utils.toWei("25", "ether");
@@ -226,7 +255,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
   });
 
-  it("8. should unstake some token", async () => {
+  it("9. should unstake some token", async () => {
     let amount = web3.utils.toWei("3", "ether");
 
     let sessionId = 1;
@@ -247,7 +276,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.equal(web3.utils.fromWei(afterSession.amount), web3.utils.fromWei(afterSession.stakeAmount), "after session amount should be session.stakeAmount");
   });
 
-  it("9. should claim earned tokens", async () => {
+  it("10. should claim earned tokens", async () => {
     let data = "0x00";
     let sessionId = 1;
     let challengeId = 1;
@@ -263,7 +292,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     assert.notEqual(parseFloat(web3.utils.fromWei(beforeSession.claimed)), parseFloat(web3.utils.fromWei(afterSession.claimed)), "after claiming, the claimed amount should increase");
   });
 
-  it("10. should unstake after time progress and complete", async () => {
+  it("11. should unstake after time progress and complete", async () => {
     /// Stake more to speed up the time progress
     let amount = web3.utils.toWei("2500", "ether");
 

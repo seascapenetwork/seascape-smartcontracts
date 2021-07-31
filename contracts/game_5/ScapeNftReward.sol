@@ -86,6 +86,27 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         emit SaveReward(sessionId, rewardType, token, generation, quality, imgId, amount);
     }
 
+    /// @notice a new challenge of this challenge category was added to the Season.
+    /// Adds a level rewards. It can't add grand reward for the season.
+    function saveRewards(uint256 sessionId, uint8 rewardAmount, bytes calldata data) external override onlyZombieFarm {
+        uint8[5] memory levelId;
+
+        uint256[5] memory imgId;
+        uint256[5] memory generation;
+        uint8[5] memory quality;
+        address[5] memory token;
+        uint256[5] memory amount;
+        
+
+        (levelId, imgId, generation, quality, token, amount) = 
+            abi.decode(data, (uint8[5], uint256[5], uint256[5], uint8[5], address[5], uint256[5])); 
+
+        for (uint8 i = 0; i < rewardAmount; i++) {
+            sessionRewards[sessionId][levelId[i]] = Params(imgId[i], generation[i], quality[i], token[i], amount[i]);
+
+            emit SaveReward(sessionId, levelId[i], token[i], generation[i], quality[i], imgId[i], amount[i]);
+        }
+    }
     function reward(uint256 sessionId, uint8 rewardType, address owner) external override onlyZombieFarm {
         Params storage params = sessionRewards[sessionId][rewardType];
 
