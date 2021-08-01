@@ -7,8 +7,6 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../seascape_nft/NftFactory.sol";
-import "./../seascape_nft/SeascapeNft.sol";
 import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
 import "./ZombieFarmRewardInterface.sol";
@@ -18,9 +16,6 @@ import "./ZombieFarmChallengeInterface.sol";
 contract ZombieFarm is Ownable, IERC721Receiver{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
-
-    NftFactory nftFactory;
-    SeascapeNft private nft;
 
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game
     uint8 public constant MAX_CHALLENGES = 10;          // Max possible challenges
@@ -384,8 +379,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "no staked");
 
         challenge.claim(sessionId, challengeId, msg.sender, data);
-
-        fillLevel(sessionId, levelId, challengeId, msg.sender);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
