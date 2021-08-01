@@ -33,6 +33,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint8 levelAmount;
         uint16 rewardId;
         uint256 speedUpFee;
+        uint256 repickFee;
     }
     mapping(uint256 => Session) public sessions;
     /// @dev There could be only one challenge category per level.
@@ -69,6 +70,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     event AddSupportedReward(uint16 indexed rewardId, address indexed rewardAdress);
     event AddSupportedChallenge(uint32 indexed challengeId, address indexed challengeAddress);
     event SpeedUp(uint256 indexed sessionId, uint32 indexed challengeId, address indexed staker, uint256 fee);
+    event Repick(uint256 indexed sessionId, uint32 indexed challengeId, address indexed staker, uint256 fee);
 
     constructor(address _crowns) public {
         crowns = CrownsToken(_crowns);
@@ -80,7 +82,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    function startSession(uint256 startTime, uint256 period, uint16 grandRewardId, bytes calldata rewardData, uint8 levelAmount, uint256 speedUpFee) external onlyOwner {
+    function startSession(uint256 startTime, uint256 period, uint16 grandRewardId, bytes calldata rewardData, uint8 levelAmount, uint256 speedUpFee, uint256 repickFee) external onlyOwner {
         require(supportedRewards[grandRewardId] != address(0), "grandRewardId");
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
@@ -93,6 +95,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(startTime > now, "start time");
         require(period > 0, "period");
         require(speedUpFee > 0, "Speeding up");
+        require(repickFee > 0, "repick");
 
         lastSessionId = lastSessionId + 1;
 
@@ -103,6 +106,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         session.levelAmount = levelAmount;
         session.rewardId = grandRewardId;
         session.speedUpFee = speedUpFee;
+        session.repickFee = repickFee;
 
         reward.saveReward(lastSessionId, 0, rewardData);
 
@@ -217,6 +221,26 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         challenge.complete(sessionId, challengeId, msg.sender);
 
         SpeedUp(sessionId, challengeId, msg.sender, fee);
+    }
+
+    function repick(uint256 sessionId, uint32 challengeId) external {
+        require(sessionId > 0 && challengeId > 0, "argument==0");
+        require(isActive(sessionId));
+        require(supportedChallenges[challengeId] != address(0), "challengeId!=address");
+
+        address challengeAddress = supportedChallenges[challengeId];
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
+        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+        require(levelId > 0, "no challenge");
+
+        require(!isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "staked");    
+
+        uint256 fee = sessions[sessionId].repickFee;
+
+        require(crowns.spendFrom(msg.sender, fee), "failed to spend");
+
+        Repick(sessionId, challengeId, msg.sender, fee);
     }
 
     //////////////////////////////////////////////////////////////////////////////////

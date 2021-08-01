@@ -25,6 +25,7 @@ contract("Game 5: Zombie Farm", async accounts => {
   let stakeAmount = 20;
   let stakePeriod = 3600 * 5;
   let speedUpFee = web3.utils.toWei((10).toString(), "ether");
+  let repickFee = web3.utils.toWei((1).toString(), "ether");
 
   // imported contracts
   let zombieFarm = null;
@@ -132,7 +133,7 @@ contract("Game 5: Zombie Farm", async accounts => {
       [imgId, generation, quality, crowns.address, wei]
     );
 
-    await zombieFarm.startSession(startTime, period, grandId, rewardData, levelAmount, speedUpFee);
+    await zombieFarm.startSession(startTime, period, grandId, rewardData, levelAmount, speedUpFee, repickFee);
 
     lastSessionId = await zombieFarm.lastSessionId();
     assert.equal(lastSessionId, 1, "session id is expected to be 1");
@@ -150,7 +151,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     );
 
     try{
-      await zombieFarm.startSession(startTime, period, grandId, rewardData, levelAmount, speedUpFee, {from: gameOwner});
+      await zombieFarm.startSession(startTime, period, grandId, rewardData, levelAmount, speedUpFee, repickFee, {from: gameOwner});
     }catch(e){
       assert.equal(e.reason, "isActive");
     }
@@ -319,6 +320,15 @@ contract("Game 5: Zombie Farm", async accounts => {
 
     let afterPlayer = await singleTokenChallenge.playerParams(sessionId, challengeId, player);
     assert.equal(afterPlayer.completed, true, "Should be marked as a completed task");
+  });
+
+  it("12. should repick the second stake", async () => {
+    let sessionId = 1;
+    let challengeId = 2;
+
+    await crowns.approve(zombieFarm.address, repickFee, {from: player});
+
+    await zombieFarm.repick(sessionId, challengeId, {from: player});
   });
 
   it("12. should unstake after time progress and complete", async () => {
