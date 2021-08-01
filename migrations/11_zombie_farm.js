@@ -1,6 +1,7 @@
 var ZombieFarm = artifacts.require("./ZombieFarm.sol");
 var ScapeNftReward = artifacts.require("./ScapeNftReward.sol");
 var SingleTokenChallenge = artifacts.require("./SingleTokenChallenge.sol");
+var LpChallenge = artifacts.require("./LpChallenge.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 
@@ -16,9 +17,11 @@ module.exports = async function(deployer, network) {
         await deployer.deploy(ZombieFarm, Crowns.address);
         await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
         await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool);
+        await deployer.deploy(LpChallenge, ZombieFarm.address, pool);
 		console.log("ZombieFarm contract was deployed at address: " + ZombieFarm.address);
 		console.log("ScapeNftReward contract was deployed at address: " + ScapeNftReward.address);
 		console.log("SingleTokenChallenge contract was deployed at address: " + SingleTokenChallenge.address);
+		console.log("Lp contract was deployed at address: " + LpChallenge.address);
     } else if (network == "rinkeby") {
         let pool = await getAccount(0);
         let factoryAddress = "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0";
@@ -27,9 +30,11 @@ module.exports = async function(deployer, network) {
         await deployer.deploy(ZombieFarm, crownsAddress);
         await deployer.deploy(ScapeNftReward, factoryAddress, ZombieFarm.address, pool);
         await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool);
+        await deployer.deploy(LpChallenge, ZombieFarm.address, pool);
 
         console.log("ZombieFarm contract was deployed at address: " + ZombieFarm.address);
 		console.log("ScapeNftReward contract was deployed at address: " + ScapeNftReward.address);
 		console.log("SingleTokenChallenge contract was deployed at address: " + SingleTokenChallenge.address);
+		console.log("LpChallenge contract was deployed at address: " + LpChallenge.address);
     }
 };
