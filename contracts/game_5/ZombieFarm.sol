@@ -9,6 +9,7 @@ import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../seascape_nft/NftFactory.sol";
 import "./../seascape_nft/SeascapeNft.sol";
+import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
 import "./ZombieFarmRewardInterface.sol";
 import "./ZombieFarmChallengeInterface.sol";
@@ -24,6 +25,9 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game
     uint8 public constant MAX_CHALLENGES = 10;          // Max possible challenges
 
+    /// For collecting fee for Speed up and Re-pick
+    CrownsToken crowns;
+
     //
     // Session global variables and structures
     //
@@ -33,6 +37,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint256 period;
         uint8 levelAmount;
         uint16 rewardId;
+        uint256 speedUpFee;
     }
     mapping(uint256 => Session) public sessions;
     /// @dev There could be only one challenge category per level.
@@ -64,12 +69,15 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     // events
     //
-    event StartSession(uint8 indexed sessionId, uint256 startTime, uint256 period, 
+    event StartSession(uint256 indexed sessionId, uint256 startTime, uint256 period, 
         uint8 levelAmount, uint16 grandRewardId);
     event AddSupportedReward(uint16 indexed rewardId, address indexed rewardAdress);
     event AddSupportedChallenge(uint32 indexed challengeId, address indexed challengeAddress);
+    event SpeedUp(uint256 indexed sessionId, uint32 indexed challengeId, address indexed staker, uint256 fee);
 
-    constructor() public {}
+    constructor(address _crowns) public {
+        crowns = CrownsToken(_crowns);
+    }
 
     //////////////////////////////////////////////////////////////////////////////////
     //
@@ -77,7 +85,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    function startSession(uint256 startTime, uint256 period, uint16 grandRewardId, bytes calldata rewardData, uint8 levelAmount) external onlyOwner {
+    function startSession(uint256 startTime, uint256 period, uint16 grandRewardId, bytes calldata rewardData, uint8 levelAmount, uint256 speedUpFee) external onlyOwner {
         require(supportedRewards[grandRewardId] != address(0), "grandRewardId");
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
@@ -89,6 +97,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         require(startTime > now, "start time");
         require(period > 0, "period");
+        require(speedUpFee > 0, "Speeding up");
 
         lastSessionId = lastSessionId + 1;
 
@@ -98,6 +107,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         session.period = period;
         session.levelAmount = levelAmount;
         session.rewardId = grandRewardId;
+        session.speedUpFee = speedUpFee;
 
         reward.saveReward(lastSessionId, 0, rewardData);
 
@@ -188,6 +198,30 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         challenge.newChallenge(supportedChallengesAmount, _data);
 
         emit AddSupportedChallenge(supportedChallengesAmount, _address);
+    }
+
+    function speedUp(uint256 sessionId, uint32 challengeId) external {
+        require(sessionId > 0 && challengeId > 0, "argument==0");
+        require(isActive(sessionId));
+        require(supportedChallenges[challengeId] != address(0), "challengeId!=address");
+
+        address challengeAddress = supportedChallenges[challengeId];
+
+        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
+        require(!challenge.isFullyCompleted(sessionId, challengeId, msg.sender), "already completed");
+    
+        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+        require(levelId > 0, "no challenge");
+
+        require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "no staked");    
+
+        uint256 fee = sessions[sessionId].speedUpFee;
+
+        require(crowns.spendFrom(msg.sender, fee), "failed to spend");
+
+        challenge.complete(sessionId, challengeId, msg.sender);
+
+        SpeedUp(sessionId, challengeId, msg.sender, fee);
     }
 
     //////////////////////////////////////////////////////////////////////////////////

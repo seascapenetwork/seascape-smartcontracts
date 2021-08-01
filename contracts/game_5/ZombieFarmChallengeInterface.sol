@@ -16,6 +16,7 @@ interface ZombieFarmChallengeInterface {
     function getLevel(uint256 sessionId, uint32 challengeId) external view returns(uint8);
 
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker) external view returns(bool);
+    function complete(uint256 sessionId, uint32 challengeId, address staker) external;
 
     function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;
     function unstake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;

@@ -345,6 +345,24 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         }
     }
 
+    /// Set session as complete
+    function complete(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
+        /// General information regarding the Staking token and Earning token
+        Params storage challenge = challenges[challengeId];
+
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+
+        /// Player parameters
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+
+		IERC20 _token = IERC20(challenge.stake);	
+
+        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");	
+
+        playerChallenge.completed = true;
+    }
+
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
     /// @param sessionChallenge is this challenge
