@@ -34,8 +34,9 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Market:                          [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
  * Scape Forum (Fourth game):           [0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A](https://rinkeby.etherscan.io/address/0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A)
  * Zombie Farm (Fifth game):            [0xE408eCAE9c43ac30c15cB975cE63bC0D9d8B98f5](https://rinkeby.etherscan.io/address/0xE408eCAE9c43ac30c15cB975cE63bC0D9d8B98f5)
- * ScapeNft Reward (Zombie Farm):       [0x976556B44ACef2A9F1D3288064D2bCD30E4E8c7F](https://rinkeby.etherscan.io/address/0x976556B44ACef2A9F1D3288064D2bCD30E4E8c7F)
- * SingleToken Challenge (Zombie Farm): [0xece42A1F3911B752763d68b32e9852967DA8DB65](https://rinkeby.etherscan.io/address/0xece42A1F3911B752763d68b32e9852967DA8DB65)
+ * ScapeNft Reward (Zombie Farm):       [0x9d768A93D960fE6b685334F0810088303Cea32EC](https://rinkeby.etherscan.io/address/0x9d768A93D960fE6b685334F0810088303Cea32EC)
+ * SingleToken Challenge (Zombie Farm): [0xFA9E55dbbc914462145370f20b61De441651a508](https://rinkeby.etherscan.io/address/0xFA9E55dbbc914462145370f20b61De441651a508)
+ * LpToken Challenge (Zombie Farm):     [0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7](https://rinkeby.etherscan.io/address/0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
