@@ -1,6 +1,12 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_crowns",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -66,9 +72,71 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint8",
+        "internalType": "uint256",
         "name": "sessionId",
-        "type": "uint8"
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "name": "Repick",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "name": "SpeedUp",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -90,9 +158,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "grandRewardId",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "StartSession",
@@ -109,8 +177,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -123,8 +190,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -137,8 +203,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -151,8 +216,70 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "playerLevels",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "playerRewards",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -178,8 +305,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -203,8 +329,31 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "sessionRewards",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -232,14 +381,23 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "rewardId",
-        "type": "uint8"
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "speedUpFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repickFee",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -258,8 +416,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -272,8 +429,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -292,8 +448,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -306,8 +461,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -335,9 +489,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "grandRewardId",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "internalType": "bytes",
@@ -348,6 +502,16 @@
         "internalType": "uint8",
         "name": "levelAmount",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "speedUpFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repickFee",
+        "type": "uint256"
       }
     ],
     "name": "startSession",
@@ -380,14 +544,13 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -438,12 +601,107 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      }
+    ],
+    "name": "speedUp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      }
+    ],
+    "name": "repick",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_address",
         "type": "address"
       }
     ],
     "name": "addSupportedReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "sessionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "rewardAmount",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint16",
+        "name": "rewardId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "addCategoryRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "levelId",
+        "type": "uint8"
+      }
+    ],
+    "name": "rewardLootBox",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "rewardGrand",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -464,26 +722,91 @@
         "internalType": "bytes",
         "name": "data",
         "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "_v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_s",
-        "type": "bytes32"
       }
     ],
     "name": "stake",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "unstake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "sessionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "levelId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint32",
+        "name": "challengeId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      }
+    ],
+    "name": "isLevelFull",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
