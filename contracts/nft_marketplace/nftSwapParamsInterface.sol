@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.7;
 
 
 /// @dev Interface of the nftSwapParams
@@ -6,6 +6,6 @@ pragma solidity ^0.6.0;
 interface NftSwapParamsInterface {
 
     /// @dev Returns true if signature is valid
-    function isValidParams(bytes encodedParams) external returns (bool);
+    function isValidParams(bytes calldata _encodedParams) external returns (bool);
 
 }
