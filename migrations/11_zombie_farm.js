@@ -25,7 +25,7 @@ module.exports = async function(deployer, network) {
     } else if (network == "rinkeby") {
         let pool = await getAccount(0);
         let factoryAddress = "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0";
-        let crownsAddress = "";
+        let crownsAddress = "0x168840Df293413A930d3D40baB6e1Cd8F406719D";
 
         await deployer.deploy(ZombieFarm, crownsAddress);
         await deployer.deploy(ScapeNftReward, factoryAddress, ZombieFarm.address, pool);
