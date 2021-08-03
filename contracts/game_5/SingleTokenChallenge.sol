@@ -347,9 +347,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 
     /// Set session as complete
     function complete(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
-        /// General information regarding the Staking token and Earning token
-        Params storage challenge = challenges[challengeId];
-
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
