@@ -33,9 +33,9 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Staking Saloon (Third game):         [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
  * Nft Market:                          [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
  * Scape Forum (Fourth game):           [0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A](https://rinkeby.etherscan.io/address/0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A)
- * Zombie Farm (Fifth game):            [0xE408eCAE9c43ac30c15cB975cE63bC0D9d8B98f5](https://rinkeby.etherscan.io/address/0xE408eCAE9c43ac30c15cB975cE63bC0D9d8B98f5)
- * ScapeNft Reward (Zombie Farm):       [0x9d768A93D960fE6b685334F0810088303Cea32EC](https://rinkeby.etherscan.io/address/0x9d768A93D960fE6b685334F0810088303Cea32EC)
- * SingleToken Challenge (Zombie Farm): [0xFA9E55dbbc914462145370f20b61De441651a508](https://rinkeby.etherscan.io/address/0xFA9E55dbbc914462145370f20b61De441651a508)
+ * Zombie Farm (Fifth game):            [0xf231e63701AF8a325bC041b5aB79c94B06c21e4D](https://rinkeby.etherscan.io/address/0xf231e63701AF8a325bC041b5aB79c94B06c21e4D)
+ * ScapeNft Reward (Zombie Farm):       [0x3B1c875bE0431C49BEdD440f99aD29Ef1225230D](https://rinkeby.etherscan.io/address/0x3B1c875bE0431C49BEdD440f99aD29Ef1225230D)
+ * SingleToken Challenge (Zombie Farm): [0x234fDF5E571f1fFcCf691F65F8E4D80b110b1aF3](https://rinkeby.etherscan.io/address/0x234fDF5E571f1fFcCf691F65F8E4D80b110b1aF3)
  * LpToken Challenge (Zombie Farm):     [0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7](https://rinkeby.etherscan.io/address/0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7)
  
  ### Binance Smartchain test network
@@ -46,7 +46,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (Third game):   [0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5](https://testnet.bscscan.com/address/0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5)
  * Nft Market:                    [0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f](https://testnet.bscscan.com/address/0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f)
- * Scape Forum (Fourth game):     [0xe796e2821fB06fCB66ca474dE4B6503f6f3e0A23](https://testnet.bscscan.com/address/0xe796e2821fB06fCB66ca474dE4B6503f6f3e0A23)
+ * Scape Forum (Fourth game):     [0x6Bb4FF81aAaF62144d2113c45df07f11Ff2c3dBD](https://testnet.bscscan.com/address/0x6Bb4FF81aAaF62144d2113c45df07f11Ff2c3dBD)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
