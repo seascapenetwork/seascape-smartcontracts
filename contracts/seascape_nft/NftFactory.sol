@@ -44,7 +44,7 @@ contract NftFactory is AccessControl {
     // Only owner
     //--------------------------------------------------
     function setNft(address _nft) public onlyAdmin {
-	nft = SeascapeNft(_nft);
+	   nft = SeascapeNft(_nft);
     }
 
     /// @dev Add an account to the admin role. Restricted to admins.

@@ -13,7 +13,6 @@ function getRandomInt(max) {
 }
 
 contract("Game 5: Zombie Farm", async accounts => {
-
   //game data
   let period = 604800;
   let generation = 0;
