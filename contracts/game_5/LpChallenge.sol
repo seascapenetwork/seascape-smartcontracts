@@ -296,7 +296,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         }
     }
 
-    function claim(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
+    function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
         Params storage challenge = challenges[challengeId];
 

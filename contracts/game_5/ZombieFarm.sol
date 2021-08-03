@@ -390,7 +390,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     // Claims earned tokens till today.
     // If claims before the time period, then it's just a claim.
     // If claims after the time period, then it withdraws staked tokens and sets the time to be completed.
-    function claim(uint256 sessionId, uint32 challengeId, bytes calldata data) external {
+    function claim(uint256 sessionId, uint32 challengeId) external {
         require(sessionId > 0 && challengeId > 0, "zero argument");
         require(sessions[sessionId].startTime > 0, "session not exists");
         require(sessionChallenges[sessionId][challengeId], "challenge!=session challenge");
@@ -402,7 +402,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender), "no staked");
 
-        challenge.claim(sessionId, challengeId, msg.sender, data);
+        challenge.claim(sessionId, challengeId, msg.sender);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////

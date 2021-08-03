@@ -296,7 +296,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         }
     }
 
-    function claim(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
+    function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
         Params storage challenge = challenges[challengeId];
 
@@ -355,8 +355,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-
-		IERC20 _token = IERC20(challenge.stake);	
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");	
 

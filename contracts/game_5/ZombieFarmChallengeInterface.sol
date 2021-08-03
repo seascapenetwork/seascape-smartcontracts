@@ -20,5 +20,5 @@ interface ZombieFarmChallengeInterface {
 
     function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;
     function unstake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;
-    function claim(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external;
+    function claim(uint256 sessionId, uint32 challengeId, address staker) external;
 }
