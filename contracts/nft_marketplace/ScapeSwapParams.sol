@@ -1,32 +1,55 @@
 pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-// import interface
-
+import "./../openzeppelin/contracts/access/Ownable.sol";
 
 /// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
 /// @author Nejc Schneider
 contract ScapeSwapParams is Ownable{
 
-    // takes in pramams and converts to seascape
-    // todo check if needs override
-    function isValidParams(bytes encodedParams) override returns (bool){
-      arrayWithParams = this.decodeParamaters(encodedParams);
-    	// check if signature is valid
-      // const isValid = ecrecover (arrayWithParams)
-    	return isValid;
+    // takes in _encodedData and converts to seascape
+    function isValidParams (uint256 _nftId, bytes memory _encodedData) public returns (address){
+
+      (uint256 imgId, uint8 gen, uint8 quality, uint8 v, bytes32 r, bytes32 s) = this
+          .decodeParams(_encodedData);
+      bytes32 hash = this.encodeParams(imgId, gen, quality);
+
+      address signer = ecrecover(hash, v, r, s);
+      require(signer == owner(),  "Verification failed");
+
+    	return signer;
     }
 
-    function encodeParams (uint imgId, uint gen, uint8 quality, bytes32 signature) returns (bytes){
-      // bytes messageNoPrefix = abi.encode(imgId, gen, quality, signature)
-      // return messageNoPrefix;
+    function encodeParams(
+        uint256 _imgId,
+        uint8 _gen,
+        uint8 _quality
+    )
+        public
+        returns (bytes32 message)
+    {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 messageNoPrefix = keccak256(abi
+            .encodePacked(_imgId, _gen, _quality));
+        bytes32 hash = keccak256(abi.encodePacked(prefix, messageNoPrefix));
+
+        return hash;
     }
 
-    function decodeParams (bytes) returns (uint imgId, uint generation, uint8 quality, bytes32 signature){
-      	 /// params: 1. what to decode 2. how to decode it 3.
-      	 (imgId, generaton, quality, signature) = abi.decode(bytes, (uint, uint, uint8, bytes32) )
-         return [imgId, generation, quality, signature];
+    function decodeParams (bytes memory _encodedData)
+        public
+        returns (
+            uint256 imgId,
+            uint8 gen,
+            uint8 quality,
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        )
+    {
+        (uint256 imgId, uint8 gen, uint8 quality, uint8 v, bytes32 r, bytes32 s) = abi
+            .decode(_encodedData, (uint256, uint8, uint8, uint8, bytes32, bytes32));
+
+        return (imgId, gen, quality, v, r, s);
     }
-
-
 }
