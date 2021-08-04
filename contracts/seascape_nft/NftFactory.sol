@@ -13,7 +13,7 @@ contract NftFactory is AccessControl {
     bytes32 public constant GENERATOR_ROLE = keccak256("GENERATOR");
 
     SeascapeNft private nft;
-    
+
     constructor(address _nft) public {
 	nft = SeascapeNft(_nft);
 	_setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -26,12 +26,12 @@ contract NftFactory is AccessControl {
 	return nft.mint(_owner, _generation, NftTypes.NORMAL);
     }
 
-    function mintQuality(address _owner, uint256 _generation, uint8 _quality) public onlyGenerator returns(uint256) {
+    function mintQuality(address _owner, uint256 _generation, uint8 _quality) public returns(uint256) {
 	require (_quality > 0 && _quality < 6, "NFT Factory: invalid quality");
 	return nft.mint(_owner, _generation, _quality);
     }
-    
-    
+
+
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
@@ -77,7 +77,7 @@ contract NftFactory is AccessControl {
      {
       return hasRole(STATIC_ROLE, account);
      }
-     
+
      /// @dev Add an account to the user role. Restricted to admins.
      function addStaticUser(address account) public virtual onlyAdmin
      {
@@ -89,7 +89,7 @@ contract NftFactory is AccessControl {
      {
 	 revokeRole(STATIC_ROLE, account);
      }
-  
+
 
      /// @dev Restricted to members of the user role.
      modifier onlyGenerator()
@@ -103,7 +103,7 @@ contract NftFactory is AccessControl {
      {
       return hasRole(GENERATOR_ROLE, account);
      }
-     
+
      /// @dev Add an account to the user role. Restricted to admins.
      function addGenerator(address account) public virtual onlyAdmin
      {
@@ -115,12 +115,10 @@ contract NftFactory is AccessControl {
      {
 	 revokeRole(GENERATOR_ROLE, account);
      }
-  
+
 
     //--------------------------------------------------
     // Public methods
     //--------------------------------------------------
 
 }
-
-

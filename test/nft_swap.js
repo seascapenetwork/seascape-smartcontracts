@@ -35,6 +35,7 @@ contract("Nft Swap", async accounts => {
     let tipsFeeRate = 100;
 
 
+
     // following vars present contracts
     let nft = null;
     let factory = null;
@@ -55,7 +56,7 @@ contract("Nft Swap", async accounts => {
     // nfts data, required for mint
     let fee = web3.utils.toWei("1", "ether");
     let quality = 3;
-    let nftIds = new Array(5);
+    let nftIds = new Array();
 
 
 
@@ -81,7 +82,8 @@ contract("Nft Swap", async accounts => {
     // edit here enableSwapContractAddress
     it("2. should initialize the contract", async () => {
 
-      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(nft.address, scapeSwapParams.address, {from: gameOwner});
+      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(nft.address, scapeSwapParams.address, {from: gameOwner})
+        .catch(console.error);
       let tradeEnabled = await nftSwap.enableTrade(true, {from: gameOwner});
 
       // verify swapParams address added to mappping
@@ -92,74 +94,108 @@ contract("Nft Swap", async accounts => {
 
     it("2.1 should mint required tokens for buyer and for seller", async () => {
 
-      // let tokenAmountSeller = 5;
-      // let tokenAmountBuyer = 0;
-      //
-      // //check nft user balance before
-      // let balanceBeforeSeller = await nft.balanceOf(seller);
-      // let balanceBeforeBuyer = await nft.balanceOf(buyer);
-      // //mint.js
-      // let generatorSeller = await factory.addGenerator(seller);
-      // let generatorBuyer = await factory.addGenerator(buyer);
-      //
-      // let generation = 0;
-      // let quality = 1;
-      // //mint 2 tokens of each quality
-      // for(var i = 0; i < tokenAmountSeller; i++){
-      //   await factory.mintQuality(seller, generation, quality);
-      // }
-      // for(var i = 0; i < tokenAmountBuyer; i++){
-      //   await factory.mintQuality(buyer, generation, quality);
-      // }
-      //
-      // //check nft user balance after
-      // let balanceAfterSeller = await nft.balanceOf(seller);
-      // assert.equal(parseInt(balanceAfterSeller), parseInt(balanceBeforeSeller) + tokenAmountSeller, `${tokenAmountSeller} tokens should be minted for seller`);
-      // let balanceAfterBuyer = await nft.balanceOf(buyer);
-      // assert.equal(parseInt(balanceAfterBuyer), parseInt(balanceBeforeBuyer) + tokenAmountBuyer, `${tokenAmountBuyer} tokens should be minted for buyer`);
+      let tokenAmountSeller = 2;
+      let tokenAmountBuyer = 0;
 
-
-
-      let balanceBefore = await nft.balanceOf(seller);
+      //check nft user balance before
+      let balanceBeforeSeller = await nft.balanceOf(seller);
+      let balanceBeforeBuyer = await nft.balanceOf(buyer);
 
       //mint.js
       web3.eth.getAccounts(function(err,res) {accounts = res;});
 
-      let res = await factory.addGenerator(gameOwner);
-      let granted = await factory.isGenerator(gameOwner);
-      console.log(granted);
-
+      let generatorSeller = await factory.addGenerator(seller);
+      let generatorBuyer = await factory.addGenerator(buyer);
 
       let generation = 0;
       let quality = 1;
 
-      await factory.mintQuality(gameOwner, generation, quality);
+      //mint 2 tokens of each quality
+      for(var i = 0; i < tokenAmountSeller; i++){
+        let returnedId = await factory.mintQuality(seller, generation, quality);
+      }
+      for(var i = 0; i < tokenAmountBuyer; i++){
+        await factory.mintQuality(buyer, generation, quality);
+      }
+
+
+
+      console.log(`Fetching the nft Ids:`);
+      for(let index = 0; index < tokenAmountSeller; index++){
+        let tokenId = await nft.tokenOfOwnerByIndex(seller, index);
+        nftIds[index] = parseInt(tokenId.toString());
+        //.catch(console.error);
+        console.log(`Nft at index ${index} has id ${nftIds[index]}`);
+      }
 
 
       //check nft user balance after
-      let balanceAfter = await nft.balanceOf(gameOwner);
-      assert.equal(parseInt(balanceAfter), parseInt(balanceBefore)+1, "1 Nft token should be minted");
+      let balanceAfterSeller = await nft.balanceOf(seller);
+      assert.equal(parseInt(balanceAfterSeller), parseInt(balanceBeforeSeller) + tokenAmountSeller, `${tokenAmountSeller} tokens should be minted for seller`);
+      let balanceAfterBuyer = await nft.balanceOf(buyer);
+      assert.equal(parseInt(balanceAfterBuyer), parseInt(balanceBeforeBuyer) + tokenAmountBuyer, `${tokenAmountBuyer} tokens should be minted for buyer`);
 
     });
 
-    xit("3. should create offer id1: no bounty 1 for 1 nft", async() => {
+    it("2.2. should mint crowns and approve spending of crowns and nfts", async () => {
+      let crownsAmount = web3.utils.toWei("100", "ether");
+      let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
+
+      // scapes approve
+      //await nft.approve(nftBurning.address, nftId, {from: player});
+      await nft.setApprovalForAll(nftSwap.address, true, {from: seller});
+
+      //get some Crowns
+      await crowns.transfer(seller, crownsAmount, {from: gameOwner});
+
+
+      let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
+      assert.equal(sellerCwsBalanceBefore+ crownsAmount/finney, sellerCwsBalanceAfter, "Seller didnt receive enough crowns");
+      });
+
+    it("3. should create offer id1: no bounty 1 for 1 nft", async() => {
+
       let offerTokensAmount = 1;
+      let offeredTokensArray = [
+        ["1", nft.address],
+        ["0", nft.address],
+        ["0", nft.address],
+        ["0", nft.address],
+        ["0", nft.address],
+      ];
       let requestTokensAmount = 1;
+      let requestedTokensArray = [
+        [nft.address, "0x86ab5d39b2c923dd5c9f35e11c3d6bb638bdad1799b8a989c4b1b7d1c0002ac0"],
+        [nft.address, "0x86ab5d39b2c923dd5c9f35e11c3d6bb638bdad1799b8a989c4b1b7d1c0002ac0"],
+        [nft.address, "0x86ab5d39b2c923dd5c9f35e11c3d6bb638bdad1799b8a989c4b1b7d1c0002ac0"],
+        [nft.address, "0x86ab5d39b2c923dd5c9f35e11c3d6bb638bdad1799b8a989c4b1b7d1c0002ac0"],
+        [nft.address, "0x86ab5d39b2c923dd5c9f35e11c3d6bb638bdad1799b8a989c4b1b7d1c0002ac0"],
+      ];
       let bounty = web3.utils.toWei("0", "ether");
-      let bountyAddress = 0x0;
+      let bountyAddress = crowns.address;
 
       //check nft and cws seller balance before
       let sellerNftBalanceBefore = await nft.balanceOf(seller);
+      console.log("nfts before: " ,parseInt(sellerNftBalanceBefore));
       let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
+      console.log("cws before: " ,sellerCwsBalanceBefore);
 
-      let offerCreated = await nftSwap.createOffer(offerTokensAmount, [offeredObject], requestTokensAmount, [requestedObject], bounty, bountyAddress,
+      // crowns approve
+      await crowns.approve(nftSwap.address, fee, {from: seller});
+      let allowance = await crowns.allowance(seller, nftSwap.address);
+      assert.equal(allowance, fee, "not enough cws allowed to be spent");
+
+
+      let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestTokensAmount, requestedTokensArray, bounty, bountyAddress,
          {from: seller}).catch(console.error);
 
        //check nft and cws seller balance after
        let sellerNftBalanceAfter = await nft.balanceOf(seller);
-       assert.equal(parseInt(sellerNftBalanceAfter), parseInt(sellerNftBalanceBefore) + offerTokensAmount, `${offerTokensAmount} tokens should be taken from seller`);
+       console.log("nfts after: " ,parseInt(sellerNftBalanceAfter));
        let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-       assert.equal(sellerCwsBalanceBefore, sellerCwsBalanceAfter + bounty/finney,  "Seller didnt pay enough fee");
+       console.log("cws after: " ,sellerCwsBalanceAfter);
+       assert.equal(parseInt(sellerNftBalanceAfter)+ offerTokensAmount, parseInt(sellerNftBalanceBefore), `${offerTokensAmount} tokens should be taken from seller`);
+       assert.equal(sellerCwsBalanceBefore, sellerCwsBalanceAfter + fee/finney,  "Seller didnt pay enough fee");
 
       // assert that contract has one nft more
       // assert that contract has one cws more
