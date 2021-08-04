@@ -69,11 +69,11 @@ let init = async function() {
     // }
 
 
-    // sessionId = await zombieFarm.lastSessionId();
-    // console.log(sessionId +" session id started");
-    // let session = await zombieFarm.sessions(sessionId);
-    // console.log(session);
-    // return;
+    sessionId = await zombieFarm.lastSessionId();
+    console.log(sessionId +" session id started");
+    let session = await zombieFarm.sessions(sessionId);
+    console.log(session);
+    return;
 
     // let startTime = Math.floor(Date.now()/1000) + 180;
 
