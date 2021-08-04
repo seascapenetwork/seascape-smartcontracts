@@ -1,6 +1,7 @@
 var NftSwap = artifacts.require("./NftSwap.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 var Nft = artifacts.require("./SeascapeNft.sol");
+let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol");
 
 
 
@@ -8,12 +9,14 @@ var Nft = artifacts.require("./SeascapeNft.sol");
 const _feeRate = 1000;	// fee = _feeRate * 1000
                         // e.g. if _feeRate is set to 1000 than fee will be 1 CWS
 
-module.exports = function(deployer, network) {
+module.exports = async function(deployer, network) {
     if (network == "ganache") {
           await deployer.deploy(Nft);
-        console.log("To mint Nft it is using NFT Factory at address: "+Nft.address);
+        console.log("To trade nfts it is using Scape NFT contract at address: "+Nft.address);
           await deployer.deploy(Crowns);
         console.log("It is used with Crowns (CWS) Token at address: "+Crowns.address);
+          await deployer.deploy(ScapeSwapParams);
+          console.log("To verify signatures it is using contract at address: "+ScapeSwapParams.address);
           await deployer.deploy(NftSwap, _feeRate, Crowns.address, Nft.address);
         console.log("NftSwap contract was deployed at address: "+NftSwap.address);
 
