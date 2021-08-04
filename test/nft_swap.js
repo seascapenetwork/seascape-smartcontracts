@@ -124,13 +124,11 @@ contract("Nft Swap", async accounts => {
 
       //mint.js
       web3.eth.getAccounts(function(err,res) {accounts = res;});
+
+      let res = await factory.addGenerator(gameOwner);
       let granted = await factory.isGenerator(gameOwner);
-      if (!granted) {
-          let res = await factory.addGenerator(gameOwner);
-      } else {
-        //replace with throw errror
-         console.log(`Account ${gameOwner} was already granted a permission`);
-      }
+      console.log(granted);
+
 
       let generation = 0;
       let quality = 1;
