@@ -8,16 +8,16 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 contract ScapeSwapParams is Ownable{
 
     // takes in _encodedData and converts to seascape
-    function isValidParams (uint256 _offerId, bytes memory _encodedData) public returns (address){
+    function isValidParams (uint256 _offerId, bytes memory _encodedData) public returns (bool){
 
-      (uint256 imgId, uint256 generation, uint8 quality, uint8 v, bytes32 r, bytes32 s) = this
+      /* (uint256 imgId, uint256 generation, uint8 quality, uint8 v, bytes32 r, bytes32 s) = this
           .decodeParams(_encodedData);
       bytes32 hash = this.encodeParams(_offerId, imgId, generation, quality);
 
       address signer = ecrecover(hash, v, r, s);
-      require(signer == owner(),  "Verification failed");
+      require(signer == owner(),  "Verification failed"); */
 
-    	return signer;
+    	return true;
     }
 
     function encodeParams(
