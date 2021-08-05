@@ -12,7 +12,7 @@ contract ScapeSwapParams is Ownable{
 
       (uint256 imgId, uint8 gen, uint8 quality, uint8 v, bytes32 r, bytes32 s) = this
           .decodeParams(_encodedData);
-      bytes32 hash = this.encodeParams(imgId, gen, quality);
+      bytes32 hash = this.encodeParams(imgId, gen, quality, _nftId);
 
       address signer = ecrecover(hash, v, r, s);
       require(signer == owner(),  "Verification failed");
@@ -23,14 +23,15 @@ contract ScapeSwapParams is Ownable{
     function encodeParams(
         uint256 _imgId,
         uint8 _gen,
-        uint8 _quality
+        uint8 _quality,
+        uint256 _nftId
     )
         public
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 messageNoPrefix = keccak256(abi
-            .encodePacked(_imgId, _gen, _quality));
+            .encodePacked(_imgId, _gen, _quality, _nftId));
         bytes32 hash = keccak256(abi.encodePacked(prefix, messageNoPrefix));
 
         return hash;
