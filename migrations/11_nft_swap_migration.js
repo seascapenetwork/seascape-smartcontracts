@@ -3,6 +3,7 @@ var Crowns = artifacts.require("./CrownsToken.sol");
 var Nft = artifacts.require("./SeascapeNft.sol");
 let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol");
 var Factory = artifacts.require("./NftFactory.sol");
+var SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
 
 
 
@@ -21,6 +22,10 @@ module.exports = function(deployer, network) {
 
         deployer.deploy(ScapeSwapParams).then(function(){
             console.log("NftSwap contract was deployed at address: "+ScapeSwapParams.address);
+        });
+
+        deployer.deploy(SampleERC20Token).then(function(){
+            console.log("NftSwap contract was deployed at address: "+SampleERC20Token.address);
         });
     }
 };
