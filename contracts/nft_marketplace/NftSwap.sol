@@ -258,15 +258,15 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 "should allow spending of nfts");
         }
         // verify requested nft oddresses
-        /* for (uint _index = 0; _index < _requestedTokensAmount; _index++) {
+        for (uint _index = 0; _index < _requestedTokensAmount; _index++) {
             address swapParamsAddress = supportedNftAddresses[_requestedTokens[_index].tokenAddress];
             require(swapParamsAddress != address(0),
                 "requested nft address unsupported");
             // verify nft parameters
             NftSwapParamsInterface requestedToken = NftSwapParamsInterface (swapParamsAddress);
-            require(requestedToken.isValidParams(_requestedTokens[_index].tokenParams),
+            require(requestedToken.isValidParams(offersAmount, _requestedTokens[_index].tokenParams),
                 "required nft params are invalid");
-        } */
+        }
 
         /// make transactions
         // send offered nfts to smart contract
@@ -277,13 +277,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         }
         // send fee and _bounty to contract
         if (_bounty > 0 && address(crowns) == _bountyAddress)
-            crowns.transfer(address(this), fee + _bounty);
+            IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee + _bounty);
         else {
             if (_bounty > 0)
                 IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), _bounty);
-            //crowns.transfer(msg.sender, fee);
-            // edit here: should transfer, not spend
-            crowns.spendFrom(msg.sender, fee);
+            IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee);
         }
 
         /// update states
