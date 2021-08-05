@@ -410,7 +410,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice cancel the offer
     /// @param _offerId offer unique ID
-    function CancelOffer(uint _offerId) public {
+    function cancelOffer(uint _offerId) public {
         OfferObject storage obj = offerObjects[_offerId];
         // edit here: check that obj at index (still) exists ^^
         require(obj.seller == msg.sender, "sender is not creator of offer");
@@ -419,18 +419,20 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         // send the offeredTokens from SC to seller
         for (uint index=0; index < obj.offeredTokensAmount; index++) {
             IERC721(obj.offeredTokens[index].tokenAddress)
-                .safeTransferFrom(msg.sender, obj.seller, obj.offeredTokens[index].tokenId);
+                .safeTransferFrom(address(this), obj.seller, obj.offeredTokens[index].tokenId);
         }
-        // send crowns and bounty from SC to seller
-        // if (_bounty > 0 && address(crowns) == _bountyAddress)
 
+        // send crowns and bounty from SC to seller
         if (obj.bounty > 0 && address(crowns) == obj.bountyAddress)
-            crowns.transferFrom(address(this), msg.sender, obj.fee + obj.bounty);
+            crowns.transfer(msg.sender, obj.fee + obj.bounty);
         else {
-            if (obj.bounty > 0)
-                IERC20(obj.bountyAddress).safeTransferFrom(address(this), msg.sender, obj.bounty);
-            crowns.transferFrom(address(this), msg.sender, obj.fee);
+            if (obj.bounty > 0){
+                IERC20 token = IERC20(obj.bountyAddress);
+                token.transfer(msg.sender, obj.bounty);
+              }
+            crowns.transfer(msg.sender, obj.fee);
         }
+
 
         /// update states
         delete offerObjects[_offerId];
