@@ -8,18 +8,35 @@ let SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
 
 contract("Nft Swap", async accounts => {
 
+  async function signParams(bytes){
 
+    let data = web3.utils.keccak256(bytes);
+    let hash = await web3.eth.sign(data, gameOwner);
+
+    let r = hash.substr(0,66);
+    let s = "0x" + hash.substr(66,64);
+    let v = parseInt(hash.substr(130), 16);
+    if (v < 27) {
+        v += 27;
+    }
+
+
+    return [v, r, s];
+  }
 
     //digital signatures
-    async function hashNft(_offerId, _imgId, _gen, _quality) {
-
+    function encodeNft(_offerId, _imgId, _gen, _quality) {
+      //generating v r s for 4 parameters
       let bytes32 = web3.eth.abi.encodeParameters(
-        ["uint256", "uint256", "uint256", "uint8"], [_offerId, _imgId, _gen, _quality]);
-      let data = web3.utils.keccak256(bytes32);
-      let hash = await web3.eth.sign(data, gameOwner);
+        ["uint256", "uint256", "uint256"], [_offerId, _imgId, _gen]);
 
-      return hash;
+      let bytes1 = web3.utils.bytesToHex([_quality]);
+
+      let str = bytes32 + bytes1.substr(2);
+
+      return str;
     }
+
 
     let tokenId;
     let price = web3.utils.toWei("2", "ether");
@@ -87,7 +104,7 @@ contract("Nft Swap", async accounts => {
 
     it("2.1 should mint required tokens for buyer and for seller", async () => {
 
-      let tokenAmountSeller = 9;
+      let tokenAmountSeller = 2;
       let tokenAmountBuyer = 0;
 
       //check nft user balance before
@@ -159,20 +176,22 @@ contract("Nft Swap", async accounts => {
 
       // this array will be passed to createOffer function. It must contain sample data for empty slots
       let requestedTokensArray = [
-        [nft.address, "0x00"],
-        [nft.address, "0x00"],
-        [nft.address, "0x00"],
-        [nft.address, "0x00"],
-        [nft.address, "0x00"],
+        [nft.address, "0x00", "0", "0x00", "0x00"],
+        [nft.address, "0x00", "0", "0x00", "0x00"],
+        [nft.address, "0x00", "0", "0x00", "0x00"],
+        [nft.address, "0x00", "0", "0x00", "0x00"],
+        [nft.address, "0x00", "0", "0x00", "0x00"],
       ]
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
-        hash = await hashNft(offersAmount, requestedTokenParams[i][1],
+
+        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
-        requestedTokensArray[i] = [requestedTokenParams[i][0], hash];
-        console.log("hash: ",hash);
+        let sig = await signParams(encodedData);
+        requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
+        console.log("encodedData: ",encodedData);
       }
-      console.log("hashed array: " ,requestedTokensArray);
+      console.log("encodedDataed array: " ,requestedTokensArray);
 
       //check nft and cws seller balance before
       let sellerNftBalanceBefore = await nft.balanceOf(seller);
@@ -185,13 +204,13 @@ contract("Nft Swap", async accounts => {
       let allowance = await crowns.allowance(seller, nftSwap.address);
       assert.equal(allowance, fee + bounty, "not enough cws allowed to be spent");
 
-      // try {
-        let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount, requestedTokensArray, bounty, bountyAddress,
-           {from: seller}).catch(console.error);
-           offersAmount ++;
-      // } catch(e){
-      //   console.log("There was a problem with createOffer function.");
-      // }
+
+
+      let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount,
+        requestedTokensArray, bounty, bountyAddress,
+         {from: seller}).catch(console.error);
+         offersAmount ++;
+
 
        //check nft and cws seller balance after
        let sellerNftBalanceAfter = await nft.balanceOf(seller);
@@ -203,7 +222,7 @@ contract("Nft Swap", async accounts => {
 
     });
 
-    it("4. should create offer id2: 10cws bounty 1 for 2 nfts", async() => {
+    xit("4. should create offer id2: 10cws bounty 1 for 2 nfts", async() => {
        let offerTokensAmount = 1;
        let offeredTokensArray = [
          [nftIdCount, nft.address],
@@ -233,10 +252,10 @@ contract("Nft Swap", async accounts => {
        ];
        // encode requestedToken parameters
        for(let i = 0; i < requestedTokensAmount; i++){
-         hash = await hashNft(offersAmount, requestedTokenParams[i][1],
+         encodedData = await encodeNft(offersAmount, requestedTokenParams[i][1],
            requestedTokenParams[i][2], requestedTokenParams[i][3]);
-         requestedTokensArray[i] = [requestedTokenParams[i][0], hash];
-         console.log("hash: ",hash);
+         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData];
+         console.log("encodedData: ",encodedData);
        }
        console.log("hashed array: " ,requestedTokensArray);
 
@@ -267,7 +286,7 @@ contract("Nft Swap", async accounts => {
 
     });
 
-    it("5. should create offer id3: 10eth bounty 2 for 1 nfts", async() => {
+    xit("5. should create offer id3: 10eth bounty 2 for 1 nfts", async() => {
        let offerTokensAmount = 2;
        let offeredTokensArray = [
          [nftIdCount, nft.address],
@@ -296,10 +315,10 @@ contract("Nft Swap", async accounts => {
        ];
        // encode requestedToken parameters
        for(let i = 0; i < requestedTokensAmount; i++){
-         hash = await hashNft(offersAmount, requestedTokenParams[i][1],
+         encodedData = await encodeNft(offersAmount, requestedTokenParams[i][1],
            requestedTokenParams[i][2], requestedTokenParams[i][3]);
-         requestedTokensArray[i] = [requestedTokenParams[i][0], hash];
-         console.log("hash: ",hash);
+         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData];
+         console.log("encodedData: ",encodedData);
        }
        console.log("hashed array: " ,requestedTokensArray);
 
@@ -343,7 +362,7 @@ contract("Nft Swap", async accounts => {
 
     });
 
-    it("6. should create offer id4: 10cws bounty 5 for 5 nfts", async() => {
+    xit("6. should create offer id4: 10cws bounty 5 for 5 nfts", async() => {
 
       let offerTokensAmount = 5;
       let offeredTokensArray = [
@@ -376,10 +395,10 @@ contract("Nft Swap", async accounts => {
       ];
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
-        hash = await hashNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = await encodeNft(offersAmount, requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
-        requestedTokensArray[i] = [requestedTokenParams[i][0], hash];
-        console.log("hash: ",hash);
+        requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData];
+        console.log("encodedData: ",encodedData);
       }
       console.log("hashed array: " ,requestedTokensArray);
 
@@ -410,7 +429,7 @@ contract("Nft Swap", async accounts => {
 
     });
 
-    it("6.1 should cancel offerid4", async() => {
+    xit("6.1 should cancel offerid4", async() => {
       let offerId = 4;
       // the following values could be fetched from SC
       let offerTokensAmount = 5;
@@ -439,112 +458,109 @@ contract("Nft Swap", async accounts => {
     xit("7. shouldnt create an offer without offerTokens (0 for 1 nfts)", async() => {
 
 
-      // let offerTokensAmount = 1;
-      // let offeredTokensArray = [
-      //   [nftIdCount, nft.address],
-      //   ["0", "0x0000000000000000000000000000000000000000"],
-      //   ["0", "0x0000000000000000000000000000000000000000"],
-      //   ["0", "0x0000000000000000000000000000000000000000"],
-      //   ["0", "0x0000000000000000000000000000000000000000"],
-      // ];
-      // nftIdCount+=offerTokensAmount;
-      // let requestedTokensAmount = 1;
-      // //structure: [tokenAddress, imgId, generation, quality]
-      // let requestedTokenParams = [
-      //   [nft.address, "24", "0", "4"],
-      //   [null], [null], [null], [null]
-      // ];
-      // let bounty = web3.utils.toWei("0", "ether");
-      // let bountyAddress = crowns.address;
-      //
-      // // this array will be passed to createOffer function. It must contain sample data for empty slots
-      // let requestedTokensArray = [
-      //   [nft.address, "0x00"],
-      //   [nft.address, "0x00"],
-      //   [nft.address, "0x00"],
-      //   [nft.address, "0x00"],
-      //   [nft.address, "0x00"],
-      // ]
-      // // encode requestedToken parameters
-      // for(let i = 0; i < requestedTokensAmount; i++){
-      //   hash = await hashNft(offersAmount, requestedTokenParams[i][1],
-      //     requestedTokenParams[i][2], requestedTokenParams[i][3]);
-      //   requestedTokensArray[i] = [requestedTokenParams[i][0], hash];
-      //   console.log("hash: ",hash);
-      // }
-      // console.log("hashed array: " ,requestedTokensArray);
-      //
-      // //check nft and cws seller balance before
-      // let sellerNftBalanceBefore = await nft.balanceOf(seller);
-      // console.log("nfts before: " ,parseInt(sellerNftBalanceBefore));
-      // let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      // console.log("cws before: " ,sellerCwsBalanceBefore);
-      //
-      // // crowns approve
-      // await crowns.approve(nftSwap.address, fee + bounty, {from: seller});
-      // let allowance = await crowns.allowance(seller, nftSwap.address);
-      // assert.equal(allowance, fee + bounty, "not enough cws allowed to be spent");
-      //
-      // // try {
-      //   let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount, requestedTokensArray, bounty, bountyAddress,
-      //      {from: seller}).catch(console.error);
-      //      offersAmount ++;
-      // // } catch(e){
-      // //   console.log("There was a problem with createOffer function.");
-      // // }
-      //
-      //  //check nft and cws seller balance after
-      //  let sellerNftBalanceAfter = await nft.balanceOf(seller);
-      //  console.log("nfts after: " ,parseInt(sellerNftBalanceAfter));
-      //  let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/finney);
-      //  console.log("cws after: " ,sellerCwsBalanceAfter);
-      //  assert.equal(parseInt(sellerNftBalanceAfter)+ offerTokensAmount, parseInt(sellerNftBalanceBefore), `${offerTokensAmount} tokens should be taken from seller`);
-      //  assert.equal(sellerCwsBalanceBefore, sellerCwsBalanceAfter + fee/finney + bounty/finney,  "Seller didnt pay enough fee");
-
-
-
-
-
-
-
-
-
-
-
-
-
       let offerTokensAmount = 0;
-      let requestTokensAmount = 1;
-      let bounty = web3.utils.toWei("1", "ether");
+      let offeredTokensArray = [
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+      ];
+      nftIdCount+=offerTokensAmount;
+      let requestedTokensAmount = 1;
+      //structure: [tokenAddress, imgId, generation, quality]
+      let requestedTokenParams = [
+        [nft.address, "24", "0", "4"],
+        [null], [null], [null], [null]
+      ];
+      let bounty = web3.utils.toWei("0", "ether");
       let bountyAddress = crowns.address;
+
+      // this array will be passed to createOffer function. It must contain sample data for empty slots
+      let requestedTokensArray = [
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+      ]
+      // encode requestedToken parameters
+      for(let i = 0; i < requestedTokensAmount; i++){
+        encodedData = await encodeNft(offersAmount, requestedTokenParams[i][1],
+          requestedTokenParams[i][2], requestedTokenParams[i][3]);
+        requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData];
+        console.log("encodedData: ",encodedData);
+      }
+      console.log("hashed array: " ,requestedTokensArray);
+
+      // crowns approve
+      await crowns.approve(nftSwap.address, fee + bounty, {from: seller});
+      let allowance = await crowns.allowance(seller, nftSwap.address);
+      assert.equal(allowance, fee + bounty, "not enough cws allowed to be spent");
 
       //main contract calls
       try{
       //if createOffer() dont fail, test should fail
-      await nftSwap.createOffer(offerTokensAmount, [], requestTokensAmount, [requestedObject], bounty, bountyAddress,
-         {from: seller}).catch(console.error);
-      assert.fail;
-      }catch{
-        //if createOffer() fails, the test should pass
-        assert(true);
+        let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount, requestedTokensArray, bounty, bountyAddress,
+           {from: seller}).catch(console.error);
+        offersAmount ++;
+      }catch(e){
+        assert.equal(e.reason, "should offer at least one nft");
+
       }
+
     });
 
     xit("8. shouldnt create an offer without requestedTokens (1 for 0 nfts)", async() => {
-      let offerTokensAmount = 1;
-      let requestTokensAmount = 0;
-      let bounty = web3.utils.toWei("1", "ether");
+
+      let offerTokensAmount = 0;
+      let offeredTokensArray = [
+        [nftIdCount, nft.address],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+        ["0", "0x0000000000000000000000000000000000000000"],
+      ];
+      nftIdCount+=offerTokensAmount;
+      let requestedTokensAmount = 1;
+      //structure: [tokenAddress, imgId, generation, quality]
+      let requestedTokenParams = [
+        [null], [null], [null], [null], [null]
+      ];
+      let bounty = web3.utils.toWei("0", "ether");
       let bountyAddress = crowns.address;
+
+      // this array will be passed to createOffer function. It must contain sample data for empty slots
+      let requestedTokensArray = [
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+        [nft.address, "0x00"],
+      ]
+      // encode requestedToken parameters
+      for(let i = 0; i < requestedTokensAmount; i++){
+        encodedData = await encodeNft(offersAmount, requestedTokenParams[i][1],
+          requestedTokenParams[i][2], requestedTokenParams[i][3]);
+        requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData];
+        console.log("encodedData: ",encodedData);
+      }
+      console.log("hashed array: " ,requestedTokensArray);
+
+      // crowns approve
+      await crowns.approve(nftSwap.address, fee + bounty, {from: seller});
+      let allowance = await crowns.allowance(seller, nftSwap.address);
+      assert.equal(allowance, fee + bounty, "not enough cws allowed to be spent");
 
       //main contract calls
       try{
       //if createOffer() dont fail, test should fail
-      await nftSwap.createOffer(offerTokensAmount, [offeredObject], requestTokensAmount, [], bounty, bountyAddress,
-         {from: seller}).catch(console.error);
-      assert.fail;
-      }catch{
-        //if createOffer() fails, the test should pass
-        assert(true);
+        let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount, requestedTokensArray, bounty, bountyAddress,
+           {from: seller}).catch(console.error);
+        offersAmount ++;
+      }catch(e){
+        assert.equal(e.reason, "should require at least one nft");
+
       }
     });
 
