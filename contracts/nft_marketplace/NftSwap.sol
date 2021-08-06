@@ -267,7 +267,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 "requested nft address unsupported");
             // verify nft parameters
             NftSwapParamsInterface requestedToken = NftSwapParamsInterface (swapParamsAddress);
-            require(requestedToken.isValidParams(offersAmount, _requestedTokens[_index].tokenParams),
+            require(requestedToken.isValidParams(offersAmount, _requestedTokens[_index].tokenParams,
+              _requestedTokens[_index].v, _requestedTokens[_index].r, _requestedTokens[_index].s),
                 "required nft params are invalid");
         }
 
