@@ -49,6 +49,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     struct RequestedToken{
         address tokenAddress;              // requested token address
         bytes tokenParams;                 // requested token Params - metadata
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
     }
 
 
