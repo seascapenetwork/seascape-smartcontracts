@@ -57,6 +57,10 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
         return true;
     }
 
+    function setNftBrawlOwner(address newOwner) external onlyOwner {
+        nftBrawl.transferOwnership(newOwner);
+    }
+
     function startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external override onlyOwner {
         nftBrawl.startSession(_interval, _period, _startTime, _generation);
     }
