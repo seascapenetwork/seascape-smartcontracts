@@ -1,4 +1,43 @@
-let ZombieFarm = artifacts.require("ZombieFarm");
+/// SUpported commands:
+let supportedCmd = [
+  "player-bnb-balance",       // Returns balance of the player in BNB
+  "player-lp-balance",        // Returns balance of the player in LP tokens
+  "reward-balance",           // The Cake balance
+  "deposit",                  // Deposit token to holder. It accepts the second argument: amount. Its deposited through player
+  "withdraw",                 // Withdraw token from hodler. It accepts the second argument: amount. Its withdrawn through player
+  "withdraw-all"              // Withdraw all tokens from hodler.
+];
+
+let todo = false;
+
+let args = process.argv.slice(6);
+switch (args[0]) {
+  case "player-bnb-balance":
+    todo = args[0]; 
+    break;
+  case "player-lp-balance":
+    playerLpBalance();
+    break;
+  case "reward-balance":
+    rewardBalance();
+    break;
+  case "deposit":
+    deposit(args[1]);
+    break;
+  case "withdraw":
+    withdraw(args[1]);
+    break;
+  case "withdraw-all":
+    withdrawAll();
+    break;
+  default:
+    console.error("ERROR: unsupported command: "+args[0]);
+    console.error("Supported commands: "+supportedCmd);
+    process.exit();
+}
+
+
+let SeascapeHodl = artifacts.require("ZombieFarm");
 let ScapeNftReward = artifacts.require("ScapeNftReward");
 let SingleTokenChallenge = artifacts.require("SingleTokenChallenge");
 let Factory = artifacts.require("NftFactory");
@@ -16,12 +55,14 @@ let repickFee = web3.utils.toWei((1).toString(), "ether");
 /**
  * For test purpose, starts a game session
  */
-module.exports = async function(callback) {
-    console.log("Calling the init function...")
-    let res = await init();
-    
-    callback(null, res);
+module.exports = {
+  
 };
+//    console.log("Calling the init function...")
+//    let res = await init();
+    
+//    callback(null, res);
+//};
 
 let init = async function() {
     console.log("account is setting..")
