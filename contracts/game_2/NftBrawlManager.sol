@@ -34,10 +34,16 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
         }
     }
 
+    event Received(address, uint);
+
     constructor(address _nftBrawl, address payable _gelato) public {
         gelato = _gelato;
         nftBrawl = NftRush(_nftBrawl);
         payment = address(0);
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
     }
     
     //--------------------------------------------------
