@@ -343,11 +343,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     function acceptOffer(
         uint256 _offerId,
         uint256 _requestedTokensAmount,
-        uint256[5] memory _requestedTokenIds,
-        address[5] memory _requestedTokenAddresses,
-        uint8 _v,
+        uint256 [5] memory _requestedTokenIds,
+        address [5] memory _requestedTokenAddresses
+        /* uint8 _v,
         bytes32 _r,
-        bytes32 _s
+        bytes32 _s */
     )
         public
         nonReentrant
@@ -360,9 +360,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         require(msg.sender != obj.seller, "cant buy self-made offer");
         // edit here: require requestedToken. id>0, ownerOf, isApproved, tokenAddress
 
+
+
         /// digital signature part
         /// @dev make sure that signature of nft matches with the address of the contract deployer
-        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
+        /* bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
             _offerId,
             _requestedTokensAmount,
             _requestedTokenIds,
@@ -371,7 +373,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         bytes32 _message = keccak256(abi.encodePacked(
             "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
         address _recover = ecrecover(_message, _v, _r, _s);
-        require(_recover == owner(),  "Verification failed");
+        require(_recover == owner(),  "Verification failed"); */
 
         /// make transactions
         // send requestedTokens from buyer to seller

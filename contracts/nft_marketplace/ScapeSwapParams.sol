@@ -11,12 +11,12 @@ contract ScapeSwapParams is Ownable{
     function isValidParams (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public returns (bool){
 
-      (uint256 imgId, uint256 generation, uint8 quality) = this
+      /* (uint256 imgId, uint256 generation, uint8 quality) = this
           .decodeParams(_encodedData);
       bytes32 hash = this.encodeParams(_offerId, imgId, generation, quality);
 
       address signer = ecrecover(hash, v, r, s);
-      require(signer == owner(),  "Verification failed");
+      require(signer == owner(),  "Verification failed"); */
 
     	return true;
     }
