@@ -31,14 +31,14 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 offerId;                   // offer ID
         uint8 offeredTokensAmount;         // total offered tokens
         uint8 requestedTokensAmount;       // total requested tokens
-        mapping(uint256 => OfferedToken) offeredTokens;       // offered tokens data
-        mapping(uint256 => RequestedToken) requestedTokens;   // requested tokensdata
         /* OfferedToken [5] offeredTokens;
         RequestedToken [5] requestedTokens; */
         uint256 bounty;                    // reward for the buyer
         address bountyAddress;             // currency address for paying bounties
         address payable seller;            // seller's address
         uint256 fee;                       // fee amount at the time offer was created
+        mapping(uint256 => OfferedToken) offeredTokens;       // offered tokens data
+        mapping(uint256 => RequestedToken) requestedTokens;   // requested tokensdata
     }
     /// @notice individual offered token related data
     struct OfferedToken{
