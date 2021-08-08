@@ -1,4 +1,4 @@
-
+[
   {
     "inputs": [],
     "name": "EPIC",
@@ -64,3 +64,4 @@
     "stateMutability": "view",
     "type": "function"
   }
+]

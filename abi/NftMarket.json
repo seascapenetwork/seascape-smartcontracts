@@ -1,4 +1,4 @@
-
+[
 "type": "address"
 },
 {
@@ -595,3 +595,4 @@
 "stateMutability": "view",
 "type": "function"
 }
+]
