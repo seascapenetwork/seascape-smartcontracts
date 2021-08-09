@@ -12,16 +12,42 @@ import "./LotteryTicket.sol";
 contract Lottery is AccessControl, Ownable, LotteryCrowns {
     using SafeMath for uint256;
     using Address for address;
+    using Counters for Counters.Counter;
     
     bytes32 public constant STATIC_ROLE = keccak256("STATIC");
     bytes32 public constant GENERATOR_ROLE = keccak256("GENERATOR");
 
-    LotteryTicket internal ticket_;
-    Counters.Counter private lotteryId_;
+    LotteryTicket private ticket;
+    Counters.Counter private sessionId;
 
-    uint8 public sizeOfLottery_;    // how many numbers in one lottery ticket (should be 5)
-    uint16 public maxValidRange_;   // max of each lottery numbers, start at 0 (should be 9)
-
+    uint8 public sizeOfLottery;     // how many numbers in one lottery ticket (should be 5)
+    uint16 public maxValidRange;    // max of each lottery numbers, start at 0 (should be 9)
+    
+    //-------------------------------------------------------------------------
+    // SESSION DATA
+    //-------------------------------------------------------------------------
+    
+    // @notice holds session related data
+    struct Session {
+        uint256 startTime;          // session start in uinx timestamp
+        uint256 roundNum;           // how many rounds in one session
+        uint256 roundBetTime;       // each round bet time in seconds
+        uint256 roundPrizeTime;     // each round get prize time in seconds
+    }
+    
+    // @dev session id => (Session struct)
+    mapping(uint256 => Session) public sessions;
+    
+    uint256 public lastSessionId;
+    uint256 public lastSessionStart;
+    uint256 public lastSessionEnd;
+    uint256 public lastSessionPeriod;
+    uint16[] public lastWinningNumbers;
+    
+    mapping(uint256 => uint16[]) public winningNumbers;
+    
+    bytes32 internal requestId;
+    
     enum Status {
         NotStarted,                 // lottery has not started yet
         Open,                       // lottery is open for ticket purchases
@@ -29,23 +55,10 @@ contract Lottery is AccessControl, Ownable, LotteryCrowns {
         Completed                   // lottery has been closed and the numbers drawn
     }
 
-    struct LotteryRound {
-        uint256 lotteryId;          // id for this round
-        Status lotteryStatus;       // status of this round
-        uint256 prizePool;          // the amount of cws for prize money
-        uint256 ticketPrize;        // cost per ticket in cws
-        uint8[] prizeDistribution;  // the distribution for prize money
-        uint256 startTime;          // block timestamp for start of this round
-        uint256 closeTime;          // block timestamp for end of this round
-        uint16[] winningNumbers;    // the winning numbers
-    }
-
-    // Lottery id to round detail
-    mapping(uint256 => LotteryRound) internal allLotterys_;
-
     //-------------------------------------------------------------------------
     // EVENTS
     //-------------------------------------------------------------------------
+    
     event TicketMinted (
         address indexed minter,
         uint256[] ticketIds,
@@ -53,19 +66,19 @@ contract Lottery is AccessControl, Ownable, LotteryCrowns {
         uint256 totalCost
     );
 
-    event LotteryOpen (
-        uint256 lotteryId,
-        uint256 ticketSupply
+    event SessionStarted (
+        uint256 indexed sessionId
     );
 
-    event LotteryClose (
-        uint256 lotteryId,
-        uint256 ticketSupply
+    event RoundStarted (
+        uint256 indexed sessionId,
+        uint256 indexed roundId
     );
 
     //-------------------------------------------------------------------------
     // MODIFIERS
     //-------------------------------------------------------------------------
+    
     modifier onlyGenerator() {
         require(isGenerator(msg.sender), "Restricted to random generator.");
         _;
@@ -83,8 +96,10 @@ contract Lottery is AccessControl, Ownable, LotteryCrowns {
     //-------------------------------------------------------------------------
     // CONSTRUCTOR
     //-------------------------------------------------------------------------
+    
     constructor(
         address _cws,
+        address _ticket,
         uint8 _sizeOfLotteryNumbers,
         uint16 _maxValidNumberRange
     ) public {
@@ -92,54 +107,127 @@ contract Lottery is AccessControl, Ownable, LotteryCrowns {
         require(_sizeOfLotteryNumbers != 0 && _maxValidNumberRange != 0, "Lottery setup cannot be 0");
 
         setCrowns(_cws);
-        sizeOfLottery_ = _sizeOfLotteryNumbers;
-        maxValidRange_ = _maxValidNumberRange;
-    }
-
-    //-------------------------------------------------------------------------
-    // STATE MODIFYING FUNCTIONS 
-    //-------------------------------------------------------------------------
-    
-    function startSession() external onlyOwner returns(uint256 sessionId) {
+        sizeOfLottery = _sizeOfLotteryNumbers;
+        maxValidRange = _maxValidNumberRange;
         
+        sessionId.increment();  // start session id as 1
+        ticket = LotteryTicket(_ticket);
     }
     
-    function createNewRound(
-        uint8[] calldata _prizeDistribution,
-        uint256 _prizePoolInCws,
-        uint256 _ticketPrize,
-        uint256 _startTime,
-        uint256 _endTime
-    ) external onlyOwner returns(uint256 lotteryId) {
-        require(_prizeDistribution.length == sizeOfLottery_, "Invalid distribution length");
-
-        uint256 prizeDistrubutionTotal = 0;
-        for(uint256 i = 0; i < _prizeDistribution.length; i++) {
-            prizeDistrubutionTotal = prizeDistrubutionTotal.add(uint256(_prizeDistribution[i]));
+    //-------------------------------------------------------------------------
+    // VIEW FUNCTIONS
+    //-------------------------------------------------------------------------
+    
+    function isSessionActive(uint256 _sessionId) internal view returns(bool) {
+        if(now < sessions[_sessionId].startTime || now > sessions[_sessionId].startTime + ((sessions[_sessionId].roundBetTime + sessions[_sessionId].roundPrizeTime) * sessions[_sessionId].roundNum)) {
+            return false;
         }
-
-        require(prizeDistrubutionTotal == 100, "Prize distrubution is not 100");
-        require(_prizePoolInCws > 0 && _ticketPrize > 0, "Prize or ticket price cannot be 0");
-        require(_startTime != 0 && _startTime < _endTime, "Timestamps for lottery invalid");
-
-        //lotteryId_.increment();
-        uint16[] memory winningNumbers = new uint16[](sizeOfLottery_);
-        Status lotteryStatus;
-
-        // if (lotteryId_ > 0) {
-        //     require(!isActive(lastSessionId), "another session is still active");
-        // }
-        // require(_startTime > block.timestamp, "session should start in future");
-        // require(_period > 0, "period should be above 0");
-        // require(_interval > 0 && _interval <= _period,
-        // "interval should be >0 & <period");
-        // require(_fee > 0, "fee should be above 0");
-        // require(_minStake > 0, "minStake should be above 0");
-        // require(_maxStake > _minStake, "maxStake should be > minStake");
-
-        
-    //  if(_startTime >= getCurrentTime()) {
-
-    //  }
+        return true;
     }
+
+    function currentRoundId() external view returns(uint256 roundId) {
+        if(now < lastSessionStart) {
+            roundId = 0;
+        } else {
+            roundId = ((now - lastSessionStart) / lastSessionPeriod) + 1;
+            if(roundId > sessions[lastSessionId].roundNum) {
+                roundId = sessions[lastSessionId].roundNum;
+            }
+        }
+    }
+    
+    function currentRoundStatus() external view returns(Status) {
+        if(now < lastSessionStart) {
+            return Status.NotStarted;
+        }
+        if(now > lastSessionEnd) {
+            return Status.Closed;
+        }
+        uint256 pastTime = (now - lastSessionStart) % lastSessionPeriod;
+        if(pastTime < sessions[lastSessionId].roundBetTime) {
+            return Status.Open;
+        } else {
+            return Status.Completed;
+        }
+    }
+    
+    function getWinningNumbers(uint256 _roundId) external view returns(uint16[] memory) {
+        return winningNumbers[_roundId];
+    }
+
+    //-------------------------------------------------------------------------
+    // STATE MODIFYING FUNCTIONS
+    //-------------------------------------------------------------------------
+    
+    function startSession(
+        uint256 _startTime,     // when the session start
+        uint256 _roundNum,
+        uint256 _betTime,
+        uint256 _prizeTime
+    )
+        external
+        onlyOwner
+    {
+        if(lastSessionId > 0) {
+            require(!isSessionActive(lastSessionId), "another session is still active");
+        }
+        require(_startTime > block.timestamp, "session should start in the future");
+        require(_roundNum > 0, "round number should above 0");
+        require(_betTime > 0, "each round bet time should above 0");
+        require(_prizeTime > 0, "each round prize time should above 0");
+        
+        uint256 _sessionId = sessionId.current();
+        sessions[_sessionId] = Session(
+            _startTime,
+            _roundNum,
+            _betTime,
+            _prizeTime
+        );
+        
+        sessionId.increment();
+        lastSessionId     = _sessionId;
+        lastSessionStart  = _startTime;
+        lastSessionPeriod = _betTime + _prizeTime;
+        lastSessionEnd    = _startTime + (_roundNum * lastSessionPeriod);
+        
+        emit SessionStarted(
+            _sessionId  
+        );
+    }
+    
+    function drawNumbers() external onlyOwner() {
+        require(lastSessionId > 0, "session not started yet");
+        require(now > lastSessionStart && now < lastSessionEnd, "session is end");
+        
+        uint256 _pastTime = (now - lastSessionStart) % lastSessionPeriod;
+        require(_pastTime >= sessions[lastSessionId].roundBetTime, "still in bet period");
+        
+        uint256 _roundId = ((now - lastSessionStart) / lastSessionPeriod) + 1;
+        require(_roundId <= sessions[lastSessionId].roundNum, "max round number reached");
+        
+        uint16[] memory numbers = new uint16[](sizeOfLottery);
+        uint256 _random;
+        for(uint i = 0; i < sizeOfLottery; i++) {
+            _random = uint256(keccak256(abi.encodePacked(block.timestamp, _roundId, i, block.difficulty)));
+            numbers[i] = uint16(_random % 10);
+        }
+        
+        winningNumbers[_roundId] = numbers;
+    }
+    
+    
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
 }
