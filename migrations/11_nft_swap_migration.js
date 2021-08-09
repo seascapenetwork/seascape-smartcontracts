@@ -4,7 +4,8 @@ var Nft = artifacts.require("./SeascapeNft.sol");
 let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 var SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
-
+let SampleSwapParams = artifacts.require("./SampleSwapParams.sol")
+let SampleNft = artifacts.require("./SampleNft.sol");
 
 
 const _feeRate = web3.utils.toWei("1", "ether");
@@ -21,11 +22,17 @@ module.exports = function(deployer, network) {
         });
 
         deployer.deploy(ScapeSwapParams).then(function(){
-            console.log("NftSwap contract was deployed at address: "+ScapeSwapParams.address);
+            console.log("ScapeSwapParams contract was deployed at address: "+ScapeSwapParams.address);
         });
 
         deployer.deploy(SampleERC20Token).then(function(){
-            console.log("NftSwap contract was deployed at address: "+SampleERC20Token.address);
+            console.log("SampleERC20Token contract was deployed at address: "+SampleERC20Token.address);
+        });
+        deployer.deploy(SampleSwapParams).then(function(){
+            console.log("SampleSwapParams contract was deployed at address: "+SampleSwapParams.address);
+        });
+        deployer.deploy(SampleNft).then(function(){
+            console.log("SampleNft contract was deployed at address: "+SampleNft.address);
         });
     }
 };
