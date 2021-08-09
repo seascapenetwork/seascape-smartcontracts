@@ -39,7 +39,7 @@ contract SampleNft is ERC721, ERC721Burnable, Ownable {
 	_;
     }
 
-    function mint(address _to, uint256 _generation, uint8 _quality) public onlyFactory returns(uint256) {
+    function mint(address _to, uint256 _generation, uint8 _quality) public returns(uint256) {
 	uint256 _tokenId = tokenId.current();
 
 	_safeMint(_to, _tokenId);
