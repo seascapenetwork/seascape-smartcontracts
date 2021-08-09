@@ -30,17 +30,18 @@ contract LotteryTicket is ERC721, ERC721Burnable, Ownable {
     }
 
     struct TicketInfo {
-        address owner;
-        uint16[]  numbers;
-        bool    claimed;
-        uint256 lotteryId;
+        address  owner;
+        uint256  sessionId;
+        uint256  roundId;
+        uint16[] numbers;
+        bool     claimed;
     }
 
     // Token ID => Token information 
-    mapping(uint256 => TicketInfo) internal ticketInfo_;
+    mapping(uint256 => TicketInfo) internal ticketInfo;
 
-    // User address => Lottery ID => Ticket IDs
-    mapping(address => mapping(uint256 => uint256[])) internal userTickets_;
+    // User address => Session ID => => Round Id => Ticket IDs
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256[]))) internal userTickets;
 
     /// @dev minting of seascape nfts are done by factory contract only.
     address private factory;
@@ -48,10 +49,11 @@ contract LotteryTicket is ERC721, ERC721Burnable, Ownable {
     //-------------------------------------------------------------------------
     // EVENTS
     //-------------------------------------------------------------------------
-    event batchMinted(
+    event TicketMinted(
         address indexed owner,
-        uint256 lotteryId,
-        uint256 amountOfTokens,
+        uint256 sessionId,
+        uint256 roundId,
+        uint256 ,
         uint256[] tokenIds
     );
 
@@ -76,30 +78,33 @@ contract LotteryTicket is ERC721, ERC721Burnable, Ownable {
     //-------------------------------------------------------------------------
     // VIEW FUNCTIONS
     //-------------------------------------------------------------------------
+    function getCurrentTokenId() external view returns(uint256) {
+        return tokenId.current();
+    }
     function getTicketNumbers(uint256 _ticketId) external view returns(uint16[] memory) {
-        return ticketInfo_[_ticketId].numbers;
+        return ticketInfo[_ticketId].numbers;
     }
 
     function getOwnerOfTicket(uint256 _ticketId) external view returns(address) {
-        return ticketInfo_[_ticketId].owner;
+        return ticketInfo[_ticketId].owner;
     }
 
     function getTicketClaimStatus(uint256 _ticketId) external view returns(bool) {
-        return ticketInfo_[_ticketId].claimed;
+        return ticketInfo[_ticketId].claimed;
     }
 
-    function getUserTickets(uint256 _lotteryId, address _user) external view returns(uint256[] memory) {
-        return userTickets_[_user][_lotteryId];
+    function getUserTickets(uint256 _sessionId, uint256 _roundId, address _user) external view returns(uint256[] memory) {
+        return userTickets[_user][_sessionId][_roundId];
     }
 
-    function getUserTicketsPagination(uint256 _lotteryId, address _user, uint256 cursor, uint256 size) external view returns(uint256[] memory, uint256) {
+    function getUserTicketsPagination(uint256 _sessionId, uint256 _roundId, address _user, uint256 cursor, uint256 size) external view returns(uint256[] memory, uint256) {
         uint256 length = size;
-        if(length > userTickets_[_user][_lotteryId].length - cursor) {
-            length = userTickets_[_user][_lotteryId].length - cursor;
+        if(length > userTickets[_user][_sessionId][_roundId].length - cursor) {
+            length = userTickets[_user][_sessionId][_roundId].length - cursor;
         }
         uint256[] memory values = new uint256[](length);
         for (uint256 i = 0; i < length; i++) {
-            values[i] = userTickets_[_user][_lotteryId][cursor + i];
+            values[i] = userTickets[_user][_sessionId][_roundId][cursor + i];
         }
         return (values, cursor + length);
     }
@@ -107,24 +112,23 @@ contract LotteryTicket is ERC721, ERC721Burnable, Ownable {
     //-------------------------------------------------------------------------
     // MODIFY FUNCTIONS
     //-------------------------------------------------------------------------
-    //function mint(address _to, uint8 _figure1, uint8 _figure2, uint8 _figure3, uint8 _figure4, uint8 _figure5) public onlyFactory returns(uint256) {
-    function mint(address _to, uint256 _lotteryId, uint8 _numberOfTickets, uint16[] calldata _numbers) external onlyFactory returns(uint256[] memory) {
+    function mint(address _to, uint256 _sessionId, uint256 _roundId, uint8 _numberOfTickets, uint16[] calldata _numbers) external onlyFactory returns(uint256[] memory) {
         uint256 _tokenId = tokenId.current();
         uint256[] memory tokenIds = new uint256[](_numberOfTickets);
 
         for(uint8 i = 0; i < _numberOfTickets; i++) {
             tokenIds[i] = _tokenId;
 
-            ticketInfo_[_tokenId] = TicketInfo(_to, _numbers, false, _lotteryId);
+            ticketInfo[_tokenId] = TicketInfo(_to, _sessionId, _roundId, _numbers, false);
 
-            userTickets_[_to][_lotteryId].push(_tokenId);
+            userTickets[_to][_sessionId][_roundId].push(_tokenId);
 
             _safeMint(_to, _tokenId);
 
             tokenId.increment();
         }
 
-        emit batchMinted(_to, _lotteryId, _numberOfTickets, tokenIds);
+        emit TicketMinted(_to, _sessionId, _roundId,  _numberOfTickets, tokenIds);
 
         return tokenIds;
     }
