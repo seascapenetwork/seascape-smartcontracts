@@ -9,16 +9,28 @@ contract ScapeSwapParams is Ownable{
 
     // takes in _encodedData and converts to seascape
     function isValidParams (uint256 _offerId, bytes memory _encodedData,
-      uint8 v, bytes32 r, bytes32 s) public returns (bool){
+      uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 
-      /* (uint256 imgId, uint256 generation, uint8 quality) = this
-          .decodeParams(_encodedData);
+      (uint256 imgId, uint256 generation, uint8 quality) = decodeParams(_encodedData);
+
       bytes32 hash = this.encodeParams(_offerId, imgId, generation, quality);
 
       address signer = ecrecover(hash, v, r, s);
-      require(signer == owner(),  "Verification failed"); */
+      require(signer == owner(),  "Verification failed");
 
     	return true;
+    }
+
+    function getSigner (uint256 _offerId, bytes memory _encodedData,
+      uint8 v, bytes32 r, bytes32 s) public view returns (address){
+
+      (uint256 imgId, uint256 generation, uint8 quality) = decodeParams(_encodedData);
+      bytes32 hash = encodeParams(_offerId, imgId, generation, quality);
+
+      address signer = ecrecover(hash, v, r, s);
+      require(signer == owner(),  "Verification failed");
+
+      return signer;
     }
 
     function encodeParams(
@@ -28,11 +40,12 @@ contract ScapeSwapParams is Ownable{
         uint8 _quality
     )
         public
+        view
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 messageNoPrefix = keccak256(abi
-            .encodePacked(_offerId, _imgId, _generation, _quality));
+            .encode(_offerId, _imgId, _generation, _quality));
         bytes32 hash = keccak256(abi.encodePacked(prefix, messageNoPrefix));
 
         return hash;
@@ -40,6 +53,7 @@ contract ScapeSwapParams is Ownable{
 
     function decodeParams (bytes memory _encodedData)
         public
+        view
         returns (
             uint256 imgId,
             uint256 generation,
@@ -50,5 +64,21 @@ contract ScapeSwapParams is Ownable{
             .decode(_encodedData, (uint256, uint256, uint8));
 
         return (imgId, generation, quality);
+    }
+
+    function encodeParamsWithoutMessage(
+        uint256 _offerId,
+        uint256 _imgId,
+        uint256 _generation,
+        uint8 _quality
+    )
+        public
+        view
+        returns (bytes32 message)
+    {
+        bytes32 messageNoPrefix = keccak256(abi
+            .encodePacked(_offerId, _imgId, _generation, _quality));
+
+        return messageNoPrefix;
     }
 }

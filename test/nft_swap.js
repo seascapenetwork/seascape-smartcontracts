@@ -8,9 +8,12 @@ let SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
 
 contract("Nft Swap", async accounts => {
 
-    async function signParams(bytes){
+    async function signParams(offerId, bytes){
 
-      let data = web3.utils.keccak256(bytes);
+      let bytes32 = web3.eth.abi.encodeParameters(
+        ["uint256"], [offerId]);
+
+      let data = web3.utils.keccak256(bytes32 + bytes.substr(2));
       let hash = await web3.eth.sign(data, gameOwner);
 
       let r = hash.substr(0,66);
@@ -24,17 +27,14 @@ contract("Nft Swap", async accounts => {
     }
 
     //digital signatures
-    function encodeNft(_offerId, _imgId, _gen, _quality) {
+    function encodeNft(_imgId, _gen, _quality) {
       //generating v r s for 4 parameters
       let bytes32 = web3.eth.abi.encodeParameters(
-        ["uint256", "uint256", "uint256"], [_offerId, _imgId, _gen]);
+        ["uint256", "uint256", "uint8"], [_imgId, _gen, _quality]);
 
-      let bytes1 = web3.utils.bytesToHex([_quality]);
-
-      let str = bytes32 + bytes1.substr(2);
-
-      return str;
+      return bytes32;
     }
+
 
 
     let price = web3.utils.toWei("2", "ether");
@@ -190,10 +190,10 @@ contract("Nft Swap", async accounts => {
         // encode requestedToken parameters
         for(let i = 0; i < requestedTokensAmount; i++){
 
-          encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+          encodedData = encodeNft(requestedTokenParams[i][1],
             requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-          let sig = await signParams(encodedData);
+          let sig = await signParams(offersAmount, encodedData);
 
           requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
         }
@@ -252,10 +252,10 @@ contract("Nft Swap", async accounts => {
         // encode requestedToken parameters
         for(let i = 0; i < requestedTokensAmount; i++){
 
-          encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+          encodedData = encodeNft(requestedTokenParams[i][1],
             requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-          let sig = await signParams(encodedData);
+          let sig = await signParams(offersAmount, encodedData);
 
           requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
         }
@@ -311,10 +311,10 @@ contract("Nft Swap", async accounts => {
         // encode requestedToken parameters
         for(let i = 0; i < requestedTokensAmount; i++){
 
-          encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+          encodedData = encodeNft(requestedTokenParams[i][1],
             requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-          let sig = await signParams(encodedData);
+          let sig = await signParams(offersAmount, encodedData);
 
           requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
         }
@@ -334,6 +334,10 @@ contract("Nft Swap", async accounts => {
            {from: seller}).catch(console.error);
            offersAmount ++;
            sellerNftIdCount+=offerTokensAmount;
+
+
+           let totalOffersAmount = parseInt(await nftSwap.getLastOfferId());
+           console.log("offers amount:" ,totalOffersAmount);
 
          //check nft and cws seller balance after
          let sellerNftBalanceAfter = await nft.balanceOf(seller);
@@ -357,6 +361,9 @@ contract("Nft Swap", async accounts => {
         //main contract calls
         let offerCanceled= await nftSwap.cancelOffer(offerId, {from: seller}).catch(console.error);
         sellerNftIdCount-=offerTokensAmount;
+
+        let totalOffersAmount = parseInt(await nftSwap.getLastOfferId());
+        console.log("offers amount:" ,totalOffersAmount);
 
         //check nft, fee and bounty seller balance after
         let sellerNftBalanceAfter = await nft.balanceOf(seller);
@@ -395,10 +402,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -458,10 +465,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -521,10 +528,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -595,10 +602,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -704,10 +711,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -886,10 +893,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
@@ -960,10 +967,10 @@ contract("Nft Swap", async accounts => {
       // encode requestedToken parameters
       for(let i = 0; i < requestedTokensAmount; i++){
 
-        encodedData = encodeNft(offersAmount, requestedTokenParams[i][1],
+        encodedData = encodeNft(requestedTokenParams[i][1],
           requestedTokenParams[i][2], requestedTokenParams[i][3]);
 
-        let sig = await signParams(encodedData);
+        let sig = await signParams(offersAmount, encodedData);
 
         requestedTokensArray[i] = [requestedTokenParams[i][0], encodedData, sig[0], sig[1], sig[2]];
       }
