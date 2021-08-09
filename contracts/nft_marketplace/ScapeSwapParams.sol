@@ -21,18 +21,6 @@ contract ScapeSwapParams is Ownable{
     	return true;
     }
 
-    function getSigner (uint256 _offerId, bytes memory _encodedData,
-      uint8 v, bytes32 r, bytes32 s) public view returns (address){
-
-      (uint256 imgId, uint256 generation, uint8 quality) = decodeParams(_encodedData);
-      bytes32 hash = encodeParams(_offerId, imgId, generation, quality);
-
-      address signer = ecrecover(hash, v, r, s);
-      require(signer == owner(),  "Verification failed");
-
-      return signer;
-    }
-
     function encodeParams(
         uint256 _offerId,
         uint256 _imgId,
@@ -66,19 +54,5 @@ contract ScapeSwapParams is Ownable{
         return (imgId, generation, quality);
     }
 
-    function encodeParamsWithoutMessage(
-        uint256 _offerId,
-        uint256 _imgId,
-        uint256 _generation,
-        uint8 _quality
-    )
-        public
-        view
-        returns (bytes32 message)
-    {
-        bytes32 messageNoPrefix = keccak256(abi
-            .encodePacked(_offerId, _imgId, _generation, _quality));
 
-        return messageNoPrefix;
-    }
 }
