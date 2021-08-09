@@ -28,8 +28,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 offerId;                   // offer ID
         uint8 offeredTokensAmount;         // total offered tokens
         uint8 requestedTokensAmount;       // total requested tokens
-        /* OfferedToken [5] offeredTokens;
-        RequestedToken [5] requestedTokens; */
         uint256 bounty;                    // reward for the buyer
         address bountyAddress;             // currency address for paying bounties
         address payable seller;            // seller's address
@@ -81,8 +79,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 fee,
         uint256 offeredTokensAmount,
         uint256 requestedTokensAmount,
-        uint256 [5] offeredTokens
-        // uint256 [5] requestedTokens
+        OfferedToken [5] offeredTokens,
+        RequestedToken [5] requestedTokens
     );
     event AcceptedOffer(
         uint256 indexed offerId,
@@ -303,18 +301,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         offerObjects[lastOfferId].seller = msg.sender;
         offerObjects[lastOfferId].fee = fee;
 
-        /* offerObjects[lastOfferId] = OfferObject(
-            lastOfferId,
-            _offeredTokensAmount,
-            _requestedTokensAmount,
-            _offeredTokens,
-            _requestedTokens,
-            _bounty,
-            _bountyAddress,
-            msg.sender,
-            fee
-        ); */
-
         /// emit events
         emit CreatedOffer(
             lastOfferId,
@@ -324,12 +310,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             fee,
             _offeredTokensAmount,
             _requestedTokensAmount,
-            [_offeredTokens[0].tokenId,
-            _offeredTokens[1].tokenId,
-            _offeredTokens[2].tokenId,
-            _offeredTokens[3].tokenId,
-            _offeredTokens[4].tokenId]
-            //_requestedTokens [5]
+            _offeredTokens,
+            _requestedTokens
           );
 
         return lastOfferId;
