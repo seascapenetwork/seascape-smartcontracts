@@ -6,7 +6,6 @@ import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
-//import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
@@ -20,10 +19,8 @@ import "./NftSwapParamsInterface.sol";
 contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    //using Counters for Counters.Counter;
 
     SeascapeNft private nft;
-    //Counters.Counter private offersAmount;
 
 
     /// @notice individual offer related data
@@ -56,7 +53,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
 
     /// @dev keep count of offers (aka offerIds)
-    uint256 offersAmount;
+    uint256 lastOfferId;
     /// @notice enable/disable creating and accepting offer.
     bool public tradeEnabled;
     /// @dev fee for creating an offer
@@ -175,7 +172,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice returns amount of offers
     /// @return total amount of offer objects
-    function getOffersAmount() external view returns(uint) { return offersAmount; }
+    function getLastOfferId() external view returns(uint) { return lastOfferId; }
 
     /// @notice change max amount of nfts seller can offer
     /// @param _amount desired limit should be in range 1 - 5
@@ -204,7 +201,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _requestedTokens array of five RequestedToken structs
     /// @param _bounty additional cws to offer to buyer
     /// @param _bountyAddress currency contract address for bounty
-    /// @return offersAmount total amount of offers
+    /// @return lastOfferId total amount of offers
     function createOffer(
         uint8 _offeredTokensAmount,
         OfferedToken [5] memory _offeredTokens,
@@ -267,7 +264,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 "requested nft address unsupported");
             // verify nft parameters
             NftSwapParamsInterface requestedToken = NftSwapParamsInterface (swapParamsAddress);
-            require(requestedToken.isValidParams(offersAmount, _requestedTokens[_index].tokenParams,
+            require(requestedToken.isValidParams(lastOfferId, _requestedTokens[_index].tokenParams,
               _requestedTokens[_index].v, _requestedTokens[_index].r, _requestedTokens[_index].s),
                 "required nft params are invalid");
         }
@@ -290,24 +287,24 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// update states
         // edit here change to .increment()
-        offersAmount++;
+        lastOfferId++;
 
-        offerObjects[offersAmount].offerId = offersAmount;
-        offerObjects[offersAmount].offeredTokensAmount   = _offeredTokensAmount;
-        offerObjects[offersAmount].requestedTokensAmount   = _requestedTokensAmount;
+        offerObjects[lastOfferId].offerId = lastOfferId;
+        offerObjects[lastOfferId].offeredTokensAmount   = _offeredTokensAmount;
+        offerObjects[lastOfferId].requestedTokensAmount   = _requestedTokensAmount;
         for(uint256 i = 0; i < _offeredTokensAmount; i++){
-            offerObjects[offersAmount].offeredTokens[i] = _offeredTokens[i];
+            offerObjects[lastOfferId].offeredTokens[i] = _offeredTokens[i];
         }
         for(uint256 i = 0; i < _requestedTokensAmount; i++){
-            offerObjects[offersAmount].requestedTokens[i] = _requestedTokens[i];
+            offerObjects[lastOfferId].requestedTokens[i] = _requestedTokens[i];
         }
-        offerObjects[offersAmount].bounty = _bounty;
-        offerObjects[offersAmount].bountyAddress = _bountyAddress;
-        offerObjects[offersAmount].seller = msg.sender;
-        offerObjects[offersAmount].fee = fee;
+        offerObjects[lastOfferId].bounty = _bounty;
+        offerObjects[lastOfferId].bountyAddress = _bountyAddress;
+        offerObjects[lastOfferId].seller = msg.sender;
+        offerObjects[lastOfferId].fee = fee;
 
-        /* offerObjects[offersAmount] = OfferObject(
-            offersAmount,
+        /* offerObjects[lastOfferId] = OfferObject(
+            lastOfferId,
             _offeredTokensAmount,
             _requestedTokensAmount,
             _offeredTokens,
@@ -320,7 +317,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// emit events
         emit CreatedOffer(
-            offersAmount,
+            lastOfferId,
             msg.sender,
             _bounty,
             _bountyAddress,
@@ -335,7 +332,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             //_requestedTokens [5]
           );
 
-        return offersAmount;
+        return lastOfferId;
     }
 
     /// @notice make a trade
