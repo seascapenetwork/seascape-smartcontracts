@@ -51,7 +51,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
 
     /// @dev keep count of offers (aka offerIds)
-    uint256 lastOfferId;
+    uint256 public lastOfferId;
     /// @notice enable/disable creating and accepting offer.
     bool public tradeEnabled;
     /// @dev fee for creating an offer
