@@ -417,7 +417,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             crowns.transfer(msg.sender, obj.fee);
         }
 
-
         /// update states
         delete offerObjects[_offerId];
 
