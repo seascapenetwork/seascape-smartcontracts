@@ -1,6 +1,6 @@
 var Crowns = artifacts.require("./CrownsToken.sol");
 
-let test = false;
+let test = true;
 
 module.exports = function(deployer, network) {
 
