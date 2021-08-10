@@ -6,12 +6,12 @@ let Factory = artifacts.require("NftFactory");
 
 let accounts;
 let interval = 120;  // 0.5 minutes
-let period = 3600 * 24 * 3;   // 1 day 
+let period = 3600 * 24 * 1;   // 1 day 
 let generation = 0;
 let dailyWinners = ["120", "50", "30", "15", "10", "5", "5", "5", "5", "5"];
 let allTimeWinners = ["2000", "1000", "500", "300", "300", "300", "200", "200", "100", "100"];
-let nftBrawlAddress = "0xdA5c1d32d3cFb46Ea83E8Cd41E3D5403F0B94Bb7";
-let managerAddress = "0x0055B1e1C499E4133Acf28ec439D5Ac77130b9ad";
+let nftBrawlAddress = "0x48AB61eaa4333d7e05B595F42C52A9E92167Eaf1";
+let managerAddress = "0xc1778DAAA1a6617Fa94A18f37061BA1C7C663806";
 let nftFactoryAddress = "0xc2DED3bCDB5Ee215Ae384903B99a34937DCBF47d";
 let nftAddress = "0xbd23fCD60bD2682dea6A3aad84b498c54d56c494";
 let crownsAddress = "0x93E5529e91f586F70631ce8B2BcCA8d8053D2289";    
@@ -39,31 +39,33 @@ let init = async function() {
         console.log(e);
     }
 
-    await nftBrawl.transferOwnership(managerAddress);
+    // after deploying contract for the first time. Only once should be called
+    // await nftBrawl.transferOwnership(managerAddress);
 
     let sessionId = await nftBrawl.lastSessionId();
     console.log(sessionId +" session id started");
 
-    let nftBrawlOwner = await nftBrawl.owner();
-    let managerOwner = await manager.owner();
-    console.log("Nft brawl owner: "+nftBrawlOwner);
-    console.log("Manager owner: "+managerOwner);
+    // let nftBrawlOwner = await nftBrawl.owner();
+    // let managerOwner = await manager.owner();
+    // console.log("Nft brawl owner: "+nftBrawlOwner);
+    // console.log("Manager owner: "+managerOwner);
     
-    await setAllRewards(manager);
-    console.log("Nft Brawl set the reward sizes");
+    // await setAllRewards(manager);
+    // console.log("Nft Brawl set the reward sizes");
 
-    let factory = await Factory.at(nftFactoryAddress);
-    console.log("Nft Factory contract instance was created");
+    // let factory = await Factory.at(nftFactoryAddress);
+    // console.log("Nft Factory contract instance was created");
 
-    let isGiven = await factory.isGenerator(nftBrawlAddress).catch(e => console.error);
-    if (!isGiven) {
-        await factory.addGenerator(nftBrawlAddress);
-        console.log("Nft Brawl was granted a permission by factory to mint Seascape NFT!");
-    }
-    console.log("Generator was set");
+    // let isGiven = await factory.isGenerator(nftBrawlAddress).catch(e => console.error);
+    // if (!isGiven) {
+        // await factory.addGenerator(nftBrawlAddress);
+        // console.log("Nft Brawl was granted a permission by factory to mint Seascape NFT!");
+    // }
+    // console.log("Generator was set");
 
     //should start a session
-    let startTime = Math.floor(Date.now()/1000) + 180;
+    let startTime = parseInt(new Date(new Date().setUTCHours(0, 0, 0) + (3600 * 24 * 1000)) / 1000);
+
     await manager.startSession(interval,
 				      period,
 				      startTime,
