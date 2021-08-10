@@ -38,6 +38,10 @@ contract ProfitCircus is Ownable {
 		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
 		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+
+		// The following two parameters are used to determine the free claimable nft.
+		uint256 stakeAmount;		// Minimum amount of Tokens to Stake
+		uint256 stakePeriod;        // Minimum period of staking
 	}
 
     /// @notice balance of lp token that each player deposited to game session
@@ -79,11 +83,12 @@ contract ProfitCircus is Ownable {
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
-    function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation) external onlyOwner {
+    function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
 		require(_lpToken != address(0), "Profit Circus: Staking token should not be equal to 0");
 		require(_startTime > block.timestamp, "Profit Circus: Seassion should start in the future");
 		require(_period > 0, "Profit Circus: Session duration should be greater than 0");
 		require(_totalReward > 0, "Profit Circus: Total reward of tokens should be greater than 0");
+		require(_stakeAmount > 0 && _stakePeriod > 0, "Profit Circus: 0 staking requirement");
 
 		// game session for the staked token was already created, then:
 		uint256 _lastId = lastSessionIds[_lpToken];
@@ -100,7 +105,7 @@ contract ProfitCircus is Ownable {
 		uint256 _sessionId = sessionId.current();
 		uint256 _rewardUnit = _totalReward.div(_period);	
 		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
-			0, 0, _startTime);
+			0, 0, _startTime, _stakeAmount, _stakePeriod);
 
 		//--------------------------------------------------------------------
         // updating rest of the session related data
