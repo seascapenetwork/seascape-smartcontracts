@@ -53,6 +53,11 @@ contract ProfitCircus is Ownable {
 									// for every session, user can claim one nft only
 		uint256 claimedReward;
 		uint256 unpaidReward;       // Amount of CWS that contract should pay to user
+
+		// Track staking period in order to claim a free nft.
+		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
+		uint256 stakeDuration;      // The previous staking period that user kept before withdrawing the token.
+		bool mintable;				
 	}
 
     mapping(address => uint256) public lastSessionIds;
@@ -140,7 +145,7 @@ contract ProfitCircus is Ownable {
     // Only game users
     //--------------------------------------------------
 
-    /// @notice deposits _amount of LP token
+    /// @notice deposits _amount of staking token. Staking token could be any ERC20 compatible token
     function deposit(uint256 _sessionId, uint256 _amount) external {
 		require(_amount > 0,          "Profit Circus: Amount to deposit should be greater than 0");
 		require(_sessionId > 0,       "Profit Circus: Session id should be greater than 0!");
@@ -174,6 +179,8 @@ contract ProfitCircus is Ownable {
 
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
 
+		updateTimeProgress(_session, _balance);
+
 		emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
 	}
 
@@ -183,11 +190,14 @@ contract ProfitCircus is Ownable {
 
 		require(_balance.amount > 0, "Profit Circus: No deposit was found");
 		
+		Session storage _session = sessions[_sessionId];
 		updateInterestPerToken(_sessionId);
 
 		_claim(_sessionId);
 
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
+
+		updateTimeProgress(_session, _balance);
 
 		return true;
     }
@@ -233,6 +243,8 @@ contract ProfitCircus is Ownable {
 		// change the session.interestPerToken
 		updateInterestPerToken(_sessionId);
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
+ 		
+		updateTimeProgress(_session, _balance);
 
 		emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
     }
@@ -280,6 +292,41 @@ contract ProfitCircus is Ownable {
     //---------------------------------------------------
     // Internal methods
     //---------------------------------------------------
+
+	function updateTimeProgress(Session storage _session, Balance storage _balance) internal {
+		if (_balance.mintable || _balance.minted) {
+			return;
+		}
+
+        // update time progress
+        // previous stake time
+        if (_balance.amount >= _session.stakeAmount) {
+			if (_balance.stakeTime > 0) {
+				uint256 time = block.timestamp.sub(_balance.stakeTime);
+
+				_balance.stakeDuration = _balance.stakeDuration.add(time);
+				if (_balance.stakeDuration >= _session.stakePeriod) {
+					_balance.mintable = true;
+				}
+			} else {
+				// Player deposits requirement amount of stakings for the first time.
+				_balance.stakeTime = now;
+			}
+        } else {
+			if (_balance.stakeTime > 0) {
+				uint256 time = block.timestamp.sub(_balance.stakeTime);
+
+				_balance.stakeDuration = _balance.stakeDuration.add(time);
+
+				_balance.stakeTime = 0;
+
+				if (_balance.stakeDuration >= _session.stakePeriod) {
+					_balance.mintable = true;
+				}
+			}
+		}
+    }
+
 
     /// @dev check whether the session is active or not
     function isActive(uint256 _sessionId) internal view returns(bool) {
