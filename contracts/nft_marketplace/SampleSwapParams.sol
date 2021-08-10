@@ -13,7 +13,7 @@ contract SampleSwapParams is Ownable{
 
       uint256 imgId = decodeParams(_encodedData);
 
-      bytes32 hash = this.encodeParams(imgId);
+      bytes32 hash = this.encodeParams(_offerId, imgId);
 
       address signer = ecrecover(hash, v, r, s);
       require(signer == owner(),  "Verification failed");
@@ -22,6 +22,7 @@ contract SampleSwapParams is Ownable{
     }
 
     function encodeParams(
+        uint256 _offerId,
         uint256 _imgId
     )
         public
@@ -29,7 +30,7 @@ contract SampleSwapParams is Ownable{
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 messageNoPrefix = keccak256(abi.encode(_imgId));
+        bytes32 messageNoPrefix = keccak256(abi.encode(_offerId, _imgId));
         bytes32 hash = keccak256(abi.encodePacked(prefix, messageNoPrefix));
 
         return hash;
