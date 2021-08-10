@@ -27,13 +27,15 @@ module.exports = async function(deployer, network) {
 			console.log("Don't forget to add Nft Rush in Nft factory into permissioned addresses");
 		});
     } else if (network == "ropsten") {
-		let gelato = "0xCc4CcD69D31F9FfDBD3BFfDe49c6aA886DaB98d9";
-		let crowns = "0xbd23fCD60bD2682dea6A3aad84b498c54d56c494";
-		let factory = "0xc2DED3bCDB5Ee215Ae384903B99a34937DCBF47d";
+		let gelato 			= "0xCc4CcD69D31F9FfDBD3BFfDe49c6aA886DaB98d9";
+		let nft 			= "0xbd23fCD60bD2682dea6A3aad84b498c54d56c494";
+		let crowns 			= "0x3272E6086BDd382291B819fE2596c128E11eC32F";
+		let factory 		= "0xc2DED3bCDB5Ee215Ae384903B99a34937DCBF47d";
 		let nftBrawlAddress = "0xdA5c1d32d3cFb46Ea83E8Cd41E3D5403F0B94Bb7";
 
-		await deployer.deploy(NftBrawl, crowns, factory, minDeposit, maxDeposit)
-		await deployer.deploy(NftBrawlManager, nftBrawlAddress, gelato)
+		await deployer.deploy(NftBrawl, crowns, factory, minDeposit, maxDeposit);
+		nftBrawlAddress = NftBrawl.address;
+		await deployer.deploy(NftBrawlManager, nftBrawlAddress, gelato);
 
 		console.log("Nft Brawl contract was deployed at address: "+NftBrawl.address);
 		console.log("Nft Brawl Manager with Gelato wrapper contract was deployed at address: "+NftBrawlManager.address);
