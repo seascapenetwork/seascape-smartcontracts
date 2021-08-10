@@ -10,7 +10,7 @@ import "./../seascape_nft/NftFactory.sol";
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
 /// @notice Contract is attached to Seascape Nft Factory
-contract LpMining is Ownable {
+contract ProfitCircus is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
