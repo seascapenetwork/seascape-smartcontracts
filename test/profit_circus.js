@@ -1,6 +1,6 @@
 const { assert } = require("chai");
 
-let LpMining = artifacts.require("LpMining");
+let ProfitCircus = artifacts.require("ProfitCircus");
 let LpToken = artifacts.require("LpToken");
 let Crowns = artifacts.require("CrownsToken");
 let Nft = artifacts.require("SeascapeNft");
@@ -17,7 +17,7 @@ contract("Game 1: Lp Mining", async accounts => {
 
     // Game credentials used in multiple test units
     let sessionId = null;
-    let lpMining = null;
+    let profitCircus = null;
     let lpToken = null;
     let crowns = null;
     let nft = null;
@@ -30,11 +30,11 @@ contract("Game 1: Lp Mining", async accounts => {
     // CWS in contract balance is required for game session award.
     it("should transfer the CWS into contract", async () => {
         crowns = await Crowns.deployed();
-        lpMining = await LpMining.deployed();
+        profitCircus = await ProfitCircus.deployed();
 
-        await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
+        await crowns.transfer(profitCircus.address, totalReward, {from: accounts[0]});
 
-        let balance = await crowns.balanceOf.call(lpMining.address);
+        let balance = await crowns.balanceOf.call(profitCircus.address);
         assert.equal(balance, totalReward, "Lp Mining contract balance should match to total reward");
     });
     
@@ -46,10 +46,10 @@ contract("Game 1: Lp Mining", async accounts => {
         lpToken = await LpToken.deployed();
         startTime = Math.floor(Date.now()/1000) + 2;
         
-        await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
+        await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
                         {from: accounts[0]})
 
-        sessionId = await lpMining.lastSessionIds.call(lpToken.address);
+        sessionId = await profitCircus.lastSessionIds.call(lpToken.address);
         
         assert.equal(sessionId, 1, "Started session id expected to be 1");
     });
@@ -60,7 +60,7 @@ contract("Game 1: Lp Mining", async accounts => {
         startTime = Math.floor(Date.now()/1000) + 2;
         
         try {
-            await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
+            await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
                         {from: accounts[0]});
         } catch(e) {
             return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is already active');
@@ -77,13 +77,13 @@ contract("Game 1: Lp Mining", async accounts => {
             await new Promise(resolve => setTimeout(resolve, wait));
 
         
-        await crowns.transfer(lpMining.address, totalReward, {from: accounts[0]});
+        await crowns.transfer(profitCircus.address, totalReward, {from: accounts[0]});
         
         startTime = Math.floor(Date.now()/1000) + 2;	
-        await lpMining.startSession(lpToken.address, totalReward, period, startTime, generation,
+        await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
                     {from: accounts[0]});
 
-        sessionId = await lpMining.lastSessionIds.call(lpToken.address);
+        sessionId = await profitCircus.lastSessionIds.call(lpToken.address);
         assert.equal(sessionId, 2, "Session after period expiration should return inserted ID of 2");
     });
 
@@ -109,9 +109,9 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should approve to deposit some token", async() => {
         let from = accounts[1];
 
-        await lpToken.approve(lpMining.address, depositAmount, {from: from});
+        await lpToken.approve(profitCircus.address, depositAmount, {from: from});
 
-        let allowance = await lpToken.allowance.call(from, lpMining.address);
+        let allowance = await lpToken.allowance.call(from, profitCircus.address);
         assert.equal(allowance, depositAmount, "Deposit amount of Lp Tokens were not allowed to be transferred");
     });
 
@@ -120,11 +120,11 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should deposit a staking token by a player", async() => {
         let from = accounts[1];
 
-        await lpMining.deposit(sessionId, depositAmount, {from: from});
+        await profitCircus.deposit(sessionId, depositAmount, {from: from});
 
-        let session = await lpMining.sessions.call(sessionId);
+        let session = await profitCircus.sessions.call(sessionId);
 
-        let balance = await lpMining.stakedBalanceOf.call(sessionId, from);
+        let balance = await profitCircus.stakedBalanceOf.call(sessionId, from);
 
         assert.equal(balance, depositAmount, "Player Balance in Lp Mining expected to be deposit amount");
     });
@@ -135,8 +135,8 @@ contract("Game 1: Lp Mining", async accounts => {
     it("should produce some Crowns for staked Lp token", async() => {
         let player = accounts[1];
 
-        let session = await lpMining.sessions.call(sessionId);
-        let balance = await lpMining.balances.call(sessionId, player);
+        let session = await profitCircus.sessions.call(sessionId);
+        let balance = await profitCircus.balances.call(sessionId, player);
 
         let time1 = parseInt(new Date()/1000);
 
@@ -156,13 +156,13 @@ contract("Game 1: Lp Mining", async accounts => {
         console.log(`Claimed per Token: ${claimedPerToken} and interest ${interest}`)
 
 
-        let cwsBalance = await lpMining.claimable.call(sessionId, player);
+        let cwsBalance = await profitCircus.claimable.call(sessionId, player);
         console.log(`Earnable balance of the user in 1 second: ${cwsBalance}`);
         
         let wait = 2 * 1000; // milliseconds	
             await new Promise(resolve => setTimeout(resolve, wait));
 
-        let stakedBalance = await lpMining.claimable.call(sessionId, player);
+        let stakedBalance = await profitCircus.claimable.call(sessionId, player);
         console.log(`Earnable balance of the user: ${stakedBalance/1e18}`);
 
         assert.equal(stakedBalance > cwsBalance, true, "Claimables after some time should be increased");
@@ -173,10 +173,10 @@ contract("Game 1: Lp Mining", async accounts => {
     // Player should claim CWS
     it("should claim some Crowns", async() => {
 	let player = accounts[1];
-        let _lpMining = lpMining;
+        let _profitCircus = profitCircus;
 
 	try {
-	    await _lpMining.claim(sessionId, {from: player});
+	    await _profitCircus.claim(sessionId, {from: player});
 	} catch(e) {
 	    assert.fail('Nothing was generated to claim');
 	    return;
@@ -186,9 +186,9 @@ contract("Game 1: Lp Mining", async accounts => {
     
     it("should withdraw all Lp Tokens", async() => {
         let player = accounts[1];
-        await lpMining.withdraw(sessionId, depositAmount, {from: player});
+        await profitCircus.withdraw(sessionId, depositAmount, {from: player});
 
-        balance = await lpMining.stakedBalanceOf.call(sessionId, player);
+        balance = await profitCircus.stakedBalanceOf.call(sessionId, player);
         assert.equal(balance, 0, "Withdrawn Lp Token amount should be 0");
         });
 
@@ -196,7 +196,7 @@ contract("Game 1: Lp Mining", async accounts => {
         let player = accounts[1];
         
         try {
-            await lpMining.claim(sessionId, {from: player});
+            await profitCircus.claim(sessionId, {from: player});
         } catch(e) {
             return assert.equal(e.reason, "Seascape Staking: No deposit was found");
         }
@@ -214,7 +214,7 @@ contract("Game 1: Lp Mining", async accounts => {
         factory = await Factory.deployed();
 
         await nft.setFactory(factory.address);
-        await factory.addStaticUser(lpMining.address);
+        await factory.addStaticUser(profitCircus.address);
     });
 
     // Claiming Seascape Nft.
@@ -224,20 +224,20 @@ contract("Game 1: Lp Mining", async accounts => {
         factory = await Factory.deployed();
 
         await nft.setFactory(factory.address);
-        await factory.addStaticUser(lpMining.address);
+        await factory.addStaticUser(profitCircus.address);
     });
 
     // Claiming Seascape Nft.
     it("should claim Nft", async() => {
         let player = accounts[1];
         
-        await lpMining.claimNft(sessionId, {from: player});
+        await profitCircus.claimNft(sessionId, {from: player});
     });
 
     it("should throw an exception if you claim Nft second time", async() => {
 	    let player = accounts[1];
       try{
-        await lpMining.claimNft(sessionId, {from: player});
+        await profitCircus.claimNft(sessionId, {from: player});
         assert.fail();
       } catch(e) {
         return assert.equal(e.reason, "Seascape Staking: Already minted");

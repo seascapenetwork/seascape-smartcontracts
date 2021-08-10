@@ -1,4 +1,4 @@
-var ProfitCircus = artifacts.require("./LpMining.sol");
+var ProfitCircus = artifacts.require("./ProfitCircus.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 var NftFactory = artifacts.require("./NftFactory.sol");
 
