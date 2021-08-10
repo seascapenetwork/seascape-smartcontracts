@@ -12,7 +12,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus V2 (First Game): [0xa35abb86c53695bb1b23b55808b6c5871432c22c](https://etherscan.io/address/0xa35abb86c53695bb1b23b55808b6c5871432c22c)
  * Nft Brawl (Second game):       [0xe5bD525aaF599B75362d5b1c78ECCc47266adE47](https://etherscan.io/address/0xe5bD525aaF599B75362d5b1c78ECCc47266adE47)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://etherscan.io/address/0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1)
- * Scape Forum (4th game):        [0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b](https://etherscan.io/address/0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b)
+ * Scape Forum (4th game):        [0x031F40ed49047dAfF336aC54372816fE5e724A72](https://etherscan.io/address/0x031F40ed49047dAfF336aC54372816fE5e724A72)
 
 ### Binance Smart chain network
  * Crowns:                        [0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd](https://bscscan.com/token/0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd) 
@@ -22,17 +22,21 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Profit Circus V2 (First Game): [0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B](https://bscscan.com/address/0xCE188BF49Ee072847c95414518EB56C5eB6F0e3B)
  * Nft Brawl (Second game):       [0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF](https://bscscan.com/address/0xDb8B1BD9A47443f7e97CCcF985F0254b191A84eF)
  * Nft Staking (Third game):      [0x29b0d9A9A989e4651488D0002ebf79199cE1b7C1](https://bscscan.com/address/0x29b0d9a9a989e4651488d0002ebf79199ce1b7c1)
- * Scape Forum (4th game):        [0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b](https://bscscan.com/address/0xb3FA53578b30cEBb7A238689Cdba90B9B565Af2b)
+ * Scape Forum (4th game):        [0x31A5bD03f0583a7F720a6C1b595ec8b052871288](https://bscscan.com/address/0x31A5bD03f0583a7F720a6C1b595ec8b052871288)
 
 ### Rinkeby test network
- * Crowns:                        [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
- * Seascape Nft:                  [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
- * Factory:                       [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
- * Profit Circus ( First game):   [0x9f5FdC047e1C53D7255a0069071127A3769a2D48](https://rinkeby.etherscan.io/address/0x9f5FdC047e1C53D7255a0069071127A3769a2D48)
- * Nft Brawl (Second game):       [0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa](https://rinkeby.etherscan.io/address/0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa)
- * Staking Saloon (Third game):   [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
- * Nft Market:                    [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
- * Scape Forum (Fourth game):     [0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f](https://rinkeby.etherscan.io/address/0x3577d8f8cA9BFB1b9ab2d20C572826De1458516f)
+ * Crowns:                              [0x168840Df293413A930d3D40baB6e1Cd8F406719D](https://rinkeby.etherscan.io/token/0x168840Df293413A930d3D40baB6e1Cd8F406719D)
+ * Seascape Nft:                        [0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a](https://rinkeby.etherscan.io/address/0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a)
+ * Factory:                             [0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0](https://rinkeby.etherscan.io/address/0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0)
+ * Profit Circus ( First game):         [0x9f5FdC047e1C53D7255a0069071127A3769a2D48](https://rinkeby.etherscan.io/address/0x9f5FdC047e1C53D7255a0069071127A3769a2D48)
+ * Nft Brawl (Second game):             [0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa](https://rinkeby.etherscan.io/address/0x593b76fc9ee7d412599cdb9aa8a87c19e9b665fa)
+ * Staking Saloon (Third game):         [0xd7512C46b665bd1c9E12D437dd9423F859db515A](https://rinkeby.etherscan.io/address/0xd7512C46b665bd1c9E12D437dd9423F859db515A)
+ * Nft Market:                          [0x9CB160C1b80C2915b3833Bf71b7913FC785150dB](https://rinkeby.etherscan.io/address/0x9CB160C1b80C2915b3833Bf71b7913FC785150dB)
+ * Scape Forum (Fourth game):           [0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A](https://rinkeby.etherscan.io/address/0x3Cd60dEc3F8623B61537A8A681850c776709Ac5A)
+ * Zombie Farm (Fifth game):            [0xf231e63701AF8a325bC041b5aB79c94B06c21e4D](https://rinkeby.etherscan.io/address/0xf231e63701AF8a325bC041b5aB79c94B06c21e4D)
+ * ScapeNft Reward (Zombie Farm):       [0x3B1c875bE0431C49BEdD440f99aD29Ef1225230D](https://rinkeby.etherscan.io/address/0x3B1c875bE0431C49BEdD440f99aD29Ef1225230D)
+ * SingleToken Challenge (Zombie Farm): [0x234fDF5E571f1fFcCf691F65F8E4D80b110b1aF3](https://rinkeby.etherscan.io/address/0x234fDF5E571f1fFcCf691F65F8E4D80b110b1aF3)
+ * LpToken Challenge (Zombie Farm):     [0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7](https://rinkeby.etherscan.io/address/0xaE716E37d4784A24Bdd41ad1320e9fa56f0125C7)
  
  ### Binance Smartchain test network
  * Crowns:                        [0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B](https://testnet.bscscan.com/token/0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B)
@@ -42,7 +46,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
  * Nft Brawl (Second game):       [0xb981EF362416f18477bca004f32920656a5b0F2F](https://testnet.bscscan.com/address/0xb981EF362416f18477bca004f32920656a5b0F2F)
  * Staking Saloon (Third game):   [0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5](https://testnet.bscscan.com/address/0x7D4CE5d7713d9f4FEA4d4A88ed8B930bB43954d5)
  * Nft Market:                    [0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f](https://testnet.bscscan.com/address/0x5d62706C6EB9606eB5fC3a9c03dF5b3D8d5f854f)
- * Scape Forum (Fourth game):     [0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf](https://testnet.bscscan.com/address/0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf)
+ * Scape Forum (Fourth game):     [0x6Bb4FF81aAaF62144d2113c45df07f11Ff2c3dBD](https://testnet.bscscan.com/address/0x6Bb4FF81aAaF62144d2113c45df07f11Ff2c3dBD)
 
  ### Moonbase (Moonbeam on Polkadot) Alpha test network
  * Crowns:                        [0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989](https://moonbeam-explorer.netlify.app/address/0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989)
@@ -56,11 +60,7 @@ It's developed by truffle framework. For more in-depth explanation, please visit
 # Audit
 The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org/).
 
-The details of this contract audits can be seen at [Certik Security Leaderboard - Seascape](https://certik.org/projects/seascape)
-
-The Nft Market and Scape Forum were audited by [Armors Lab](https://armors.io/)
-
-The details of this contract audits can be found in audits folder of this repository.
+The details of all contract audits can be seen at [Certik Security Leaderboard - Seascape](https://certik.org/projects/seascape)
 
 ## This repository depends on the following **submodules**:
  * crowns - an ERC-20 token used as a in-game token of Blocklords. Strategy game on ethereum at https://blocklords.io
