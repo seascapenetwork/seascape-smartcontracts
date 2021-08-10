@@ -252,16 +252,16 @@ contract ProfitCircus is Ownable {
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
     function claimNft(uint256 _sessionId) external {
 		// it also indicates that session exists
+		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
 		require(_balance.claimed.add(_balance.amount) > 0, "Profit Circus: Deposit first");
-
-		// uncomment in a production mode:
-		require(_balance.minted == false, "Profit Circus: Already minted");
+		require(isMintable(_session, _balance), "Profit Circus: already claimed or time not passed");
 
 		uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
 		require(_tokenId > 0,                              "Profit Circus: failed to mint a token");
 		
 		balances[_sessionId][msg.sender].minted = true;
+		balances[_sessionId][msg.sender].mintable = false;
     }
 
     //--------------------------------------------------
@@ -288,6 +288,12 @@ contract ProfitCircus is Ownable {
     function stakedBalance(uint256 _sessionId) external view returns(uint256) {
 		return sessions[_sessionId].amount;
     }
+
+	function isNftClaimable(uint256 _sessionId) external view returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][msg.sender];
+		return isMintable(_session, _balance);
+	}
 
     //---------------------------------------------------
     // Internal methods
@@ -339,6 +345,25 @@ contract ProfitCircus is Ownable {
 
 		return true;
     }
+
+	/// @dev check whether the time progress passed or not
+	function isMintable(Session storage _session, Balance storage _balance) internal view returns(bool) {
+		if (_balance.minted) {
+			return false;
+		}
+		if (_balance.mintable) {
+			return true;
+		}
+
+		uint256 time = _balance.stakeDuration;
+
+        if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
+            uint256 duration = now.sub(_balance.stakeTime);
+            time = time.add(duration);
+        }
+
+        return time >= _session.stakePeriod;
+	}
 
     function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {	    
 		Session storage _session = sessions[_sessionId];
