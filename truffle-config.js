@@ -29,7 +29,7 @@ module.exports = {
 	    skipDryRun: true // To prevent async issues occured on node v. 14. see:
 	    // https://github.com/trufflesuite/truffle/issues/3008
 	},
-  bsc_testnet: {
+  bsctestnet: {
     provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://data-seed-prebsc-2-s1.binance.org:8545/`),
     network_id: 97,
     confirmations: 10,
