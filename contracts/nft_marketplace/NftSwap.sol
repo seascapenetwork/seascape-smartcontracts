@@ -394,9 +394,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice cancel the offer
     /// @param _offerId offer unique ID
-    function cancelOffer(uint _offerId) public {
+    /* function cancelOffer(uint _offerId) public {
         OfferObject storage obj = offerObjects[_offerId];
-        // edit here: check that obj at index (still) exists ^^
         require(obj.seller == msg.sender, "sender is not creator of offer");
 
         /// make transactions
@@ -425,7 +424,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             obj.offerId,
             obj.seller
         );
-    }
+    } */
 
     /// @dev fetch offer object at offerId and nftAddress
     /// @param _offerId unique offer ID
