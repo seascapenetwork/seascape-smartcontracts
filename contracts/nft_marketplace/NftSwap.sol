@@ -320,44 +320,51 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId offer unique ID
     function acceptOffer(
         uint256 _offerId,
-        uint256 _requestedTokensAmount,
         uint256 [5] memory _requestedTokenIds,
-        address [5] memory _requestedTokenAddresses
-        /* uint8 _v,
-        bytes32 _r,
-        bytes32 _s */
+        address [5] memory _requestedTokenAddresses,
+        uint8 [5] memory _v,
+        bytes32 [5] memory _r,
+        bytes32 [5] memory _s
     )
         public
         nonReentrant
         payable
     {
         OfferObject storage obj = offerObjects[_offerId];
-        // edit here: check that obj at index (still) exists ^^
         require(tradeEnabled, "trade is disabled");
-        require(_requestedTokensAmount == obj.requestedTokensAmount);
         require(msg.sender != obj.seller, "cant buy self-made offer");
-        // edit here: require requestedToken. id>0, ownerOf, isApproved, tokenAddress
 
-
-
-        /// digital signature part
-        /// @dev make sure that signature of nft matches with the address of the contract deployer
-        /* bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
-            _offerId,
-            _requestedTokensAmount,
-            _requestedTokenIds,
-            _requestedTokenAddresses
-        ));
-        bytes32 _message = keccak256(abi.encodePacked(
-            "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
-        address _recover = ecrecover(_message, _v, _r, _s);
-        require(_recover == owner(),  "Verification failed"); */
+        /// @dev verify requested tokens
+        for(uint256 i = 0; i < obj.requestedTokensAmount; i++){
+            require(_requestedTokenIds[i] > 0, "nft id must be greater than 0");
+            require(_requestedTokenAddresses[i] == obj.requestedTokens[i].tokenAddress,
+                "wrong requested token address");
+            IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
+            require(nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
+                "sender not owner of nft");
+            require(nft.isApprovedForAll(msg.sender, address(this)),
+                "should allow spending of nfts");
+            for(uint256 j = i; j > 0; j--){
+                if(_requestedTokenAddresses[i] == _requestedTokenAddresses[j-1]){
+                    require(_requestedTokenIds[i] != _requestedTokenIds[j-1],
+                      "cant transfer same nft twice");
+                }
+            }
+            /// digital signature part
+            bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
+                _offerId,
+                //_requestedTokenAddresses[i],
+                _requestedTokenIds[i]
+            ));
+            bytes32 _message = keccak256(abi.encodePacked(
+                "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+            address _recover = ecrecover(_message, _v[i], _r[i], _s[i]);
+            require(_recover == owner(),  "Verification failed");
+        }
 
         /// make transactions
         // send requestedTokens from buyer to seller
         for (uint index = 0; index < obj.requestedTokensAmount; index++) {
-            require(_requestedTokenAddresses[index] == obj.requestedTokens[index].tokenAddress,
-                "wrong requested token address");
             IERC721(_requestedTokenAddresses[index])
                 .safeTransferFrom(msg.sender, obj.seller, _requestedTokenIds[index]);
         }
@@ -381,7 +388,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             obj.bounty,
             obj.bountyAddress,
             obj.fee,
-            _requestedTokensAmount,
+            obj.requestedTokensAmount,
             _requestedTokenIds,
             obj.offeredTokensAmount,
             [obj.offeredTokens[0].tokenId,
