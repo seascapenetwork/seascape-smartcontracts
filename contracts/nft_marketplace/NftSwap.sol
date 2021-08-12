@@ -353,8 +353,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             /// digital signature part
             bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
                 _offerId,
-                //_requestedTokenAddresses[i],
                 _requestedTokenIds[i]
+                //_requestedTokenAddresses[i]
+
             ));
             bytes32 _message = keccak256(abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
