@@ -43,14 +43,32 @@ contract("Nft Swap", async accounts => {
 
       return bytes32;
     }
-    function encodeRequestedNft(_tokenId, _tokenAddress){
+
+    async function encodeRequestedNft(_offerId, _tokenId, _tokenAddress){
+
+      // const data = web3.eth.abi.encodeParameter('address[2]', ['0x0000000000000000000000000000000000000033','0x0000000000000000000000000000000000000044']);
+      //
+      // let bytes32 = web3.eth.abi.encodeParameters(
+      //   ["uint256", "address"], [_tokenId, _tokenAddress]);
+      //
+      // return bytes32;
+
 
       let bytes32 = web3.eth.abi.encodeParameters(
-        ["uint256"], [_tokenId]);
+        ["uint256", "uint256"], [_offerId, _tokenId]);
 
-      return bytes32;
+      let data = web3.utils.keccak256(bytes32);
+      let hash = await web3.eth.sign(data, gameOwner);
+
+      let r = hash.substr(0,66);
+      let s = "0x" + hash.substr(66,64);
+      let v = parseInt(hash.substr(130), 16);
+      if (v < 27) {
+          v += 27;
+      }
+
+      return [v, r, s];
     }
-
 
 
     let price = web3.utils.toWei("2", "ether");
@@ -928,9 +946,9 @@ contract("Nft Swap", async accounts => {
        // encode requestedToken parameters
        for(let i = 0; i < requestedTokensAmount; i++){
 
-         encodedData = encodeRequestedNft(requestedTokenIds[i], requestedTokenAddresses[i]);
+         //encodedData = encodeRequestedNft(requestedTokenIds[i], requestedTokenAddresses[i]);
 
-         let sig = await signParams(offersAmount, encodedData);
+         let sig = await encodeRequestedNft(offersAmount, requestedTokenIds[i], requestedTokenAddresses[i]);
 
          v[i] = sig[0];
          r[i] = sig[1];
