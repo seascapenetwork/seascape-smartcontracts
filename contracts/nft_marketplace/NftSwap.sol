@@ -164,9 +164,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice change fee amount
     /// @param _feeRate set fee to this value.
-    function setFee(uint256 _feeRate) external onlyOwner {
-        fee = _feeRate;
-    }
+    function setFee(uint256 _feeRate) external onlyOwner { fee = _feeRate; }
 
     /// @notice returns amount of offers
     /// @return total amount of offer objects
@@ -221,25 +219,16 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             if (address(crowns) == _bountyAddress) {
                 require(crowns.balanceOf(msg.sender) >= fee + _bounty,
                     "not enough CWS for fee & bounty");
-                require(crowns.allowance(msg.sender, address(this)) >= fee + _bounty,
-                    "should allow spending of crowns");
             } else {
                 require(supportedBountyAddresses[_bountyAddress],
                     "bounty address not supported");
                 IERC20 currency = IERC20(_bountyAddress);
                 require(currency.balanceOf(msg.sender) >= _bounty,
                     "not enough money to pay bounty");
-                require(currency.allowance(msg.sender, address(this)) >= _bounty,
-                    "should allow spending of bounty");
                 require(crowns.balanceOf(msg.sender) >= fee, "not enough CWS for fee");
-                require(crowns.allowance(msg.sender, address(this)) >= fee,
-                    "should allow spending of crowns");
             }
         } else {
-            require(crowns.balanceOf(msg.sender) >= fee,
-                "not enough CWS for fee");
-            require(crowns.allowance(msg.sender, address(this)) >= fee,
-                "should allow spending of crowns");
+            require(crowns.balanceOf(msg.sender) >= fee, "not enough CWS for fee");
         }
         require(tradeEnabled, "trade is disabled");
         /// input token verification
@@ -252,8 +241,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             IERC721 nft = IERC721(_offeredTokens[index].tokenAddress);
             require(nft.ownerOf(_offeredTokens[index].tokenId) == msg.sender,
                 "sender not owner of nft");
-            require(nft.isApprovedForAll(msg.sender, address(this)),
-                "should allow spending of nfts");
         }
         // verify requested nft oddresses
         for (uint _index = 0; _index < _requestedTokensAmount; _index++) {
@@ -287,8 +274,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         lastOfferId++;
 
         offerObjects[lastOfferId].offerId = lastOfferId;
-        offerObjects[lastOfferId].offeredTokensAmount   = _offeredTokensAmount;
-        offerObjects[lastOfferId].requestedTokensAmount   = _requestedTokensAmount;
+        offerObjects[lastOfferId].offeredTokensAmount = _offeredTokensAmount;
+        offerObjects[lastOfferId].requestedTokensAmount = _requestedTokensAmount;
         for(uint256 i = 0; i < _offeredTokensAmount; i++){
             offerObjects[lastOfferId].offeredTokens[i] = _offeredTokens[i];
         }
@@ -342,8 +329,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
             require(nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
                 "sender not owner of nft");
-            require(nft.isApprovedForAll(msg.sender, address(this)),
-                "should allow spending of nfts");
             for(uint256 j = i; j > 0; j--){
                 if(_requestedTokenAddresses[i] == _requestedTokenAddresses[j-1]){
                     require(_requestedTokenIds[i] != _requestedTokenIds[j-1],
@@ -353,8 +338,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             /// digital signature part
             bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
                 _offerId,
-                _requestedTokenIds[i]
-                //_requestedTokenAddresses[i]
+                msg.sender,
+                _requestedTokenIds[i],
+                _requestedTokenAddresses[i]
 
             ));
             bytes32 _message = keccak256(abi.encodePacked(
@@ -402,7 +388,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice cancel the offer
     /// @param _offerId offer unique ID
-    /* function cancelOffer(uint _offerId) public {
+    function cancelOffer(uint _offerId) public {
         OfferObject storage obj = offerObjects[_offerId];
         require(obj.seller == msg.sender, "sender is not creator of offer");
 
@@ -432,7 +418,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             obj.offerId,
             obj.seller
         );
-    } */
+    }
 
     /// @dev fetch offer object at offerId and nftAddress
     /// @param _offerId unique offer ID
