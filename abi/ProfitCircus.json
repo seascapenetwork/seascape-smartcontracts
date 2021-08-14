@@ -276,11 +276,6 @@
         "internalType": "uint256",
         "name": "stakeTime",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "mintable",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
