@@ -56,7 +56,6 @@ contract ProfitCircus is Ownable {
 
 		// Track staking period in order to claim a free nft.
 		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
-		bool mintable;				
 	}
 
     mapping(address => uint256) public lastSessionIds;
@@ -258,7 +257,6 @@ contract ProfitCircus is Ownable {
 		require(_tokenId > 0,                              "Profit Circus: failed to mint a token");
 		
 		balances[_sessionId][msg.sender].minted = true;
-		balances[_sessionId][msg.sender].mintable = false;
     }
 
     //--------------------------------------------------
@@ -305,14 +303,7 @@ contract ProfitCircus is Ownable {
 		// progress the timer.
 		// otherwise reset it.
         if (_balance.amount >= _session.stakeAmount) {
-			if (_balance.stakeTime > 0) {
-				uint256 time = block.timestamp.sub(_balance.stakeTime);
-
-				if (time >= _session.stakePeriod) {
-					_balance.mintable = true;
-				}
-			} else {
-				// Player deposits requirement amount of stakings for the first time.
+			if (_balance.stakeTime == 0) {
 				_balance.stakeTime = now;
 			}
         } else {
@@ -337,9 +328,6 @@ contract ProfitCircus is Ownable {
 	function isMintable(Session storage _session, Balance storage _balance) internal view returns(bool) {
 		if (_balance.minted) {
 			return false;
-		}
-		if (_balance.mintable) {
-			return true;
 		}
 
 		uint256 time = 0;
