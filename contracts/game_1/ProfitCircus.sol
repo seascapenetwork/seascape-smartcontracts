@@ -56,7 +56,6 @@ contract ProfitCircus is Ownable {
 
 		// Track staking period in order to claim a free nft.
 		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
-		uint256 stakeDuration;      // The previous staking period that user kept before withdrawing the token.
 		bool mintable;				
 	}
 
@@ -197,8 +196,6 @@ contract ProfitCircus is Ownable {
 
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
 
-		updateTimeProgress(_session, _balance);
-
 		return true;
     }
 
@@ -300,18 +297,18 @@ contract ProfitCircus is Ownable {
     //---------------------------------------------------
 
 	function updateTimeProgress(Session storage _session, Balance storage _balance) internal {
-		if (_balance.mintable || _balance.minted) {
+		if (_balance.minted) {
 			return;
 		}
 
-        // update time progress
-        // previous stake time
+		// If after withdraw or deposit remained more than minimum required tokens
+		// progress the timer.
+		// otherwise reset it.
         if (_balance.amount >= _session.stakeAmount) {
 			if (_balance.stakeTime > 0) {
 				uint256 time = block.timestamp.sub(_balance.stakeTime);
 
-				_balance.stakeDuration = _balance.stakeDuration.add(time);
-				if (_balance.stakeDuration >= _session.stakePeriod) {
+				if (time >= _session.stakePeriod) {
 					_balance.mintable = true;
 				}
 			} else {
@@ -319,17 +316,7 @@ contract ProfitCircus is Ownable {
 				_balance.stakeTime = now;
 			}
         } else {
-			if (_balance.stakeTime > 0) {
-				uint256 time = block.timestamp.sub(_balance.stakeTime);
-
-				_balance.stakeDuration = _balance.stakeDuration.add(time);
-
-				_balance.stakeTime = 0;
-
-				if (_balance.stakeDuration >= _session.stakePeriod) {
-					_balance.mintable = true;
-				}
-			}
+			_balance.stakeTime = 0;
 		}
     }
 
@@ -355,7 +342,7 @@ contract ProfitCircus is Ownable {
 			return true;
 		}
 
-		uint256 time = _balance.stakeDuration;
+		uint256 time = 0;
 
         if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
             uint256 duration = now.sub(_balance.stakeTime);
