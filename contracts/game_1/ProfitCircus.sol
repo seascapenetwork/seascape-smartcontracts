@@ -287,6 +287,11 @@ contract ProfitCircus is Ownable {
 	function isNftClaimable(uint256 _sessionId) external view returns(bool) {
 		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
+		
+		// session doesn't exist.
+		if (_session.startTime == 0) {
+			return false;
+		}
 		return isMintable(_session, _balance);
 	}
 
