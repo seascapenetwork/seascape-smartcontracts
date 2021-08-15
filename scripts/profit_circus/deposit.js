@@ -1,9 +1,11 @@
-let LpMining = artifacts.require("LpMining");
+let ProfitCircus = artifacts.require("ProfitCircus");
 let LpToken = artifacts.require("LpToken");
 let Crowns = artifacts.require("CrownsToken");
 let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
 
+let depositInt = "5";
+let depositAmount = web3.utils.toWei(depositInt, "ether");
 let accounts;
 
 /**
@@ -12,17 +14,17 @@ let accounts;
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
     let res = init(networkId);
-    console.log("Nft token was claimed successfully!");
+    console.log("Deposit of "+depositInt+" CWS was successful!");
 
     callback(null, res);
 };
 
 let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
-    let lpMining = await LpMining.deployed();
+    let profitCircus = await ProfitCircus.deployed();
     let lpToken = await LpToken.deployed();
 
-    let lastSessionId = await lpMining.lastSessionIds[lpToken];
+    let lastSessionId = await profitCircus.lastSessionIds.call(lpToken.address);
 
     let nft = await Nft.deployed();
     let balance = await nft.balanceOf(accounts[0]);
@@ -30,11 +32,15 @@ let init = async function(networkId) {
     let crowns = await Crowns.deployed();
     let factory = await Factory.deployed();
 
-    return await claimNft(lpMining, lastSessionId);
+    let res =  await deposit(profitCircus, crowns, lastSessionId);
     console.log(res.logs[0]);
 }.bind(this);
 
-let claimNft = async function(lpMining, lastSessionId) {
+let deposit = async function(lpMining, crowns, lastSessionId) {
 
-    return await lpMining.claimNft(lastSessionId, {from: accounts[0]});
+    //should approve nft rush to spend cws of player
+    await crowns.approve(lpMining.address, depositAmount);
+
+    //should spend CWS in nft rush
+    return await lpMining.deposit(lastSessionId, depositAmount, {from: accounts[0]});
 }.bind(this);

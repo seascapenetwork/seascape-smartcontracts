@@ -10,7 +10,7 @@ import "./../seascape_nft/NftFactory.sol";
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
 /// @notice Contract is attached to Seascape Nft Factory
-contract LpMining is Ownable {
+contract ProfitCircus is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
@@ -38,6 +38,10 @@ contract LpMining is Ownable {
 		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
 		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+
+		// The following two parameters are used to determine the free claimable nft.
+		uint256 stakeAmount;		// Minimum amount of Tokens to Stake
+		uint256 stakePeriod;        // Minimum period of staking
 	}
 
     /// @notice balance of lp token that each player deposited to game session
@@ -49,6 +53,9 @@ contract LpMining is Ownable {
 									// for every session, user can claim one nft only
 		uint256 claimedReward;
 		uint256 unpaidReward;       // Amount of CWS that contract should pay to user
+
+		// Track staking period in order to claim a free nft.
+		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
 	}
 
     mapping(address => uint256) public lastSessionIds;
@@ -79,11 +86,12 @@ contract LpMining is Ownable {
     /// time, starting from _startTime. The _totalReward of
     /// CWS tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
-    function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation) external onlyOwner {
+    function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
 		require(_lpToken != address(0), "Profit Circus: Staking token should not be equal to 0");
 		require(_startTime > block.timestamp, "Profit Circus: Seassion should start in the future");
 		require(_period > 0, "Profit Circus: Session duration should be greater than 0");
 		require(_totalReward > 0, "Profit Circus: Total reward of tokens should be greater than 0");
+		require(_stakeAmount > 0 && _stakePeriod > 0, "Profit Circus: 0 staking requirement");
 
 		// game session for the staked token was already created, then:
 		uint256 _lastId = lastSessionIds[_lpToken];
@@ -100,7 +108,7 @@ contract LpMining is Ownable {
 		uint256 _sessionId = sessionId.current();
 		uint256 _rewardUnit = _totalReward.div(_period);	
 		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
-			0, 0, _startTime);
+			0, 0, _startTime, _stakeAmount, _stakePeriod);
 
 		//--------------------------------------------------------------------
         // updating rest of the session related data
@@ -135,7 +143,7 @@ contract LpMining is Ownable {
     // Only game users
     //--------------------------------------------------
 
-    /// @notice deposits _amount of LP token
+    /// @notice deposits _amount of staking token. Staking token could be any ERC20 compatible token
     function deposit(uint256 _sessionId, uint256 _amount) external {
 		require(_amount > 0,          "Profit Circus: Amount to deposit should be greater than 0");
 		require(_sessionId > 0,       "Profit Circus: Session id should be greater than 0!");
@@ -169,6 +177,8 @@ contract LpMining is Ownable {
 
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
 
+		updateTimeProgress(_session, _balance);
+
 		emit Deposited(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
 	}
 
@@ -178,6 +188,7 @@ contract LpMining is Ownable {
 
 		require(_balance.amount > 0, "Profit Circus: No deposit was found");
 		
+		Session storage _session = sessions[_sessionId];
 		updateInterestPerToken(_sessionId);
 
 		_claim(_sessionId);
@@ -228,6 +239,8 @@ contract LpMining is Ownable {
 		// change the session.interestPerToken
 		updateInterestPerToken(_sessionId);
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
+ 		
+		updateTimeProgress(_session, _balance);
 
 		emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
     }
@@ -235,11 +248,10 @@ contract LpMining is Ownable {
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
     function claimNft(uint256 _sessionId) external {
 		// it also indicates that session exists
+		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
 		require(_balance.claimed.add(_balance.amount) > 0, "Profit Circus: Deposit first");
-
-		// uncomment in a production mode:
-		require(_balance.minted == false, "Profit Circus: Already minted");
+		require(isMintable(_session, _balance), "Profit Circus: already claimed or time not passed");
 
 		uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
 		require(_tokenId > 0,                              "Profit Circus: failed to mint a token");
@@ -272,9 +284,38 @@ contract LpMining is Ownable {
 		return sessions[_sessionId].amount;
     }
 
+	function isNftClaimable(uint256 _sessionId) external view returns(bool) {
+		Session storage _session = sessions[_sessionId];
+		Balance storage _balance = balances[_sessionId][msg.sender];
+		
+		// session doesn't exist.
+		if (_session.startTime == 0) {
+			return false;
+		}
+		return isMintable(_session, _balance);
+	}
+
     //---------------------------------------------------
     // Internal methods
     //---------------------------------------------------
+
+	function updateTimeProgress(Session storage _session, Balance storage _balance) internal {
+		if (_balance.minted) {
+			return;
+		}
+
+		// If after withdraw or deposit remained more than minimum required tokens
+		// progress the timer.
+		// otherwise reset it.
+        if (_balance.amount >= _session.stakeAmount) {
+			if (_balance.stakeTime == 0) {
+				_balance.stakeTime = now;
+			}
+        } else {
+			_balance.stakeTime = 0;
+		}
+    }
+
 
     /// @dev check whether the session is active or not
     function isActive(uint256 _sessionId) internal view returns(bool) {
@@ -287,6 +328,22 @@ contract LpMining is Ownable {
 
 		return true;
     }
+
+	/// @dev check whether the time progress passed or not
+	function isMintable(Session storage _session, Balance storage _balance) internal view returns(bool) {
+		if (_balance.minted) {
+			return false;
+		}
+
+		uint256 time = 0;
+
+        if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
+            uint256 duration = now.sub(_balance.stakeTime);
+            time = time.add(duration);
+        }
+
+        return time >= _session.stakePeriod;
+	}
 
     function calculateInterest(uint256 _sessionId, address _owner) internal view returns(uint256) {	    
 		Session storage _session = sessions[_sessionId];

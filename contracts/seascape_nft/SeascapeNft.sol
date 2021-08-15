@@ -18,8 +18,8 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     Counters.Counter private tokenId;
 
     struct Params {
-	uint256 quality;   // seascape points
-	uint8 generation;	
+	    uint256 quality;   // seascape points
+	    uint8 generation;	
     }
 
     /// @dev minting of seascape nfts are done by factory contract only.
@@ -46,7 +46,7 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     }
 
     function mint(address _to, uint256 _generation, uint8 _quality) public onlyFactory returns(uint256) {
-	uint256 _tokenId = tokenId.current();
+	    uint256 _tokenId = tokenId.current();
 
         _safeMint(_to, _tokenId);
 
