@@ -205,6 +205,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         _nft.transferFrom(staker, address(this), nftId);
         playerChallenge.nftId = nftId;
         playerChallenge.weight = weight;
+        sessionChallenge.amount = sessionChallenge.amount.add(playerChallenge.weight);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
         playerChallenge.claimedTime = block.timestamp;
@@ -231,7 +232,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256 weight;
 
         /// Staking amount
-        (v, r, s, nftId, weight) = abi.decode(data, (uint8, bytes32, bytes32, uint256, weight));
+        (v, r, s, nftId, weight) = abi.decode(data, (uint8, bytes32, bytes32, uint256, uint256));
         require(nftId > 0, "scape nft null params");
         require(weight > 0, "weight is 0");
 
@@ -337,7 +338,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
             }
 
             playerChallenge.nftId = 0;
-            sessionChallenge.amount = sessionChallenge.amount.sub(weight);
+            sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight);
             updateInterestPerToken(sessionChallenge);
 
             playerChallenge.weight = 0;
