@@ -27,7 +27,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     /// @dev in WEI format.
     uint256 public maxSpend;
 
-    uint256 private signer; 
+    address public signer; 
     
     struct Balance {
 	    uint256 amount;
@@ -106,6 +106,18 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 	    nftFactory = NftFactory(_address);
 
         emit NftFactorySet(_address);
+    }
+
+    
+    /** 
+     *  @notice set signer
+     *
+     *  @param _address a new Address of signer
+     */
+    function setSigner(address _signer) external onlyOwner {
+        require(_signer != address(0), "Signer can't be zero address");
+        require(_signer != signer), "Can't be previous signer");
+        signer = _signer;
     }
 
     /**
