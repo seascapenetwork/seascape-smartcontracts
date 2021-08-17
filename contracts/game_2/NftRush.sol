@@ -116,7 +116,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
      */
     function setSigner(address _signer) external onlyOwner {
         require(_signer != address(0), "Signer can't be zero address");
-        require(_signer != signer), "Can't be previous signer");
+        require(_signer != signer, "Can't be previous signer");
         signer = _signer;
     }
 
