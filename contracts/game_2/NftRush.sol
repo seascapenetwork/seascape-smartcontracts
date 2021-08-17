@@ -108,6 +108,18 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
         emit NftFactorySet(_address);
     }
 
+    
+    /** 
+     *  @notice set signer
+     *
+     *  @param _address a new Address of signer
+     */
+    function setSigner(address _signer) external onlyOwner {
+        require(_signer != address(0), "Signer can't be zero address");
+        require(_signer != signer), "Can't be previous signer");
+        signer = _signer;
+    }
+
     /**
      *  @notice minimum amount of Crowns that players could spend
      *
