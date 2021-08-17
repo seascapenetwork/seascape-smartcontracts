@@ -27,7 +27,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     /// @dev in WEI format.
     uint256 public maxSpend;
 
-    uint256 private signer; 
+    address private signer; 
     
     struct Balance {
 	    uint256 amount;
