@@ -40,35 +40,35 @@ module.exports = async function(deployer, network) {
 		    var nft = "0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a";
 
         await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftBurning contract was deployed at address: " +NftSwap.address);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
 
     } else if (network == "bsctestnet") {
         var crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
   	    var nft = "0x66638F4970C2ae63773946906922c07a583b6069";
 
         await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftBurning contract was deployed at address: " +NftSwap.address);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
 
     } else if (network == "moonbase") {
         var crowns = "0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989";
         var nft = "0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37";
 
         await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftBurning contract was deployed at address: " +NftSwap.address);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
 
     } else if (network == "mainnet") {
         var crowns = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0";
         var nft = "0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad";
 
         await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftBurning contract was deployed at address: " +NftSwap.address);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
 
     } else if (network == "bsc") {
         var crowns = "0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd";
         var nft = "0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8";
 
         await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftBurning contract was deployed at address: " +NftSwap.address);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
     }
 
 };
