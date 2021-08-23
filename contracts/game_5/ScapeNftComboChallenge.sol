@@ -123,7 +123,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         require(_nftAmount > 0 && _nftAmount <= 5, "nft amount");
         for (uint8 i = 0; i < _nftAmount; i++) {
             require(_quality[i] <= 5, "data.quality");
-            require(_imgIdAmount[i] <= 5, "data.imgAmount");
+            //require(_imgIdAmount[i] <= 5, "data.imgAmount");
             require(_generation[i] >= -1, "data.generation");
         }
 
