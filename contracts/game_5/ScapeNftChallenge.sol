@@ -108,7 +108,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
     /// @notice support a new Challenge of this category by Zombie Farm
     /// Each Challenge of this category is different based on their earning, staking or scape nft parameter.
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].stake == address(0), "challenge exists");
+        require(challenges[id].earn == address(0), "challenge exists");
 
         address _earn;
 
@@ -118,7 +118,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint8 _quality;          // Quality (0 if not filtered)
         bool _burn;
 
-        (_earn, _imgIdAmount, _imgId, _generation, _quality, _burn) = 
+        (_earn, _imgIdAmount, _imgId, _generation, _quality, _burn) =
             abi.decode(data, (address, uint8, uint256[5], int8, uint8, bool));
 
         require(_earn != address(0), "data.earn");
@@ -145,7 +145,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        require(challenges[id[offset]].stake != address(0), "single token.challenge is not existing");
+        require(challenges[id[offset]].earn != address(0), "single token.challenge is not existing");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
@@ -153,7 +153,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].stake != address(0), "prev");
+            require(challenges[prevChallengeId[offset]].earn != address(0), "prev");
         }
 
         session.levelId = levelId[offset];
