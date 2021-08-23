@@ -173,7 +173,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         /// Transfer tokens to the Smartcontract
         /// TODO add stake holding option. The stake holding option earns a passive income
         /// by user provided tokens.
-		IERC20 _token = IERC20(challenges.stake);
+		IERC20 _token = IERC20(challenge.stake);
 		require(_token.balanceOf(staker) >= amount,                 "not enough");
 		require(_token.transferFrom(staker, address(this), amount), "transferFrom");
 
@@ -240,7 +240,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             playerChallenge.claimedTime = block.timestamp;
 		}
 
-		IERC20 _token = IERC20(challenges.stake);
+		IERC20 _token = IERC20(challenge.stake);
 
         if (!isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
             if (amount > playerChallenge.overStakeAmount) {
@@ -317,7 +317,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             playerChallenge.claimedTime = block.timestamp;
 		}
 
-		IERC20 _token = IERC20(challenges.stake);
+		IERC20 _token = IERC20(challenge.stake);
 
         if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
             isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
