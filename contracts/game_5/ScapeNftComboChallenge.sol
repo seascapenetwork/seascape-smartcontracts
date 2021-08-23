@@ -146,7 +146,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        require(challenges[id[offset]].stake != address(0), "single token.challenge is not existing");
+        require(challenges[id[offset]].earn != address(0), "single token.challenge is not existing");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
@@ -154,7 +154,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].stake != address(0), "prev");
+            require(challenges[prevChallengeId[offset]].earn != address(0), "prev");
         }
 
         session.levelId = levelId[offset];
