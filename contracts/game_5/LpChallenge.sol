@@ -457,9 +457,9 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 			return false;
 		}
 
-        Params storage challenge = challenges[challengeId];
+    Params storage challenge = challenges[challengeId];
 
-		IERC20 _token = IERC20(challenges.earn);
+		IERC20 _token = IERC20(challenge.earn);
 
 		uint256 contractBalance = _token.balanceOf(pool);
 
