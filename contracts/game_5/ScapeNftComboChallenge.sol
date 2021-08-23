@@ -418,9 +418,9 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
 		// How much of total deposit belongs to player as a floating number
-		if (playerChallenge.weight[staker] == 0 || sessionChallenge.amount == 0) {
+		/* if (playerChallenge.weight[staker] == 0 || sessionChallenge.amount == 0) {
 			return 0;
-		}
+		} */
 
 		uint256 sessionCap = block.timestamp;
 		if (isActive(sessionChallenge.startTime, sessionChallenge.endTime) == false) {
