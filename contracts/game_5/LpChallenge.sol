@@ -22,26 +22,26 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
     struct SessionChallenge {
         uint8 levelId;
-        uint32 prevChallengeId;    // This is the previous challenge id if level is 
+        uint32 prevChallengeId;    // This is the previous challenge id if level is
 
         uint256 totalReward;
         uint256 stakeAmount;        // Required amount to pass the level
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
         uint256 multiplier;         // Increase the progress
-        
+
         uint256 startTime;     		// session start in unixtimestamp
         uint256 endTime;
 
 		uint256 claimed;       		// amount of already claimed CWS
 		uint256 amount;        		// total amount of deposited tokens to the session by users
-		
+
         uint256 rewardUnit;    		// reward per second = totalReward/period
 		uint256 interestPerToken; 	// total earned interest per token since the beginning
 									// of the session
 		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
 		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
-        
+
     }
 
     struct PlayerChallenge {
@@ -72,7 +72,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 	    _;
     }
 
-    event SaveReward(uint256 indexed sessionId, uint8 indexed rewardType, 
+    event SaveReward(uint256 indexed sessionId, uint8 indexed rewardType,
         address indexed token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
     event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
@@ -113,8 +113,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory multiplier;
         uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
@@ -138,7 +138,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         session.multiplier = multiplier[offset];
         session.startTime = startTime;
         session.endTime = startTime + period;
-		session.rewardUnit = reward[offset] / period;	
+		session.rewardUnit = reward[offset] / period;
         session.lastInterestUpdate = startTime;
         session.prevChallengeId = prevChallengeId[offset];
     }
@@ -163,7 +163,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         /// Staking amount
         uint256 amount;
-        (amount) = abi.decode(data, (uint256)); 
+        (amount) = abi.decode(data, (uint256));
         require(amount > 0, "single token:amount==0");
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp), "time completed");
@@ -173,7 +173,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         /// Transfer tokens to the Smartcontract
         /// TODO add stake holding option. The stake holding option earns a passive income
         /// by user provided tokens.
-		IERC20 _token = IERC20(challenge.stake);		
+		IERC20 _token = IERC20(challenges.stake);
 		require(_token.balanceOf(staker) >= amount,                 "not enough");
 		require(_token.transferFrom(staker, address(this), amount), "transferFrom");
 
@@ -194,7 +194,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             // Once the total stake amount has been increased, we update the earnings
             updateInterestPerToken(sessionChallenge);
         }
-		
+
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
         if (total < sessionChallenge.stakeAmount) {
@@ -202,7 +202,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         } else {
             updateTimeProgress(sessionChallenge, playerChallenge);
 
-            playerChallenge.amount = sessionChallenge.stakeAmount; 
+            playerChallenge.amount = sessionChallenge.stakeAmount;
             playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
             playerChallenge.stakedTime = block.timestamp;
 
@@ -229,7 +229,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         /// Staking amount
         uint256 amount;
-        (amount) = abi.decode(data, (uint256)); 
+        (amount) = abi.decode(data, (uint256));
         require(amount <= totalStake, "single token:exceed stake");
 
         updateInterestPerToken(sessionChallenge);
@@ -240,7 +240,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             playerChallenge.claimedTime = block.timestamp;
 		}
 
-		IERC20 _token = IERC20(challenge.stake);		
+		IERC20 _token = IERC20(challenges.stake);
 
         if (!isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
             if (amount > playerChallenge.overStakeAmount) {
@@ -317,11 +317,11 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             playerChallenge.claimedTime = block.timestamp;
 		}
 
-		IERC20 _token = IERC20(challenge.stake);		
+		IERC20 _token = IERC20(challenges.stake);
 
         if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
             isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
-            
+
             uint256 totalStake = playerChallenge.amount + playerChallenge.overStakeAmount;
 
             playerChallenge.amount = 0;
@@ -353,9 +353,9 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-		IERC20 _token = IERC20(challenge.stake);	
+		IERC20 _token = IERC20(challenges.stake);
 
-        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");	
+        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");
 
         playerChallenge.completed = true;
     }
@@ -405,7 +405,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             if (playerChallenge.stakedTime > 0) {
                 uint256 duration = (currentTime - playerChallenge.stakedTime);
                 time = time + duration;
-            
+
                 if (playerChallenge.overStakeAmount > 0) {
                     time = time + (duration * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
                 }
@@ -453,7 +453,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
 		require(playerChallenge.amount > 0, "no deposit");
-		
+
 		uint256 interest = calculateInterest(sessionId, challengeId, staker);
 		if (interest == 0) {
 			return false;
@@ -461,7 +461,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         Params storage challenge = challenges[challengeId];
 
-		IERC20 _token = IERC20(challenge.earn);
+		IERC20 _token = IERC20(challenges.earn);
 
 		uint256 contractBalance = _token.balanceOf(pool);
 
@@ -477,18 +477,18 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 		}
 		sessionChallenge.claimed     = sessionChallenge.claimed + interest;
 		playerChallenge.claimed     = playerChallenge.claimed + interest;
-		
+
         if (interest > contractBalance) {
             _token.transferFrom(pool, staker, contractBalance);
         } else {
             _token.transferFrom(pool, staker, interest);
         }
-			
+
 		//emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
 		return true;
     }
 
-    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {	    
+    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
@@ -509,7 +509,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
 		uint256 claimedPerToken = sessionChallenge.claimedPerToken + (
 			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
-		
+
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
     	uint256 interest = ((playerChallenge.amount * claimedPerToken) / scaler) - playerChallenge.claimedReward;
 
@@ -525,8 +525,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory multiplier;
         uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
 
         return (id[offset], levelId[offset]);
