@@ -4,6 +4,7 @@ import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
 
 
 /// @notice Stake a single scape NFT, and earn ERC20 token
@@ -13,7 +14,7 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 ///     It receives nft id, signature.
 /// If user's nft is in the game, then deposit is unavailable.
 contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
-
+    using SafeMath for uint256;
     // The seascape NFT address
     address scape;
 
@@ -416,7 +417,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-		// How much of total deposit is belong to player as a floating number
+		// How much of total deposit belongs to player as a floating number
 		if (playerChallenge.weight[staker] == 0 || sessionChallenge.amount == 0) {
 			return 0;
 		}
