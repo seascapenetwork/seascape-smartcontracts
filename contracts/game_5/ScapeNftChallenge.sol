@@ -341,10 +341,11 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
             sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight);
             updateInterestPerToken(sessionChallenge);
 
+            uint256 memory claimedAmount = playerChallenge.weight;
             playerChallenge.weight = 0;
         }
 
-   		emit Claim(staker, sessionId, challengeId);
+   		emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
