@@ -107,7 +107,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
     /// @notice support a new Challenge of this category by Zombie Farm
     /// Each Challenge of this category is different based on their earning, staking or scape nft parameter.
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].stake == address(0), "challenge exists");
+        require(challenges[id].earn == address(0), "challenge exists");
 
         address _earn;
 
