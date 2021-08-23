@@ -353,8 +353,6 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-		IERC20 _token = IERC20(challenges.stake);
-
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");
 
         playerChallenge.completed = true;
