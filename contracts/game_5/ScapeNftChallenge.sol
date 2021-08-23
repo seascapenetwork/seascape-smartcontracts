@@ -29,7 +29,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
     struct Category {
         address earn;
-        uint8 imgIdAmount;      // The supported nft category (0 if not filtered) 
+        uint8 imgIdAmount;      // The supported nft category (0 if not filtered)
         uint256[5] imgId;       // Image ids for determining image category
         int8 generation;        // Generation (-1 if not filtered)
         uint8 quality;          // Quality (0 if not filtered)
@@ -38,18 +38,18 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
     struct SessionChallenge {
         uint8 levelId;
-        uint32 prevChallengeId;    // This is the previous challenge id if level is 
+        uint32 prevChallengeId;    // This is the previous challenge id if level is
 
         uint256 totalReward;
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
         uint256 multiplier;         // Increase the progress
 
-        uint256 amount;             // Total weight of staked nfts.        
+        uint256 amount;             // Total weight of staked nfts.
         uint256 startTime;     		// session start in unixtimestamp
         uint256 endTime;
 
 		uint256 claimed;       		// amount of already claimed CWS
-		
+
         uint256 rewardUnit;    		// reward per second = totalReward/period
 		uint256 interestPerToken; 	// total earned interest per token since the beginning
 									// of the session
@@ -87,7 +87,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 	    _;
     }
 
-    event SaveReward(uint256 indexed sessionId, uint8 indexed rewardType, 
+    event SaveReward(uint256 indexed sessionId, uint8 indexed rewardType,
         address indexed token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
     event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
@@ -112,15 +112,15 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         address _earn;
 
-        uint8 _imgIdAmount;      // The supported nft category (0 if not filtered) 
+        uint8 _imgIdAmount;      // The supported nft category (0 if not filtered)
         uint256[5] memory _imgId;       // Image ids for determining image category
         int8 _generation;        // Generation (-1 if not filtered)
         uint8 _quality;          // Quality (0 if not filtered)
         bool _burn;
 
-        (_stake, _imgIdAmount, _imgId, _generation, _quality, _burn) = 
+        (_earn, _imgIdAmount, _imgId, _generation, _quality, _burn) = 
             abi.decode(data, (address, uint8, uint256[5], int8, uint8, bool));
-        
+
         require(_earn != address(0), "data.earn");
         require(_quality <= 5, "data.quality");
         require(_imgIdAmount <= 5, "data.imgAmount");
@@ -139,8 +139,8 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         // multipliers could be 0.
         uint256[5] memory multiplier;           // The time progress speed if the player stakes more
 
-        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
@@ -162,7 +162,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         session.multiplier = multiplier[offset];
         session.startTime = startTime;
         session.endTime = startTime + period;
-		session.rewardUnit = reward[offset] / period;	
+		session.rewardUnit = reward[offset] / period;
         session.lastInterestUpdate = startTime;
         session.prevChallengeId = prevChallengeId[offset];
     }
@@ -325,7 +325,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         playerChallenge.claimedTime = block.timestamp;
 
         if (isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
-	    	IERC721 _nft = IERC721(scape);		
+	    	IERC721 _nft = IERC721(scape);
 
             playerChallenge.stakedTime = 0;
 
@@ -342,7 +342,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
             updateInterestPerToken(sessionChallenge);
 
             playerChallenge.weight = 0;
-        } 
+        }
 
    		emit Claim(staker, sessionId, challengeId);
     }
@@ -421,7 +421,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
 		require(playerChallenge.weight > 0, "no deposit");
-		
+
 		uint256 interest = calculateInterest(sessionId, challengeId, staker);
 		if (interest == 0) {
 			return false;
@@ -445,18 +445,18 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 		}
 		sessionChallenge.claimed     = sessionChallenge.claimed + interest;
 		playerChallenge.claimed     = playerChallenge.claimed + interest;
-		
+
         if (interest > contractBalance) {
             _token.transferFrom(pool, staker, contractBalance);
         } else {
             _token.transferFrom(pool, staker, interest);
         }
-			
+
 		//emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
 		return true;
     }
 
-    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {	    
+    function calculateInterest(uint256 sessionId, uint32 challengeId, address staker) internal view returns(uint256) {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
@@ -477,7 +477,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
 		uint256 claimedPerToken = sessionChallenge.claimedPerToken + (
 			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
-		
+
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
     	uint256 interest = (claimedPerToken / scaler) - playerChallenge.claimedReward;
 
@@ -492,8 +492,8 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256[5] memory multiplier;
         uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = 
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5])); 
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
 
         return (id[offset], levelId[offset]);
