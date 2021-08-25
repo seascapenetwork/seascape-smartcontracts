@@ -6,8 +6,8 @@ module.exports = async function(deployer, network) {
 	let crowns;
 	let factory;
 
-		crowns = "0xfC3C4136f8b2E19a6a759601D1aa4e29A8A502A1";
-		factory = "0x3fd6Db81DD05e6054CBcddB0b2D4De37db2886d9";
+		crowns = "0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911";
+		factory = "0x06fddbD58cb286DC1e7a9eB50eF67c9215478670";
 
 
 	deployer.deploy(ProfitCircus, crowns, factory)
