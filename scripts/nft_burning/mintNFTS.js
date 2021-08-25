@@ -29,17 +29,17 @@ let init = async function(networkId) {
     console.log(`Using ${user}`);
 
     // mint nfts
-    console.log(`attemping to mint ${amountToMint} nfts...`);
-    for(let i=1; i<=amountToMint; i++){
-        let quality = Math.floor(Math.random() * (6 - 1))+1;
-        let minted = await factory.mintQuality(user, generation, quality);
-        console.log(`Nft ${i} with quality ${quality} was minted`);
-        // show progress
-        if(i % 5 == 0){
-          let percentComplete = Math.round(i/amountToMint*10000) / 100
-          console.log(`Minting ${percentComplete}% complete.`);
-        }
-    }
+    // console.log(`attemping to mint ${amountToMint} nfts...`);
+    // for(let i=1; i<=amountToMint; i++){
+    //     let quality = Math.floor(Math.random() * (6 - 1))+1;
+    //     let minted = await factory.mintQuality(user, generation, quality);
+    //     console.log(`Nft ${i} with quality ${quality} was minted`);
+    //     // show progress
+    //     if(i % 5 == 0){
+    //       let percentComplete = Math.round(i/amountToMint*10000) / 100
+    //       console.log(`Minting ${percentComplete}% complete.`);
+    //     }
+    // }
 
     // fetch nft balance
     console.log("Checking users nft balance...");

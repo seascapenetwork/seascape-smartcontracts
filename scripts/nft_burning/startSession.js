@@ -16,8 +16,8 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17");
-    let crowns  = await Crowns.at("0x58Dc7b18D116208C9d1ECc45373A6b3B029566A8");
+    let nftBurning = await NftBurning.at("0x24F30161085c082A637fc3B6B7F3969455260CD1");
+    let crowns  = await Crowns.at("0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911");
     let factory  = await Factory.at("0x06fddbD58cb286DC1e7a9eB50eF67c9215478670");
     let nft     = await Nft.at("0x9ceAB9b5530762DE5409F2715e85663405129e54");
 
@@ -27,7 +27,7 @@ let init = async function(networkId) {
 
 
     // startSession parameters
-    let startTime = Math.floor(Date.now()/1000) + 100;
+    let startTime = Math.floor(Date.now()/1000) + 300;
     let period = 3600 * 24 * 7; // one day * 5
     let generation = 1;
     let interval = 120; // 5 minutes

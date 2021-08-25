@@ -19,7 +19,7 @@ let init = async function(networkId) {
     // contracts
     let factory  = await Factory.at("0x06fddbD58cb286DC1e7a9eB50eF67c9215478670");
     let nft     = await Nft.at("0x9ceAB9b5530762DE5409F2715e85663405129e54");
-    let nftBurning = await NftBurning.at("0x2cd95F7C0259Ff21dCDf951BDB8496Ac22FeBf17");
+    let nftBurning = await NftBurning.at("0x24F30161085c082A637fc3B6B7F3969455260CD1");
 
 
     // global variables
