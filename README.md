@@ -12,7 +12,7 @@ The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://cert
 The details of all contract audits can be seen at [Certik Security Leaderboard - Seascape](https://certik.org/projects/seascape)
 
 ## This repository depends on the following **submodules**:
- * crowns - an ERC-20 token used as a in-game token of Blocklords. Strategy game on ethereum at https://blocklords.io
+ * crowns - an ERC-20 token of Seascape Network. https://seascape.network
 
 # Running up on your machine
 *It uses truffle framework.*
