@@ -39,7 +39,19 @@ module.exports = async function(deployer, network) {
 
 		console.log("Nft Brawl contract was deployed at address: "+NftBrawl.address);
 		console.log("Nft Brawl Manager with Gelato wrapper contract was deployed at address: "+NftBrawlManager.address);
-	} else {
+  } else if (network == "development") {
+    deployer.deploy(NftBrawl, Crowns.address, Factory.address, minDeposit, maxDeposit).then(function(){
+        console.log("Nft Brawl contract was deployed at address: "+NftBrawl.address);
+    });
+  } else if (network == "moonbase") {
+    let crowns = "0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911";
+    let factory = "0x06fddbD58cb286DC1e7a9eB50eF67c9215478670";
+
+        await deployer.deploy(NftBrawl, crowns, factory, minDeposit, maxDeposit).then(function(){
+        console.log("Nft Brawl contract was deployed at address: "+NftBrawl.address);
+      console.log("Don't forget to add Nft Rush in Nft factory into permissioned addresses");
+    });
+  } else {
 		let crowns = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0"
 		let factory = "0x25F4C38FAF75dF9622FECB17Fa830278cd732091";
 
