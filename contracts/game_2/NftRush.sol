@@ -26,6 +26,8 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     /// @notice maximum CWS amount to spend in game.
     /// @dev in WEI format.
     uint256 public maxSpend;
+
+    address public signer; 
     
     struct Balance {
 	    uint256 amount;
@@ -54,6 +56,8 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 
         /// @dev set crowns is defined in Crowns.sol
         setCrowns(_crowns);		
+
+        signer = msg.sender;
 
         minSpend = _minSpend;
         maxSpend = _maxSpend;
@@ -102,6 +106,18 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 	    nftFactory = NftFactory(_address);
 
         emit NftFactorySet(_address);
+    }
+
+    
+    /** 
+     *  @notice set signer
+     *
+     *  @param _signer a new Address of signer
+     */
+    function setSigner(address _signer) external onlyOwner {
+        require(_signer != address(0), "Signer can't be zero address");
+        require(_signer != signer, "Can't be previous signer");
+        signer = _signer;
     }
 
     /**
@@ -220,7 +236,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 	    bytes32 _message = keccak256(abi.encodePacked(_prefix, _messageNoPrefix));
 	    address _recover = ecrecover(_message, _v, _r, _s);
 
-	    require(_recover == owner(),
+	    require(_recover == signer,
 		    "NFT Rush: Failed to verify quality signature");
 	
         uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
