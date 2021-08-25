@@ -31,5 +31,5 @@ let init = async function() {
     // should send crowns to an address
     console.log("Attemping to send crowns...");
     await crowns.transfer("0x5C6107cb3c3662DB1F9336757f89B42a557BF24C", amount, {from: accounts[0]}).catch(console.error);
-    console.log("David Crowns were transferred");
+    console.log("Crowns were transferred");
 };
