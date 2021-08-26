@@ -390,13 +390,16 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         // send crowns and bounty from SC to seller
         if (obj.bounty > 0 && address(crowns) == obj.bountyAddress)
-            require(crowns.transfer(msg.sender, obj.fee + obj.bounty);
+            require(crowns.transfer(msg.sender, obj.fee + obj.bounty), true,
+              "Failed to transfer fee & bounty");
         else {
             if (obj.bounty > 0){
                 IERC20 token = IERC20(obj.bountyAddress);
-                token.transfer(msg.sender, obj.bounty);
+                require(token.transfer(msg.sender, obj.bounty), true,
+                "Failed to transfer bounty");
               }
-            crowns.transfer(msg.sender, obj.fee);
+            require(crowns.transfer(msg.sender, obj.fee), true,
+            "Failed to transfer fee");
         }
 
         /// update states
