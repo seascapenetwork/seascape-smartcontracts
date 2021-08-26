@@ -323,12 +323,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
             require(nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
                 "sender not owner of nft");
-            for(uint256 j = i; j > 0; j--){
-                if(_requestedTokenAddresses[i] == _requestedTokenAddresses[j-1]){
-                    require(_requestedTokenIds[i] != _requestedTokenIds[j-1],
-                      "cant transfer same nft twice");
-                }
-            }
+
             /// digital signature part
             bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
                 _offerId,
@@ -395,7 +390,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         // send crowns and bounty from SC to seller
         if (obj.bounty > 0 && address(crowns) == obj.bountyAddress)
-            crowns.transfer(msg.sender, obj.fee + obj.bounty);
+            require(crowns.transfer(msg.sender, obj.fee + obj.bounty);
         else {
             if (obj.bounty > 0){
                 IERC20 token = IERC20(obj.bountyAddress);
