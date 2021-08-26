@@ -422,7 +422,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId unique offer ID
     /// @return OfferObject at given index
     function getOffer(uint _offerId)
-        internal
+        external
         view
         returns(OfferObject memory)
     {
