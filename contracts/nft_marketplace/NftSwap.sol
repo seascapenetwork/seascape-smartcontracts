@@ -64,11 +64,10 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @dev store offer objects.
     /// @param offerId => OfferObject
     mapping(uint256 => OfferObject) offerObjects;
-    /// @dev parse metadata contract addresses (1 per individual nftSeries)
-    /// @param nftAddress => nftSwapParams contract address
-    mapping(address => address) public nftSwapParamsAddresses;
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedBountyAddresses;
+    /// @dev parse metadata contract addresses (1 per individual nftSeries)
+    /// @param nftAddress => nftSwapParams contract address
     mapping(address => address) public supportedNftAddresses;
 
     event CreatedOffer(
@@ -131,8 +130,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     {
         require(_nftAddress != address(0x0), "invalid nft address");
         require(_nftSwapParamsAddress != address(0x0), "invalid nftSwapParams address");
-        require(nftSwapParamsAddresses[_nftSwapParamsAddress] == address(0x0),
-            "swapParams address already used");
         require(supportedNftAddresses[_nftAddress] == address(0x0),
             "nft address already enabled");
         supportedNftAddresses[_nftAddress] = _nftSwapParamsAddress;
@@ -144,7 +141,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         require(_nftAddress != address(0x0), "invalid address");
         require(supportedNftAddresses[_nftAddress] != address(0),
             "nft address already disabled");
-        delete nftSwapParamsAddresses[supportedNftAddresses[_nftAddress]];
         supportedNftAddresses[_nftAddress] = address(0x0);
     }
 
