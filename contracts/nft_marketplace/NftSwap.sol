@@ -194,9 +194,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @return lastOfferId total amount of offers
     function createOffer(
         uint8 _offeredTokensAmount,
-        OfferedToken [5] memory _offeredTokens,
+        OfferedToken [5] calldata _offeredTokens,
         uint8 _requestedTokensAmount,
-        RequestedToken [5] memory _requestedTokens,
+        RequestedToken [5] calldata _requestedTokens,
         uint256 _bounty,
         address _bountyAddress
     )
@@ -301,11 +301,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId offer unique ID
     function acceptOffer(
         uint256 _offerId,
-        uint256 [5] memory _requestedTokenIds,
-        address [5] memory _requestedTokenAddresses,
-        uint8 [5] memory _v,
-        bytes32 [5] memory _r,
-        bytes32 [5] memory _s
+        uint256 [5] calldata _requestedTokenIds,
+        address [5] calldata _requestedTokenAddresses,
+        uint8 [5] calldata _v,
+        bytes32 [5] calldata _r,
+        bytes32 [5] calldata _s
     )
         external
         nonReentrant
