@@ -104,7 +104,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _nftAddress initial nft collection token address (Scapes)
     constructor(uint256 _feeRate, address _crownsAddress, address _nftAddress) public {
         /// @dev set crowns is defined in Crowns.sol
+        require(_crownsAddress != address(0x0), "invalid cws address");
         setCrowns(_crownsAddress);
+        require(_nftAddress != address(0x0), "invalid nft address");
         nft = SeascapeNft(_nftAddress);
         fee = _feeRate;
     }
@@ -186,10 +188,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         maxRequestedTokens = _amount;
     }
 
-    //--------------------------------------------------
-    // Public methods
-    //--------------------------------------------------
-
     /// @notice create a new offer
     /// @param _offeredTokensAmount how many nfts to offer
     /// @param _offeredTokens array of five OfferedToken structs
@@ -206,7 +204,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 _bounty,
         address _bountyAddress
     )
-        public
+        external
         returns(uint256)
     {
         /// require statements
@@ -313,7 +311,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         bytes32 [5] memory _r,
         bytes32 [5] memory _s
     )
-        public
+        external
         nonReentrant
         payable
     {
@@ -388,7 +386,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice cancel the offer
     /// @param _offerId offer unique ID
-    function cancelOffer(uint _offerId) public {
+    function cancelOffer(uint _offerId) external {
         OfferObject storage obj = offerObjects[_offerId];
         require(obj.seller == msg.sender, "sender is not creator of offer");
 
@@ -430,6 +428,10 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     {
         return offerObjects[_offerId];
     }
+
+    //--------------------------------------------------
+    // Public methods
+    //--------------------------------------------------
 
     /// @dev encrypt token data
     function onERC721Received(

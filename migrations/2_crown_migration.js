@@ -1,9 +1,9 @@
 var Crowns = artifacts.require("./CrownsToken.sol");
 
+let type = 1;
+
 module.exports = function(deployer, network) {
-    //if (network == "development") {
-	deployer.deploy(Crowns).then(function(){
-	    console.log("Crowns Test token contract was deployed at address: "+Crowns.address);
-	});
-    //}
-};
+    deployer.deploy(Crowns, type).then(function(){
+	    console.log("Crowns deployed on "+Crowns.address);
+    });
+}
