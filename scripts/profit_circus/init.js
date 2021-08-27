@@ -28,6 +28,12 @@ let init = async function(networkId) {
     console.log(accounts);
 
     //rinkeby
+    let profitCircus    =  await ProfitCircus.deployed("0xfb96487f0dC8ecad503C5E575E1d23d837475f25");
+    // let factory         = await Factory.at("0x3fd6Db81DD05e6054CBcddB0b2D4De37db2886d9");
+  	let crowns          = await Crowns.deployed();
+    // let lpTokenAddress  = await LpToken.at("0xb0CD1a0C95497d822780e763253A4532d6C63369");
+
+    //rinkeby
     // let profitCircus    =  await ProfitCircus.at("0xfb96487f0dC8ecad503C5E575E1d23d837475f25");
     // let factory         = await Factory.at("0x3fd6Db81DD05e6054CBcddB0b2D4De37db2886d9");
   	// let crowns          = await Crowns.at("0xfC3C4136f8b2E19a6a759601D1aa4e29A8A502A1");
@@ -53,7 +59,7 @@ let init = async function(networkId) {
 
     console.log("starting the session..");
     let startTime = Math.floor(new Date().getTime()/1000) + 300;
-    await profitCircus.startSession(lpTokenAddress.address, reward, period, startTime, generation, stakeAmount, stakePeriod)
+    await profitCircus.startSession(crowns.address, lpTokenAddress.address, reward, period, startTime, generation, stakeAmount, stakePeriod)
       .catch(console.error);
     console.log("Session started");
 

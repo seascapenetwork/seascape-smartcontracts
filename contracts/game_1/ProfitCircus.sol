@@ -19,18 +19,17 @@ contract ProfitCircus is Ownable {
 	
     NftFactory nftFactory;
   
-    IERC20 public immutable CWS;
-
     Counters.Counter private sessionId;
 
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
-		address stakingToken;  		// staked token, users earn CWS token
-        uint256 totalReward;   		// amount of CWS to airdrop
+		address rewardToken;		// The token that user is farming
+		address stakingToken;  		// staked token, users earn reward token
+        uint256 totalReward;   		// amount of reward tokens to airdrop
 		uint256 period;        		// session duration in seconds
 		uint256 startTime;     		// session start in unixtimestamp
 		uint256 generation;    		// Seascape Nft generation given for minted NFT in the game
-		uint256 claimed;       		// amount of already claimed CWS
+		uint256 claimed;       		// amount of already claimed reward token
 		uint256 amount;        		// total amount of deposited tokens to the session by users
 		uint256 rewardUnit;    		// reward per second = totalReward/period
 		uint256 interestPerToken; 	// total earned interest per token since the beginning
@@ -46,13 +45,13 @@ contract ProfitCircus is Ownable {
 
     /// @notice balance of lp token that each player deposited to game session
     struct Balance {
-		uint256 amount;        		// amount of deposited token
-		uint256 claimed;       		// amount of claimed CWS reward
+		uint256 amount;        		// amount of staked token
+		uint256 claimed;       		// amount of claimed reward token
 		uint256 claimedTime;
 		bool minted;           		// Seascape Nft is claimed or not,
 									// for every session, user can claim one nft only
 		uint256 claimedReward;
-		uint256 unpaidReward;       // Amount of CWS that contract should pay to user
+		uint256 unpaidReward;       // Amount of reward token that contract should pay to user
 
 		// Track staking period in order to claim a free nft.
 		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
@@ -63,16 +62,13 @@ contract ProfitCircus is Ownable {
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTimes;
 
-    event SessionStarted(address indexed stakingToken, uint256 sessionIdd, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
+    event SessionStarted(address indexed rewardToken, address indexed stakingToken, uint256 indexed sessionIdd, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event Claimed(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 claimedTime);
     event Withdrawn(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event FactorySet(address indexed factoryAddress);	
 
-    /// @dev CWS is not changable after contract deployment.
-    constructor(IERC20 _cws, address _nftFactory) public {
-		CWS = _cws;
-
+    constructor(address _nftFactory) public {
 		sessionId.increment(); 	// starts at value 1
 
 		nftFactory = NftFactory(_nftFactory);
@@ -84,9 +80,9 @@ contract ProfitCircus is Ownable {
 
     /// @notice Starts a staking session for a finit _period of
     /// time, starting from _startTime. The _totalReward of
-    /// CWS tokens will be distributed in every second. It allows to claim a
+    /// Reward tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
-    function startSession(address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
+    function startSession(address _rewardToken, address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
 		require(_lpToken != address(0), "Profit Circus: Staking token should not be equal to 0");
 		require(_startTime > block.timestamp, "Profit Circus: Seassion should start in the future");
 		require(_period > 0, "Profit Circus: Session duration should be greater than 0");
@@ -99,15 +95,21 @@ contract ProfitCircus is Ownable {
 			require(isActive(_lastId)==false,     "Profit Circus: Can't start when session is already active");
 		}
 
-		// required CWS balance of this contract
-		require(CWS.balanceOf(address(this)) >= _totalReward, "Profit Circus: Not enough balance of Crowns for reward");
+		if (_rewardToken != address(0)) {
+			IERC20 _reward = IERC20(_rewardToken);
+
+			// required reward balance of this contract
+			require(_reward.balanceOf(address(this)) >= _totalReward, "Profit Circus: Not enough balance of reward token");
+		} else {
+			require(address(this).balance >= _totalReward, "Profit Circus: Not enough balance of native reward");
+		}
 
 		//--------------------------------------------------------------------
 		// creating the session
 		//--------------------------------------------------------------------
 		uint256 _sessionId = sessionId.current();
 		uint256 _rewardUnit = _totalReward.div(_period);	
-		sessions[_sessionId] = Session(_lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
+		sessions[_sessionId] = Session(_rewardToken, _lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
 			0, 0, _startTime, _stakeAmount, _stakePeriod);
 
 		//--------------------------------------------------------------------
@@ -116,7 +118,7 @@ contract ProfitCircus is Ownable {
 		sessionId.increment();
 		lastSessionIds[_lpToken] = _sessionId;
 
-		emit SessionStarted(_lpToken, _sessionId, _totalReward, _startTime, _startTime + _period, _generation);
+		emit SessionStarted(_rewardToken, _lpToken, _sessionId, _totalReward, _startTime, _startTime + _period, _generation);
     }
      
     /// @dev sets an nft factory, a smartcontract that mints tokens.
@@ -131,10 +133,19 @@ contract ProfitCircus is Ownable {
 	function payDebt(uint256 _sessionId, address _address) external onlyOwner {
 		Balance storage _balance = balances[_sessionId][_address];
 		if (_balance.unpaidReward > 0) {
-			uint256 crownsBalance = CWS.balanceOf(address(this));
-			require(crownsBalance >= _balance.unpaidReward, "Profit Circus: Not enough Crowns to transfer!");
+			address _rewardToken = sessions[_sessionId].rewardToken;
+			
+			if (_rewardToken != address(0)) {
+				IERC20 _reward = IERC20(_rewardToken);
 
-			_safeTransfer(_address, _balance.unpaidReward);
+				uint256 _contractBalance = _reward.balanceOf(address(this));
+				require(_contractBalance >= _balance.unpaidReward, "Profit Circus: Not enough reward token to transfer!");
+			} else {
+				require(address(this).balance >= _balance.unpaidReward, "Profit Circus: Not enough native reward to transfer!");
+			}
+
+			_safeTransfer(_rewardToken, _address, _balance.unpaidReward);
+			
 			_balance.unpaidReward = 0;
 		}
 	}
@@ -207,12 +218,19 @@ contract ProfitCircus is Ownable {
 
 		updateInterestPerToken(_sessionId);
 
-		IERC20 _token = IERC20(sessions[_sessionId].stakingToken);
+		IERC20 _token = IERC20(_session.stakingToken);
 			
 		require(_token.balanceOf(address(this)) >= _amount, "Profit Circus: Not enough Lp token in player balance");
 		uint256 _interest = calculateInterest(_sessionId, msg.sender);
 
-		uint256 _contractBalance = CWS.balanceOf(address(this));
+
+		uint256 _contractBalance = 0;
+		if (_session.rewardToken != address(0)) {
+			IERC20 _reward = IERC20(_session.rewardToken);
+			_contractBalance = _reward.balanceOf(address(this));
+		} else {
+			_contractBalance = address(this).balance;
+		}
 		if (_interest > 0 && _contractBalance < _interest) {
 			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
 		}
@@ -220,7 +238,7 @@ contract ProfitCircus is Ownable {
 		_balance.amount = _balance.amount.sub(_amount);
 		_session.amount = _session.amount.sub(_amount);
 
-		/// CWS claims as in claim method
+		/// reward claims as in claim method
 		if (_interest > 0) {
 			_session.claimed     = _session.claimed.add(_interest);	
 			_balance.claimed     = _balance.claimed.add(_interest);
@@ -230,7 +248,7 @@ contract ProfitCircus is Ownable {
 				_balance.claimedTime = block.timestamp;
 			}
 
-			_safeTransfer(msg.sender, _interest);
+			_safeTransfer(_session.rewardToken, msg.sender, _interest);
 			emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);	
 		}
 		require(_token.transfer(msg.sender, _amount), "Profit Circus: Failed to transfer token from contract to user");
@@ -241,7 +259,7 @@ contract ProfitCircus is Ownable {
  		
 		updateTimeProgress(_session, _balance);
 
-		emit Withdrawn(sessions[_sessionId].stakingToken, msg.sender, _sessionId, _amount, block.timestamp, sessions[_sessionId].amount);
+		emit Withdrawn(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
     }
 
     /// @notice Mints an NFT for staker. One NFT per session, per token. and should be a deposit
@@ -267,13 +285,13 @@ contract ProfitCircus is Ownable {
 		return balances[_sessionId][_owner].amount;
     }
 
-    /// @notice Returns amount of CWS Tokens earned by _address
+    /// @notice Returns amount of reward Tokens earned by _address
     function earned(uint256 _sessionId, address _owner) external view returns(uint256) {
 		uint256 _interest = calculateInterest(_sessionId, _owner);
 		return balances[_sessionId][_owner].claimed.add(_interest);
     }
 
-    /// @notice Returns amount of CWS Tokens that _address could claim.
+    /// @notice Returns amount of reward Tokens that _address could claim.
     function claimable(uint256 _sessionId, address _owner) external view returns(uint256) {
 		return calculateInterest(_sessionId, _owner);
     }
@@ -389,7 +407,7 @@ contract ProfitCircus is Ownable {
 		_session.claimedPerToken = _session.claimedPerToken.add(
 			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken));
 
-        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
+        // I record that interestPerToken is 0.1 Reward Token (rewardUnit/amount) in session.interestPerToken
         // I update the session.lastInterestUpdate to now
 		if (_session.amount == 0) {
 			_session.interestPerToken = 0;
@@ -420,7 +438,16 @@ contract ProfitCircus is Ownable {
 		if (_interest == 0) {
 			return false;
 		}
-		uint256 _contractBalance = CWS.balanceOf(address(this));
+
+
+		uint256 _contractBalance = 0;
+
+		if (_session.rewardToken != address(0)) {
+			IERC20 _rewardToken = IERC20(_session.rewardToken);
+			_contractBalance = _rewardToken.balanceOf(address(this));
+		} else {
+			_contractBalance = address(this).balance;
+		}
 		if (_interest > 0 && _contractBalance < _interest) {
 			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
 		}
@@ -434,20 +461,36 @@ contract ProfitCircus is Ownable {
 		_session.claimed     = _session.claimed.add(_interest);
 		_balance.claimed     = _balance.claimed.add(_interest);
 		
-		_safeTransfer(msg.sender, _interest);
+		_safeTransfer(_session.rewardToken, msg.sender, _interest);
 			
 		emit Claimed(_session.stakingToken, msg.sender, _sessionId, _interest, block.timestamp);
 		return true;
     }
 
-	function _safeTransfer(address _to, uint256 _amount) internal {
-		uint256 _crownsBalance = CWS.balanceOf(address(this));
-        if (_amount > _crownsBalance) {
-            CWS.transfer(_to, _crownsBalance);
-        } else {
-            CWS.transfer(_to, _amount);
-        }
+	function _safeTransfer(address _token, address _to, uint256 _amount) internal {
+		if (_token != address(0)) {
+			IERC20 _rewardToken = IERC20(_token);
+
+			uint256 _balance = _rewardToken.balanceOf(address(this));
+        	if (_amount > _balance) {
+            	_rewardToken.transfer(_to, _balance);
+			} else {
+				_rewardToken.transfer(_to, _amount);
+			}
+		} else {
+			uint256 _balance = address(this).balance;
+        	if (_amount > _balance) {
+            	payable(_to).transfer(_balance);
+			} else {
+				payable(_to).transfer(_amount);
+			}
+		}
 	}
+
+	// Accept native tokens.
+	receive() external payable {
+        // React to receiving ether
+    }
 }
 
 
