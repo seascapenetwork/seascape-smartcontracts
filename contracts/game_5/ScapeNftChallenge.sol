@@ -2,9 +2,20 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
 
-/// @notice Stake a one token, and earn another token
-contract LpChallenge is ZombieFarmChallengeInterface {
+/// @notice Stake a single scape NFT, and earn ERC20 token
+///
+/// STAKING:
+/// First time whe user deposits his nft:
+///     It receives nft id, signature.
+/// If user's nft is in the game, then deposit is unavailable.
+contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
+    using SafeMath for uint256;
+    // The seascape NFT address
+    address scape;
 
     address stakeToken;
     address earnToken;
@@ -14,10 +25,15 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
     uint256 private constant scaler = 10**18;
     uint256 private constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public nonce = 0;
 
-    struct Params {
-        address stake;
+    struct Category {
         address earn;
+        uint8 imgIdAmount;      // The supported nft category (0 if not filtered)
+        uint256[5] imgId;       // Image ids for determining image category
+        int8 generation;        // Generation (-1 if not filtered)
+        uint8 quality;          // Quality (0 if not filtered)
+        bool burn;
     }
 
     struct SessionChallenge {
@@ -25,15 +41,14 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         uint32 prevChallengeId;    // This is the previous challenge id if level is
 
         uint256 totalReward;
-        uint256 stakeAmount;        // Required amount to pass the level
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
         uint256 multiplier;         // Increase the progress
 
+        uint256 amount;             // Total weight of staked nfts.
         uint256 startTime;     		// session start in unixtimestamp
         uint256 endTime;
 
 		uint256 claimed;       		// amount of already claimed CWS
-		uint256 amount;        		// total amount of deposited tokens to the session by users
 
         uint256 rewardUnit;    		// reward per second = totalReward/period
 		uint256 interestPerToken; 	// total earned interest per token since the beginning
@@ -41,16 +56,14 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
 		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
-
     }
 
     struct PlayerChallenge {
         uint256 stakedTime;
-        uint256 stakedDuration;
 
-        uint256 amount;        		// amount of deposited token
-        bool counted;               // whether its been counted in the session or not.
-        uint256 overStakeAmount;
+        uint256 weight;             // Weight of the NFT which determines how much it earns
+
+        bool counted;               // whether the stake amount is added to total season amount or not.
 
         uint256 claimed;
 		uint256 claimedTime;
@@ -59,9 +72,11 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 		uint256 unpaidReward;       // Amount of token that contract should pay to user
 
         bool completed;             // Was the challenge in the season completed by the player or not.
+
+        uint256 nftId;              // Nft that user staked in.
     }
 
-    mapping(uint32 => Params) public challenges;
+    mapping(uint32 => Category) public challenges;
     mapping(uint256 => mapping(uint32 => SessionChallenge)) public sessionChallenges;
 
     // session id => challenge id => player address = PlayerChallenge
@@ -76,64 +91,73 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         address indexed token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
     event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
-    event Stake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
-    event Unstake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
-    event Claim(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount, uint256 sessionAmount);
+    event Stake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 nftId);
+    event Unstake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 nftId);
+    event Claim(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount);
 
-    constructor (address _zombieFarm, address _pool) public {
+    constructor (address _zombieFarm, address _scape, address _pool) public {
         require(_zombieFarm != address(0), "_zombieFarm");
+        require(_scape != address(0), "_scape");
         require(_pool != address(0), "_pool");
 
         zombieFarm = _zombieFarm;
+        scape = _scape;
         pool = _pool;
     }
 
-    /// @notice indicates that a new challenge of this challenge category is supported by Zombie Farm
+    /// @notice support a new Challenge of this category by Zombie Farm
+    /// Each Challenge of this category is different based on their earning, staking or scape nft parameter.
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].stake == address(0), "single token challenge exists");
+        require(challenges[id].earn == address(0), "challenge exists");
 
-        address _stake;
         address _earn;
 
-        (_stake, _earn) = abi.decode(data, (address, address));
-        require(_stake != address(0), "data.stake");
-        require(_earn != address(0), "data.earn");
+        uint8 _imgIdAmount;      // The supported nft category (0 if not filtered)
+        uint256[5] memory _imgId;       // Image ids for determining image category
+        int8 _generation;        // Generation (-1 if not filtered)
+        uint8 _quality;          // Quality (0 if not filtered)
+        bool _burn;
 
-        challenges[id] = Params(_stake, _earn);
+        (_earn, _imgIdAmount, _imgId, _generation, _quality, _burn) =
+            abi.decode(data, (address, uint8, uint256[5], int8, uint8, bool));
+
+        require(_earn != address(0), "data.earn");
+        require(_quality <= 5, "data.quality");
+        require(_imgIdAmount <= 5, "data.imgAmount");
+        require(_generation >= -1, "data.generation");
+
+        challenges[id] = Category(_earn, _imgIdAmount, _imgId, _generation, _quality, _burn);
     }
 
-    /// @notice a new challenge of this challenge category was added to the Season.
+    /// @notice The challenges of this category were added to the Zombie Farm season
     function saveChallenge(uint256 sessionId, uint256 startTime, uint256 period, uint8 offset, bytes calldata data) external override onlyZombieFarm {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakeAmount;
-        uint256[5] memory stakePeriod;
+        uint32[5] memory id;                    // Challenge Id
+        uint8[5] memory levelId;                // Level of Zombie Farm to which challenge was added
+        uint32[5] memory prevChallengeId;       // Previous Level Challenge that player should complete
+        uint256[5] memory reward;               // Reward pool that players are farming
+        uint256[5] memory stakePeriod;          // Staking period
         // multipliers could be 0.
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
+        uint256[5] memory multiplier;           // The time progress speed if the player stakes more
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) =
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5]));
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        require(challenges[id[offset]].stake != address(0), "single token.challenge is not existing");
+        require(challenges[id[offset]].earn != address(0), "single token.challenge is not existing");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
-        require(stakeAmount[offset] > 0, "single token.stake amount==0");
         require(stakePeriod[offset] > 0, "single token.stake period==0");
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].stake != address(0), "prev");
+            require(challenges[prevChallengeId[offset]].earn != address(0), "prev");
         }
 
         session.levelId = levelId[offset];
         session.totalReward = reward[offset];
-        session.stakeAmount = stakeAmount[offset];
         session.stakePeriod = stakePeriod[offset];
         session.multiplier = multiplier[offset];
         session.startTime = startTime;
@@ -143,9 +167,12 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         session.prevChallengeId = prevChallengeId[offset];
     }
 
+    /// @notice Stake an nft and some token.
+    /// For the first time whe user deposits his nft:
+    ///     It receives nft id, signature and amount of staking.
     function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
-        Params storage challenge = challenges[challengeId];
+        Category storage challenge = challenges[challengeId];
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
@@ -155,150 +182,85 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "completed");
 
+        require(playerChallenge.nftId == 0, "already staked");
+
         // Previous Challenge should be completed
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
             require(playerPrevChallenge.completed || isCompleted(sessionChallenge, playerPrevChallenge, now), "prev not completed");
         }
 
-        /// Staking amount
-        uint256 amount;
-        (amount) = abi.decode(data, (uint256));
-        require(amount > 0, "single token:amount==0");
+        uint256 nftId;
+        uint256 weight;
+        // It does verification that nft id is valid
+        (nftId, weight) = decodeStakeData(playerChallenge.nftId, playerChallenge.weight, data);
+
+        IERC721 _nft = IERC721(scape);
+        require(_nft.ownerOf(nftId) == staker, "not your nft");
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp), "time completed");
 
         updateInterestPerToken(sessionChallenge);
 
-        /// Transfer tokens to the Smartcontract
-        /// TODO add stake holding option. The stake holding option earns a passive income
-        /// by user provided tokens.
-		IERC20 _token = IERC20(challenge.stake);
-		require(_token.balanceOf(staker) >= amount,                 "not enough");
-		require(_token.transferFrom(staker, address(this), amount), "transferFrom");
+        _nft.transferFrom(staker, address(this), nftId);
+        playerChallenge.nftId = nftId;
+        playerChallenge.weight = weight;
+        sessionChallenge.amount = sessionChallenge.amount.add(playerChallenge.weight);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
-		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
-			_claim(sessionId, challengeId, staker);
-            playerChallenge.claimedTime = block.timestamp;
-		}
+        playerChallenge.claimedTime = block.timestamp;
+        playerChallenge.stakedTime = block.timestamp;
 
-        uint256 total = amount + playerChallenge.amount + playerChallenge.overStakeAmount;
+        updateTimeProgress(sessionChallenge, playerChallenge);
 
-        // I add amount of deposits to session.amount
-        // we add to total stakes, if user deposited >= stakeAmount.
-        if (total >= sessionChallenge.stakeAmount && !playerChallenge.counted) {
-    	    sessionChallenge.amount = sessionChallenge.amount + sessionChallenge.stakeAmount; // 10
-            playerChallenge.counted = true;
+   		updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
 
-            // Once the total stake amount has been increased, we update the earnings
-            updateInterestPerToken(sessionChallenge);
-        }
-
-        // Amount holds only max session.stakeAmount
-        // the remaining part goes to multiply
-        if (total < sessionChallenge.stakeAmount) {
-            playerChallenge.amount = total;
-        } else {
-            updateTimeProgress(sessionChallenge, playerChallenge);
-
-            playerChallenge.amount = sessionChallenge.stakeAmount;
-            playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
-            playerChallenge.stakedTime = block.timestamp;
-
-    		updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
-        }
-
-		emit Stake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
+		emit Stake(staker, sessionId, challengeId, playerChallenge.nftId);
     }
 
-    function unstake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
-        /// General information regarding the Staking token and Earning token
-        Params storage challenge = challenges[challengeId];
+    /// @dev it returns amount for stake and nft id.
+    /// If user already staked, then return the previous staked token.
+    function decodeStakeData(uint256 stakedNftId, uint256 stakedWeight, bytes memory data) internal view returns(uint256, uint256) {
+        if (stakedNftId > 0) {
+            return (stakedNftId, stakedWeight);
+        }
 
-        /// Session Parameters
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token:no exist session");
-
-        /// Player parameters
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed and claimed");
-        require(playerChallenge.amount > 0, "no stake");
-
-        uint256 totalStake = playerChallenge.amount + playerChallenge.overStakeAmount;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 nftId;
+        uint256 weight;
 
         /// Staking amount
-        uint256 amount;
-        (amount) = abi.decode(data, (uint256));
-        require(amount <= totalStake, "single token:exceed stake");
+        (v, r, s, nftId, weight) = abi.decode(data, (uint8, bytes32, bytes32, uint256, uint256));
+        require(nftId > 0, "scape nft null params");
+        require(weight > 0, "weight is 0");
 
-        updateInterestPerToken(sessionChallenge);
+        /// Verify the Scape Nft signature.
+      	/// @dev message is generated as nftId + amount + nonce
+      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, weight, nonce));
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
+      	address _recover = ecrecover(_message, v, r, s);
+      	require(_recover == owner(),  "scape nft+token.nftId, token.weight");
 
-        // before updating player's challenge parameters, we auto-claim earned tokens till now.
-		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
-			_claim(sessionId, challengeId, staker);
-            playerChallenge.claimedTime = block.timestamp;
-		}
-
-		IERC20 _token = IERC20(challenge.stake);
-
-        if (!isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
-            if (amount > playerChallenge.overStakeAmount) {
-                uint256 cut = amount - playerChallenge.overStakeAmount;
-                playerChallenge.amount = playerChallenge.amount - cut;
-
-                // player is removed from earning. so other users gets more.
-                if (playerChallenge.amount < sessionChallenge.stakeAmount) {
-                    sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
-
-                    updateInterestPerToken(sessionChallenge);
-                }
-
-                playerChallenge.overStakeAmount = 0;
-            } else {
-                playerChallenge.overStakeAmount = playerChallenge.overStakeAmount - amount;
-            }
-
-            playerChallenge.stakedDuration = 0;
-            if (playerChallenge.amount == sessionChallenge.stakeAmount) {
-                playerChallenge.stakedTime = now;
-            } else {
-                playerChallenge.stakedTime = 0;
-                playerChallenge.counted = false;
-            }
-
-            /// Transfer tokens to the Smartcontract
-            /// TODO add stake holding option. The stake holding option earns a passive income
-            /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= amount,                 "not enough");
-            require(_token.transfer(staker, amount), "transfer");
-
-       		emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
-        } else {
-            playerChallenge.amount = 0;
-            playerChallenge.overStakeAmount = 0;
-            playerChallenge.stakedTime = 0;
-            playerChallenge.stakedDuration = 0;
-
-            playerChallenge.completed = true;
-
-            sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
-
-            updateInterestPerToken(sessionChallenge);
-
-            /// Transfer tokens to the Smartcontract
-            /// TODO add stake holding option. The stake holding option earns a passive income
-            /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake,                 "not enough");
-            require(_token.transfer(staker, totalStake), "transfer");
-
-       		emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
-        }
+        return (nftId, weight);
     }
 
-    function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
+    /// @notice Unstake an nft and some token.
+    /// If Category is burning, then revert.
+    /// If Category is not burning, then:
+    /// Unstake the nft.
+    /// Claim all earned rewards.
+    /// Unstake the all tokens.
+    /// If the time progress completed, then
+    ///     mark as completed.
+    /// else
+    ///     reset the time progress.
+    /// @dev data variable is not used, but its here for following the ZombieFarm architecture.
+    function unstake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
-        Params storage challenge = challenges[challengeId];
+        Category storage challenge = challenges[challengeId];
+        require(!challenge.burn, "Burning tokens aren't allowed to be unstaked.");
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
@@ -307,55 +269,83 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "completed and claimed");
-        require(playerChallenge.amount > 0, "no stake");
+        require(playerChallenge.nftId > 0, "no stake");
+
+        updateInterestPerToken(sessionChallenge);
+
+        bool timeCompleted = isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+
+        // before updating player's challenge parameters, we auto-claim earned tokens till now.
+        _claim(sessionId, challengeId, staker);
+        playerChallenge.claimedTime = block.timestamp;
+
+        IERC721 _nft = IERC721(scape);
+        _nft.transferFrom(address(this), staker, playerChallenge.nftId);
+
+        playerChallenge.nftId = 0;
+
+        if (timeCompleted) {
+            playerChallenge.completed = true;
+        }
+
+        sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight);
+        playerChallenge.weight = 0;
+        playerChallenge.stakedTime = 0;
+        playerChallenge.claimedReward = 0;
+
+       	emit Unstake(staker, sessionId, challengeId, 0);
+    }
+
+    /// @notice CLAIMING:
+    /// Claim all earned tokens.
+    /// If time progress completed, then
+    ///     Withdraw all staked tokens.
+    ///     If Category is burning, then
+    ///         Burn nft.
+    ///     else
+    ///         Transfer back to user.
+    ///     Mark as completed.
+    function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
+        /// General information regarding the Staking token and Earning token
+        Category storage challenge = challenges[challengeId];
+
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        require(sessionChallenge.levelId > 0, "single token:no exist session");
+
+        /// Player parameters
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        require(!playerChallenge.completed, "completed and claimed");
+        require(playerChallenge.nftId > 0, "no stake");
 
         updateInterestPerToken(sessionChallenge);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
-		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
-			_claim(sessionId, challengeId, staker);
-            playerChallenge.claimedTime = block.timestamp;
-		}
+    	_claim(sessionId, challengeId, staker);
+        playerChallenge.claimedTime = block.timestamp;
 
-		IERC20 _token = IERC20(challenge.stake);
+        if (isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
+	    	IERC721 _nft = IERC721(scape);
 
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
-
-            uint256 totalStake = playerChallenge.amount + playerChallenge.overStakeAmount;
-
-            playerChallenge.amount = 0;
-            playerChallenge.overStakeAmount = 0;
             playerChallenge.stakedTime = 0;
-            playerChallenge.stakedDuration = 0;
 
             playerChallenge.completed = true;
 
-            sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
+            if (challenge.burn) {
+                _nft.transferFrom(address(this), address(0), playerChallenge.nftId);
+            } else {
+                _nft.transferFrom(address(this), staker, playerChallenge.nftId);
+            }
 
+            playerChallenge.nftId = 0;
+            sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight);
             updateInterestPerToken(sessionChallenge);
 
-            /// Transfer tokens to the Smartcontract
-            /// TODO add stake holding option. The stake holding option earns a passive income
-            /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake,                 "not enough");
-            require(_token.transfer(staker, totalStake), "transfer");
-
-       		emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
+            uint256 memory claimedAmount = playerChallenge.weight;
+            playerChallenge.weight = 0;
         }
-    }
 
-    /// Set session as complete
-    function complete(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
-        /// Session Parameters
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-
-        /// Player parameters
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-
-        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");
-
-        playerChallenge.completed = true;
+   		emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
@@ -397,20 +387,12 @@ contract LpChallenge is ZombieFarmChallengeInterface {
     }
 
     function isCompleted(SessionChallenge storage sessionChallenge, PlayerChallenge storage playerChallenge, uint256 currentTime) internal view returns(bool) {
-        uint256 time = playerChallenge.stakedDuration;
-
-        if (playerChallenge.amount == sessionChallenge.stakeAmount) {
-            if (playerChallenge.stakedTime > 0) {
-                uint256 duration = (currentTime - playerChallenge.stakedTime);
-                time = time + duration;
-
-                if (playerChallenge.overStakeAmount > 0) {
-                    time = time + (duration * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
-                }
-            }
+        if (playerChallenge.stakedTime > 0) {
+            uint256 duration = (currentTime - playerChallenge.stakedTime);
+            return duration >= sessionChallenge.stakePeriod;
         }
 
-        return time >= sessionChallenge.stakePeriod;
+        return false;
     }
 
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker) external override view returns(bool) {
@@ -426,38 +408,27 @@ contract LpChallenge is ZombieFarmChallengeInterface {
     }
 
     function updateTimeProgress(SessionChallenge storage sessionChallenge, PlayerChallenge storage playerChallenge) internal {
-        // update time progress
-        // previous stake time
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount && playerChallenge.stakedTime > 0) {
-            uint256 time = block.timestamp - playerChallenge.stakedTime;
-
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + (time * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
-            }
-
-            playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
-            if (playerChallenge.stakedDuration >= sessionChallenge.stakePeriod) {
-                playerChallenge.completed = true;
-            }
+        if (isCompleted(sessionChallenge, playerChallenge, now)) {
+            playerChallenge.completed = true;
         }
     }
 
 	function updateBalanceInterestPerToken(uint256 claimedPerToken, PlayerChallenge storage playerChallenge) internal returns(bool) {
-		playerChallenge.claimedReward = claimedPerToken * playerChallenge.amount / scaler; // 0
+		playerChallenge.claimedReward = claimedPerToken * playerChallenge.weight / scaler; // 0
 	}
 
     function _claim(uint256 sessionId, uint32 challengeId, address staker) internal returns(bool) {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-		require(playerChallenge.amount > 0, "no deposit");
+		require(playerChallenge.weight > 0, "no deposit");
 
 		uint256 interest = calculateInterest(sessionId, challengeId, staker);
 		if (interest == 0) {
 			return false;
 		}
 
-    Params storage challenge = challenges[challengeId];
+        Category storage challenge = challenges[challengeId];
 
 		IERC20 _token = IERC20(challenge.earn);
 
@@ -491,7 +462,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
 		// How much of total deposit is belong to player as a floating number
-		if (playerChallenge.amount == 0 || sessionChallenge.amount == 0) {
+		if (playerChallenge.nftId == 0 || sessionChallenge.amount == 0) {
 			return 0;
 		}
 
@@ -509,7 +480,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
 
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
-    	uint256 interest = ((playerChallenge.amount * claimedPerToken) / scaler) - playerChallenge.claimedReward;
+    	uint256 interest = (claimedPerToken / scaler) - playerChallenge.claimedReward;
 
 		return interest;
     }
@@ -518,13 +489,12 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         uint32[5] memory id;
         uint8[5] memory levelId;
         uint256[5] memory reward;
-        uint256[5] memory stakeAmount;
         uint256[5] memory stakePeriod;
         uint256[5] memory multiplier;
         uint32[5] memory prevChallengeId;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) =
-            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint256[5], uint32[5]));
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) =
+            abi.decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
 
 
         return (id[offset], levelId[offset]);
