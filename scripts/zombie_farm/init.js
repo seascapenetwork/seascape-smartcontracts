@@ -6,7 +6,7 @@ let Crowns = artifacts.require("CrownsToken");
 
 let accounts;
 let interval = 120;  // 0.5 minutes
-let period = 3600 * 24;   // 1 day 
+let period = 3600 * 24 * 7;   // 1 day 
 let generation = 0;
 let nftFactoryAddress = "0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0";    
 let crownsAddress = "0x168840Df293413A930d3D40baB6e1Cd8F406719D";
@@ -56,7 +56,7 @@ let init = async function() {
     let quality = 5;
     let generation = 0;
     let imgId = 35;
-    let levelAmount = 3;
+    let levelAmount = 4;
 
     // let approveAmount = web3.utils.toWei((100000000).toString(), "ether");
     // try {
@@ -68,18 +68,15 @@ let init = async function() {
     //     console.error(e);
     // }
 
-
     sessionId = await zombieFarm.lastSessionId();
     console.log(sessionId +" session id started");
-    let session = await zombieFarm.sessions(sessionId);
-    console.log(session);
 
-    // let startTime = Math.floor(Date.now()/1000) + 180;
+    let startTime = Math.floor(Date.now()/1000) + 30;
 
-    // let rewardData = web3.eth.abi.encodeParameters(
-    //     ['uint256', 'uint256', 'uint8', 'address', 'uint256'],
-    //     [imgId, generation, quality, crowns.address, wei]
-    //   );
+    let rewardData = web3.eth.abi.encodeParameters(
+        ['uint256', 'uint256', 'uint8', 'address', 'uint256'],
+        [imgId, generation, quality, crowns.address, wei]
+      );
 
     // try {
     // await zombieFarm.startSession(startTime, period, grandId, rewardData, levelAmount, speedUpFee, repickFee, {from: accounts[0], gasPrice: 136000000000});
@@ -152,8 +149,11 @@ let init = async function() {
     let stakeAmountWei = web3.utils.toWei(stakeAmount.toString(), "ether");
     let multiply = parseInt(10 * 10000);
 
-    let prevChallengeId = 0;
+    /// Adding Challenges for level 1
 
+    try {
+      let prevChallengeId = 0;
+    
     // challenge id, level id, reward, stakeAmount, stakePeriod, min, max;
     let levelChallengeData = web3.eth.abi.encodeParameters(
       ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint32[5]'],
@@ -167,9 +167,14 @@ let init = async function() {
     let nonActive2 = await zombieFarm.sessionChallenges(sessionId, challengeId + 2);
 
     await zombieFarm.addChallenges(sessionId, challengesAmount, challengeId, levelChallengeData);
+    } catch (e) {
+      console.error(e);
+    }
 
     let active = await zombieFarm.sessionChallenges(sessionId, challengeId);
     let active1 = await zombieFarm.sessionChallenges(sessionId, challengeId + 1);
     let active2 = await zombieFarm.sessionChallenges(sessionId, challengeId + 2);
     console.log("Challenges were added");
+
+    // Adding challenges for level 2
 }.bind(this);
