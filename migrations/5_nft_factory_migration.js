@@ -1,8 +1,10 @@
 var Nft = artifacts.require("./SeascapeNft.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 
+const scapeNft = "0x607cBd90BE76e9602548Fbe63931AbE9E8af8aA7";
+
 module.exports = function(deployer, network) {
-    deployer.deploy(Factory, "0xf0c27DB379AD997C225701EAf00344693B4b36e1").then(function(){
+    deployer.deploy(Factory, scapeNft).then(function(){
 	    console.log("Nft Factory was deployed at address: "+Factory.address);
     });
 };

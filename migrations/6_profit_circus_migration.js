@@ -1,17 +1,12 @@
 var ProfitCircus = artifacts.require("./ProfitCircus.sol");
-var Crowns = artifacts.require("./CrownsToken.sol");
-var NftFactory = artifacts.require("./NftFactory.sol");
 
 module.exports = async function(deployer, network) {
-	let crowns;
-	let factory;
-
-	crowns = "0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911";
-	factory = "0x06fddbD58cb286DC1e7a9eB50eF67c9215478670";
+	const crowns 	= "0x6fc9651f45B262AE6338a701D563Ab118B1eC0Ce";
+	const factory 	= "0x77478212aa57A7A9Cc5b611156Fce7c0697578fb";
 
 	deployer.deploy(ProfitCircus, crowns, factory)
 	.then(() => {
 		console.log("Profit Circus smartcontract was deployed at address: "+ProfitCircus.address);
-		console.log("Now call, scripts/lp_mining/init.js with uncommenting nftFactory.addStaticUser(profitCircus.address)");
+		console.log("Now call, scripts/profit_circus/init.js with uncommenting nftFactory.addStaticUser(profitCircus.address)");
 	});
 };
