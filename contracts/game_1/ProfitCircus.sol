@@ -83,7 +83,6 @@ contract ProfitCircus is Ownable {
     /// Reward tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
     function startSession(address _rewardToken, address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
-		require(_rewardToken != address(0), "Profit Circus: Reward token should not be equal to 0");
 		require(_lpToken != address(0), "Profit Circus: Staking token should not be equal to 0");
 		require(_startTime > block.timestamp, "Profit Circus: Seassion should start in the future");
 		require(_period > 0, "Profit Circus: Session duration should be greater than 0");
@@ -96,10 +95,14 @@ contract ProfitCircus is Ownable {
 			require(isActive(_lastId)==false,     "Profit Circus: Can't start when session is already active");
 		}
 
-		IERC20 _reward = IERC20(_rewardToken);
+		if (_rewardToken != address(0)) {
+			IERC20 _reward = IERC20(_rewardToken);
 
-		// required reward balance of this contract
-		require(_reward.balanceOf(address(this)) >= _totalReward, "Profit Circus: Not enough balance of reward token");
+			// required reward balance of this contract
+			require(_reward.balanceOf(address(this)) >= _totalReward, "Profit Circus: Not enough balance of reward token");
+		} else {
+			require(address(this).balance >= _totalReward, "Profit Circus: Not enough balance of native reward");
+		}
 
 		//--------------------------------------------------------------------
 		// creating the session
@@ -131,12 +134,18 @@ contract ProfitCircus is Ownable {
 		Balance storage _balance = balances[_sessionId][_address];
 		if (_balance.unpaidReward > 0) {
 			address _rewardToken = sessions[_sessionId].rewardToken;
-			IERC20 _reward = IERC20(_rewardToken);
+			
+			if (_rewardToken != address(0)) {
+				IERC20 _reward = IERC20(_rewardToken);
 
-			uint256 _contractBalance = _reward.balanceOf(address(this));
-			require(_contractBalance >= _balance.unpaidReward, "Profit Circus: Not enough reward token to transfer!");
+				uint256 _contractBalance = _reward.balanceOf(address(this));
+				require(_contractBalance >= _balance.unpaidReward, "Profit Circus: Not enough reward token to transfer!");
+			} else {
+				require(address(this).balance >= _balance.unpaidReward, "Profit Circus: Not enough native reward to transfer!");
+			}
 
 			_safeTransfer(_rewardToken, _address, _balance.unpaidReward);
+			
 			_balance.unpaidReward = 0;
 		}
 	}
@@ -214,9 +223,14 @@ contract ProfitCircus is Ownable {
 		require(_token.balanceOf(address(this)) >= _amount, "Profit Circus: Not enough Lp token in player balance");
 		uint256 _interest = calculateInterest(_sessionId, msg.sender);
 
-		IERC20 _reward = IERC20(_session.rewardToken);
 
-		uint256 _contractBalance = _reward.balanceOf(address(this));
+		uint256 _contractBalance = 0;
+		if (_session.rewardToken != address(0)) {
+			IERC20 _reward = IERC20(_session.rewardToken);
+			_contractBalance = _reward.balanceOf(address(this));
+		} else {
+			_contractBalance = address(this).balance;
+		}
 		if (_interest > 0 && _contractBalance < _interest) {
 			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
 		}
@@ -425,9 +439,15 @@ contract ProfitCircus is Ownable {
 			return false;
 		}
 
-		IERC20 _rewardToken = IERC20(_session.rewardToken);
 
-		uint256 _contractBalance = _rewardToken.balanceOf(address(this));
+		uint256 _contractBalance = 0;
+
+		if (_session.rewardToken != address(0)) {
+			IERC20 _rewardToken = IERC20(_session.rewardToken);
+			_contractBalance = _rewardToken.balanceOf(address(this));
+		} else {
+			_contractBalance = address(this).balance;
+		}
 		if (_interest > 0 && _contractBalance < _interest) {
 			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
 		}
@@ -448,14 +468,23 @@ contract ProfitCircus is Ownable {
     }
 
 	function _safeTransfer(address _token, address _to, uint256 _amount) internal {
-		IERC20 _rewardToken = IERC20(_token);
+		if (_token != address(0)) {
+			IERC20 _rewardToken = IERC20(_token);
 
-		uint256 _balance = _rewardToken.balanceOf(address(this));
-        if (_amount > _balance) {
-            _rewardToken.transfer(_to, _balance);
-        } else {
-            _rewardToken.transfer(_to, _amount);
-        }
+			uint256 _balance = _rewardToken.balanceOf(address(this));
+        	if (_amount > _balance) {
+            	_rewardToken.transfer(_to, _balance);
+			} else {
+				_rewardToken.transfer(_to, _amount);
+			}
+		} else {
+			uint256 _balance = address(this).balance;
+        	if (_amount > _balance) {
+            	payable(_to).transfer(_balance);
+			} else {
+				payable(_to).transfer(_amount);
+			}
+		}
 	}
 }
 

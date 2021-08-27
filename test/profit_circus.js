@@ -60,7 +60,7 @@ contract("Game 1: Lp Mining", async accounts => {
     //---------------------------------------------------
 
     it("should not overwrite a session before time expiration", async () => {
-        startTime = Math.floor(Date.now()/1000) + 3;
+        startTime = Math.floor(Date.now()/1000) + 1;
         
         try {
             await profitCircus.startSession(crowns.address, lpToken.address, totalReward, period, startTime, generation, stakeAmount, stakePeriod,
