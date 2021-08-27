@@ -7,13 +7,13 @@ module.exports = async function(deployer, network) {
     if (network == "ganache") {
 		await deployer.deploy(Nft);
 		console.log("To mint Nft it is using NFT Factory at address: "+Nft.address);
-		
+
         await deployer.deploy(Crowns);
 		console.log("It is used with Crowns (CWS) Token at address: "+Crowns.address);
-		
+
         await deployer.deploy(Factory, Nft.address);
         console.log("It is used with NFT Factory at address: "+Factory.address);
-		
+
         await deployer.deploy(NftBurning, Crowns.address, Factory.address, Nft.address);
 		console.log("NftBurning contract was deployed at address: "+NftBurning.address);
     }
@@ -34,9 +34,9 @@ module.exports = async function(deployer, network) {
         console.log("NftBurning contract was deployed at address: "+NftBurning.address);
     }
     else if (network == "moonbase") {
-        var crowns = "0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989";
-        var factory = "0xa6c50A865bCC3A3353bFA4B03Bd42C85D4446cD2";
-        var nft = "0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37";
+        var crowns = "0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911";
+        var factory = "0x06fddbD58cb286DC1e7a9eB50eF67c9215478670";
+        var nft = "0x9ceAB9b5530762DE5409F2715e85663405129e54";
 
         await deployer.deploy(NftBurning, crowns, factory, nft);
         console.log("NftBurning contract was deployed at address: "+NftBurning.address);

@@ -188,7 +188,6 @@ contract ProfitCircus is Ownable {
 
 		require(_balance.amount > 0, "Profit Circus: No deposit was found");
 		
-		Session storage _session = sessions[_sessionId];
 		updateInterestPerToken(_sessionId);
 
 		_claim(_sessionId);

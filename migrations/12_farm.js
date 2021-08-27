@@ -28,7 +28,7 @@ async function getAccount(id) {
 }
 
 module.exports = async function(deployer, network) {
-    if (network == "development") {
+    /*if (network == "development") {
         await deployer.deploy(SeascapeHodl, testGame);
         // constructor(address _stake, uint256 _pid, address _staking, address _hodl, address _reward, address _cake)
         await deployer.deploy(FarmCake, lpToken, pid, pancakeSwap, SeascapeHodl.address, reward, farm);
@@ -42,5 +42,5 @@ module.exports = async function(deployer, network) {
         
         console.log("SeacapeHodl contract was deployed at address: " + SeascapeHodl.address);
 		console.log("FarmCake contract was deployed at address: " + FarmCake.address);
-    }
+    }*/
 };
