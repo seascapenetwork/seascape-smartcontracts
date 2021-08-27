@@ -1,7 +1,7 @@
 const { assert } = require("chai");
 
 let ProfitCircus = artifacts.require("ProfitCircus");
-let LpToken = artifacts.require("LpToken");
+let LpToken = artifacts.require("RiverBoat");
 let Crowns = artifacts.require("CrownsToken");
 let Nft = artifacts.require("SeascapeNft");
 let Factory = artifacts.require("NftFactory");
@@ -23,6 +23,9 @@ contract("Game 1: Lp Mining", async accounts => {
     let nft = null;
     let factory = null;
 
+    let stakeAmount = web3.utils.toWei("1", "ether");
+        let stakePeriod = 10;
+        
     //--------------------------------------------------
     
     // Before using the game contract, we should start the game session.
@@ -38,15 +41,15 @@ contract("Game 1: Lp Mining", async accounts => {
         assert.equal(balance, totalReward, "Lp Mining contract balance should match to total reward");
     });
     
-
     //--------------------------------------------------
     
     // Before using the game contract, we should start the game session.
     it("should start a session that lasts "+period+" seconds", async () => {
         lpToken = await LpToken.deployed();
-        startTime = Math.floor(Date.now()/1000) + 2;
+        startTime = Math.floor(Date.now()/1000) + 3;
         
-        await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
+        //address _rewardToken, address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod
+        await profitCircus.startSession(crowns.address, lpToken.address, totalReward, period, startTime, generation, stakeAmount, stakePeriod,
                         {from: accounts[0]})
 
         sessionId = await profitCircus.lastSessionIds.call(lpToken.address);
@@ -57,14 +60,14 @@ contract("Game 1: Lp Mining", async accounts => {
     //---------------------------------------------------
 
     it("should not overwrite a session before time expiration", async () => {
-        startTime = Math.floor(Date.now()/1000) + 2;
+        startTime = Math.floor(Date.now()/1000) + 3;
         
         try {
-            await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
-                        {from: accounts[0]});
+            await profitCircus.startSession(crowns.address, lpToken.address, totalReward, period, startTime, generation, stakeAmount, stakePeriod,
+                {from: accounts[0]})
         } catch(e) {
-            return assert.equal(e.reason, 'Seascape Staking: Can\'t start when session is already active');
-        }
+            return assert.equal(e.reason, 'Profit Circus: Can\'t start when session is already active');
+        }   
 
         assert.fail();
     });
@@ -73,15 +76,15 @@ contract("Game 1: Lp Mining", async accounts => {
     
     it("should overwrite a session after time expiration", async() => {
         // wait until passes 2 second after session period
-        let wait = (period + 2) * 1000; // milliseconds
-            await new Promise(resolve => setTimeout(resolve, wait));
+        let wait = (period + 3) * 1000; // milliseconds
+        await new Promise(resolve => setTimeout(resolve, wait));
 
         
         await crowns.transfer(profitCircus.address, totalReward, {from: accounts[0]});
         
-        startTime = Math.floor(Date.now()/1000) + 2;	
-        await profitCircus.startSession(lpToken.address, totalReward, period, startTime, generation,
-                    {from: accounts[0]});
+        startTime = Math.floor(Date.now()/1000) + 3;	
+        await profitCircus.startSession(crowns.address, lpToken.address, totalReward, period, startTime, generation, stakeAmount, stakePeriod,
+            {from: accounts[0]})
 
         sessionId = await profitCircus.lastSessionIds.call(lpToken.address);
         assert.equal(sessionId, 2, "Session after period expiration should return inserted ID of 2");
@@ -198,7 +201,7 @@ contract("Game 1: Lp Mining", async accounts => {
         try {
             await profitCircus.claim(sessionId, {from: player});
         } catch(e) {
-            return assert.equal(e.reason, "Seascape Staking: No deposit was found");
+            return assert.equal(e.reason, "Profit Circus: No deposit was found");
         }
 
         assert.fail();
@@ -207,40 +210,40 @@ contract("Game 1: Lp Mining", async accounts => {
 
     //--------------------------------------------------
 
-    // Claiming Seascape Nft.
-    // First, we need to link Smartcontracts between each other.
-    it("should link nft, factory and lp mining contracts", async() => {
-        nft = await Nft.deployed();
-        factory = await Factory.deployed();
+    // // Claiming Seascape Nft.
+    // // First, we need to link Smartcontracts between each other.
+    // it("should link nft, factory and lp mining contracts", async() => {
+    //     nft = await Nft.deployed();
+    //     factory = await Factory.deployed();
 
-        await nft.setFactory(factory.address);
-        await factory.addStaticUser(profitCircus.address);
-    });
+    //     await nft.setFactory(factory.address);
+    //     await factory.addStaticUser(profitCircus.address);
+    // });
 
-    // Claiming Seascape Nft.
-    // First, we need to link Smartcontracts between each other.
-    it("should link nft, factory and lp mining contracts", async() => {
-        nft = await Nft.deployed();
-        factory = await Factory.deployed();
+    // // Claiming Seascape Nft.
+    // // First, we need to link Smartcontracts between each other.
+    // it("should link nft, factory and lp mining contracts", async() => {
+    //     nft = await Nft.deployed();
+    //     factory = await Factory.deployed();
 
-        await nft.setFactory(factory.address);
-        await factory.addStaticUser(profitCircus.address);
-    });
+    //     await nft.setFactory(factory.address);
+    //     await factory.addStaticUser(profitCircus.address);
+    // });
 
-    // Claiming Seascape Nft.
-    it("should claim Nft", async() => {
-        let player = accounts[1];
+    // // Claiming Seascape Nft.
+    // it("should claim Nft", async() => {
+    //     let player = accounts[1];
         
-        await profitCircus.claimNft(sessionId, {from: player});
-    });
+    //     await profitCircus.claimNft(sessionId, {from: player});
+    // });
 
-    it("should throw an exception if you claim Nft second time", async() => {
-	    let player = accounts[1];
-      try{
-        await profitCircus.claimNft(sessionId, {from: player});
-        assert.fail();
-      } catch(e) {
-        return assert.equal(e.reason, "Seascape Staking: Already minted");
-      }
-    });
+    // it("should throw an exception if you claim Nft second time", async() => {
+	//     let player = accounts[1];
+    //   try{
+    //     await profitCircus.claimNft(sessionId, {from: player});
+    //     assert.fail();
+    //   } catch(e) {
+    //     return assert.equal(e.reason, "Profit Circus: Already minted");
+    //   }
+    // });
 });
