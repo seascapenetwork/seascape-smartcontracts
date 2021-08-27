@@ -133,7 +133,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
         uint256 _sessionId = sessionId.current();
         sessions[_sessionId] = Session(
             _period,
-            _startTime,
+            _startTime+ _period,
             _generation,
             _interval,
             _fee,

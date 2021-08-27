@@ -22,26 +22,13 @@ let init = async function(networkId) {
 
     //must fill correct nftId
     let nftId = 548;
-    let approveAmount = web3.utils.toWei("1", "ether");
-
     let user = accounts[1];
     console.log(`Using ${user}`);
 
-    //approve spending of crowns
-    await crowns.approve(nftMarket.address, approveAmount, {from: user})
+
+    let getSales = await nftMarket.getSales(nftId, nft.address, {from: user})
       .catch(console.error);
-
-
-    // make sure that sale is correct
-    // let salesObject = await nftMarket.getSales(nftId, nft.address)
-    //   .catch(console.error);
-    // console.log("Sale data:");
-    // console.log(salesObject);
-
-    //execute buy
-    let buy = await nftMarket.buy(nftId, nft.address, crowns.address, {from: user})
-      .catch(console.error);
-    console.log(`bought nft id ${nftId} with account ${user}`);
+    console.log(getSales);
 
 
 }.bind(this);
