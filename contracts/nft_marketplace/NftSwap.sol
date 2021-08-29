@@ -7,7 +7,7 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./ReentrancyGuard.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./Crowns.sol";
 import "./NftSwapParamsInterface.sol";
 
