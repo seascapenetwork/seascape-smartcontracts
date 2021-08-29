@@ -184,6 +184,10 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         maxRequestedTokens = _amount;
     }
 
+    //--------------------------------------------------
+    // Public methods
+    //--------------------------------------------------
+
     /// @notice create a new offer
     /// @param _offeredTokensAmount how many nfts to offer
     /// @param _offeredTokens array of five OfferedToken structs
@@ -194,13 +198,13 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @return lastOfferId total amount of offers
     function createOffer(
         uint8 _offeredTokensAmount,
-        OfferedToken [5] calldata _offeredTokens,
+        OfferedToken [5] memory _offeredTokens,
         uint8 _requestedTokensAmount,
-        RequestedToken [5] calldata _requestedTokens,
+        RequestedToken [5] memory _requestedTokens,
         uint256 _bounty,
         address _bountyAddress
     )
-        external
+        public
         returns(uint256)
     {
         /// require statements
@@ -301,13 +305,13 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId offer unique ID
     function acceptOffer(
         uint256 _offerId,
-        uint256 [5] calldata _requestedTokenIds,
-        address [5] calldata _requestedTokenAddresses,
-        uint8 [5] calldata _v,
-        bytes32 [5] calldata _r,
-        bytes32 [5] calldata _s
+        uint256 [5] memory _requestedTokenIds,
+        address [5] memory _requestedTokenAddresses,
+        uint8 [5] memory _v,
+        bytes32 [5] memory _r,
+        bytes32 [5] memory _s
     )
-        external
+        public
         nonReentrant
         payable
     {
@@ -323,7 +327,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
             require(nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
                 "sender not owner of nft");
-
             /// digital signature part
             bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
                 _offerId,
@@ -377,7 +380,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice cancel the offer
     /// @param _offerId offer unique ID
-    function cancelOffer(uint _offerId) external {
+    function cancelOffer(uint _offerId) public {
         OfferObject storage obj = offerObjects[_offerId];
         require(obj.seller == msg.sender, "sender is not creator of offer");
 
@@ -390,14 +393,13 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         // send crowns and bounty from SC to seller
         if (obj.bounty > 0 && address(crowns) == obj.bountyAddress)
-            require(crowns.transfer(msg.sender, obj.fee + obj.bounty),
-              "Failed to transfer fee & bounty");
+            require(crowns.transfer(msg.sender, obj.fee + obj.bounty), "Failed to transfer fee & bounty");
         else {
             if (obj.bounty > 0){
                 IERC20 token = IERC20(obj.bountyAddress);
                 require(token.transfer(msg.sender, obj.bounty), "Failed to transfer bounty");
               }
-            require(crowns.transfer(msg.sender, obj.fee), "Failed to transfer fee");
+              require(crowns.transfer(msg.sender, obj.fee), "Failed to transfer fee");
         }
 
         /// update states
@@ -414,16 +416,12 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId unique offer ID
     /// @return OfferObject at given index
     function getOffer(uint _offerId)
-        external
+        internal
         view
         returns(OfferObject memory)
     {
         return offerObjects[_offerId];
     }
-
-    //--------------------------------------------------
-    // Public methods
-    //--------------------------------------------------
 
     /// @dev encrypt token data
     function onERC721Received(
