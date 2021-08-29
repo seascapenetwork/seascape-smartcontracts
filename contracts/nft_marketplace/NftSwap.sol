@@ -7,7 +7,6 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../seascape_nft/SeascapeNft.sol";
 import "./ReentrancyGuard.sol";
 import "./Crowns.sol";
 import "./NftSwapParamsInterface.sol";
@@ -20,7 +19,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    SeascapeNft private nft;
 
 
     /// @notice individual offer related data
@@ -100,13 +98,10 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @param _feeRate - fee amount
     /// @param _crownsAddress staking currency address
-    /// @param _nftAddress initial nft collection token address (Scapes)
-    constructor(uint256 _feeRate, address _crownsAddress, address _nftAddress) public {
+    constructor(uint256 _feeRate, address _crownsAddress) public {
         /// @dev set crowns is defined in Crowns.sol
         require(_crownsAddress != address(0x0), "invalid cws address");
         setCrowns(_crownsAddress);
-        require(_nftAddress != address(0x0), "invalid nft address");
-        nft = SeascapeNft(_nftAddress);
         fee = _feeRate;
     }
 
