@@ -206,9 +206,11 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         updateInterestPerToken(sessionChallenge);
 
-        _nft.transferFrom(staker, address(this), nftId);
-        playerChallenge.nftId = nftId;
-        playerChallenge.weight = weight;
+        for (uint8 i = 0; i < challenge.nftAmount; i++) {
+            _nft.transferFrom(staker, address(this), nftId[i]);
+            playerChallenge.nftId[i] = nftId[i];
+            playerChallenge.weight[i] = weight[i];
+        }
 
         for (uint8 i = 0; i < challenge.nftAmount; i++) {
             sessionChallenge.amount = sessionChallenge.amount.add(weight[i]);
