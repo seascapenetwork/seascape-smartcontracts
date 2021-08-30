@@ -224,7 +224,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
    		updateBalanceInterestPerToken(challenge.nftAmount, sessionChallenge.claimedPerToken, playerChallenge);
 
-		emit Stake(staker, sessionId, challengeId, playerChallenge.nftId);
+		emit Stake(staker, sessionId, challengeId, nftId);
     }
 
     /// @dev it returns amount for stake and nft id.
