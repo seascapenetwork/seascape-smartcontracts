@@ -268,6 +268,7 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
     function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
+        uint256 claimedAmount;
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
@@ -294,12 +295,13 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
                 _nft.transferFrom(address(this), staker, playerChallenge.nftId[i]);
                 playerChallenge.nftId[i] = 0;
                 sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight[i]);
+                claimedAmount += playerChallenge.weight[i];
                 playerChallenge.weight[i] = 0;
             }
             updateInterestPerToken(sessionChallenge);
         }
 
-   		emit Claim(staker, sessionId, challengeId);
+   		emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning

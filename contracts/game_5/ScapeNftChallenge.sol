@@ -308,6 +308,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
     function claim(uint256 sessionId, uint32 challengeId, address staker) external override onlyZombieFarm {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
+        uint256 claimedAmount;
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
@@ -320,7 +321,6 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         updateInterestPerToken(sessionChallenge);
 
-      uint256 claimedAmount;
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
     	_claim(sessionId, challengeId, staker);
