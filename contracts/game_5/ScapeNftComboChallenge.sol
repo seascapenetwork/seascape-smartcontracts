@@ -277,7 +277,10 @@ contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "completed and claimed");
-        require(playerChallenge.nftId > 0, "no stake");
+        //check each individual nftid
+        for(uint8 i = 0; i < challenge.nftAmount; i++){
+            require(playerChallenge.nftId[i] > 0, "no stake");
+        }
 
         updateInterestPerToken(sessionChallenge);
 
