@@ -91,7 +91,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         address indexed token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
     event RewardNft(uint256 indexed sessionId, uint8 rewardType, address indexed owner,
         uint256 indexed nftId, address token, uint256 generation, uint8 quality, uint256 imgId, uint256 amount);
-    event Stake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 nftId);
+    event Stake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256[5] nftId);
     event Unstake(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 nftId);
     event Claim(address indexed staker, uint256 indexed sessionId, uint32 challengeId, uint256 amount);
 
