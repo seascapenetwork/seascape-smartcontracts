@@ -320,6 +320,8 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         updateInterestPerToken(sessionChallenge);
 
+      uint256 claimedAmount;
+
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
     	_claim(sessionId, challengeId, staker);
         playerChallenge.claimedTime = block.timestamp;
@@ -341,7 +343,7 @@ contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
             sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight);
             updateInterestPerToken(sessionChallenge);
 
-            uint256 memory claimedAmount = playerChallenge.weight;
+            claimedAmount = playerChallenge.weight;
             playerChallenge.weight = 0;
         }
 
