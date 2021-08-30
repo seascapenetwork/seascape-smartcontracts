@@ -12,7 +12,7 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 /// First time whe user deposits his nft:
 ///     It receives nft id, signature.
 /// If user's nft is in the game, then deposit is unavailable.
-contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
+abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
     using SafeMath for uint256;
     // The seascape NFT address
     address scape;
