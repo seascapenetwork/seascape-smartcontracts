@@ -118,7 +118,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         uint8[5] memory _quality;          // Quality (0 if not filtered)
 
         (_earn, _nftAmount, _imgId, _generation, _quality) =
-            abi.decode(data, (address, uint8[5], uint256[5], int8[5], uint8[5]));
+            abi.decode(data, (address, uint8, uint256[5], int8[5], uint8[5]));
 
         require(_earn != address(0), "data.earn");
         require(_nftAmount > 0 && _nftAmount <= 5, "nft amount");
