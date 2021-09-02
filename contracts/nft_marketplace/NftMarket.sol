@@ -12,7 +12,7 @@ import "./ReentrancyGuard.sol";
 
 /// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
 /// @author Nejc Schneider
-contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
+contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
