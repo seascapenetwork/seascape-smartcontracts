@@ -155,22 +155,15 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         uint256[5] memory multiplier;
         uint32[5] memory prevChallengeId;
 
-        (
-            id,
-            levelId,
-            reward,
-            stakeAmount,
-            stakePeriod,
-            multiplier,
-            prevChallengeId
-        ) = abi.decode(data, (
-            uint32[5],
-            uint8[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint32[5])
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
+            .decode(data, (
+                uint32[5],
+                uint8[5],
+                uint256[5],
+                uint256[5],
+                uint256[5],
+                uint256[5],
+                uint32[5])
         );
 
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
