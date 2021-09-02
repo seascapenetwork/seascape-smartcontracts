@@ -104,7 +104,6 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     /// @notice add supported currency token
     /// @param _currencyAddress ERC20 contract address
     function addSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
         require(!supportedCurrency[_currencyAddress], "currency already supported");
         supportedCurrency[_currencyAddress] = true;
     }
@@ -112,7 +111,6 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     /// @notice disable supported currency token
     /// @param _currencyAddress ERC20 contract address
     function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
         require(supportedCurrency[_currencyAddress], "currency already removed");
         supportedCurrency[_currencyAddress] = false;
     }
@@ -147,9 +145,11 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
         require(obj.status == 0, "status: sold or canceled");
         require(obj.seller == msg.sender, "seller not nft owner");
         require(salesEnabled, "sales are closed");
+        
         obj.status = 2;
         IERC721 nft = IERC721(obj.nft);
         nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
+
         emit SaleCanceled(_tokenId, obj.tokenId);
     }
 
