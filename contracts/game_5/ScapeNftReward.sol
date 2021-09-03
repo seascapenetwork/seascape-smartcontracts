@@ -24,7 +24,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     }
 
     modifier onlyZombieFarm () {
-	     require(msg.sender == zombieFarm, "onlyZombieFarm");
+	     require(msg.sender == zombieFarm, "only ZombieFarm can call");
 	      _;
     }
 
@@ -53,9 +53,9 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     );
 
     constructor (address _factory, address _zombieFarm, address _pool) public {
-        require(_factory != address(0), "_factory");
-        require(_zombieFarm != address(0), "_zombieFarm");
-        require(_pool != address(0), "_pool");
+        require(_factory != address(0), "incorrect _factory address");
+        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
+        require(_pool != address(0), "incorrect _pool address");
 
         factory = _factory;
         zombieFarm = _zombieFarm;
@@ -92,7 +92,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         override
         onlyZombieFarm
     {
-        require(isValidData(data), "scape reward:isvaliddata");
+        require(isValidData(data), "scape reward:isvaliddata failed");
 
         uint256 imgId;
         uint256 generation;
@@ -174,7 +174,8 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         IERC20 token = IERC20(params.token);
 
         uint256 id = nftFactory.mintQuality(owner, params.generation, params.quality);
-        require(token.transferFrom(pool, owner, params.amount), "erc20 reward");
+        require(token.transferFrom(pool, owner, params.amount),
+            "transferFrom pool failed");
 
         emit RewardNft(
             sessionId,
