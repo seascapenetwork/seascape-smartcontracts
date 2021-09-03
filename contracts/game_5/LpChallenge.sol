@@ -170,7 +170,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].stake != address(0),
-            "single token.challenge !exists");
+            "single token.challenge no exist");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
@@ -180,7 +180,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
             require(challenges[prevChallengeId[offset]].stake != address(0),
-                "prev");
+                "previous challenge incomplete");
         }
 
         session.levelId = levelId[offset];
@@ -205,7 +205,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session !exists");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -235,7 +235,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
     		IERC20 _token = IERC20(challenge.stake);
     		require(_token.balanceOf(staker) >= amount, "not enough staking token");
     		require(_token.transferFrom(staker, address(this), amount),
-            "transferFrom failed");
+            "transferFrom staker failed");
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
     		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
@@ -282,7 +282,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session !exists");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -351,7 +351,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             /// Transfer tokens to the Smartcontract
             /// TODO add stake holding option. The stake holding option earns a passive income
             /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake, "insufficient contract balances");
+            require(_token.balanceOf(address(this)) >= totalStake,
+                "insufficient contract balances");
             require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
        		emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
@@ -367,7 +368,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         Params storage challenge = challenges[challengeId];
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session !exists");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -403,7 +404,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
             /// Transfer tokens to the Smartcontract
             /// TODO add stake holding option. The stake holding option earns a passive income
             /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake, "insufficient contract balances");
+            require(_token.balanceOf(address(this)) >= totalStake,
+                "insufficient contract balances");
             require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
        		emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
@@ -639,13 +641,13 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
         (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
             .decode(data, (
-                uint32[5],
-                uint8[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint32[5]
+            uint32[5],
+            uint8[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint32[5]
             ));
 
         return (id[offset], levelId[offset]);
