@@ -85,7 +85,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
     mapping(uint256 => mapping(uint32 => mapping (address => PlayerChallenge))) public playerParams;
 
     modifier onlyZombieFarm () {
-	    require(msg.sender == zombieFarm, "onlyZombieFarm");
+	    require(msg.sender == zombieFarm, "only ZombieFarm can call");
 	    _;
     }
 
@@ -134,9 +134,9 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
     );
 
     constructor (address _zombieFarm, address _scape, address _pool) public {
-        require(_zombieFarm != address(0), "_zombieFarm");
-        require(_scape != address(0), "_scape");
-        require(_pool != address(0), "_pool");
+        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
+        require(_scape != address(0), "incorrect _scape address");
+        require(_pool != address(0), "incorrect _pool address");
 
         zombieFarm = _zombieFarm;
         scape = _scape;
@@ -151,7 +151,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         override
         onlyZombieFarm
     {
-        require(challenges[id].stake == address(0), "challenge exists");
+        require(challenges[id].stake == address(0), "single token challenge exists");
 
         address _earn;
 
@@ -166,13 +166,14 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         (_stake, _earn, _imgIdAmount, _imgId, _generation, _quality, _burn) = abi
             .decode(data, (address, address, uint8, uint256[5], int8, uint8, bool));
 
-        require(_earn != address(0), "data.earn");
-        require(_stake != address(0), "data.stake");
-        require(_quality <= 5, "data.quality");
-        require(_imgIdAmount <= 5, "data.imgAmount");
-        require(_generation >= -1, "data.generation");
+        require(_earn != address(0), "data.earn verification failed");
+        require(_stake != address(0), "data.stake verification failed");
+        require(_quality <= 5, "data.quality verificati failed");
+        require(_imgIdAmount <= 5, "data.imgAmount verificat failed");
+        require(_generation >= -1, "data.gen verification failed");
 
-        challenges[id] = Category(_stake, _earn, _imgIdAmount, _imgId, _generation, _quality, _burn);
+        challenges[id] = Category(
+            _stake, _earn, _imgIdAmount, _imgId, _generation, _quality, _burn);
     }
 
     /// @notice The challenges of this category were added to the Zombie Farm season
@@ -195,20 +196,20 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
             .decode(data, (
-                uint32[5],
-                uint8[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint32[5]
+            uint32[5],
+            uint8[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint32[5]
             ));
 
         SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].stake != address(0),
-            "single token.challenge is not existing");
+            "single token.challenge no exist");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
@@ -217,7 +218,8 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].stake != address(0), "prev");
+            require(challenges[prevChallengeId[offset]].stake != address(0),
+                "previous challenge incomplete");
         }
 
         session.levelId = levelId[offset];
@@ -247,18 +249,19 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token:no exist session");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed");
+        require(!playerChallenge.completed, "challange already completed");
 
         // Previous Challenge should be completed
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge = playerParams[
                 sessionId][sessionChallenge.prevChallengeId][staker];
             require(playerPrevChallenge.completed ||
-                isCompleted(sessionChallenge, playerPrevChallenge, now), "prev not completed");
+                isCompleted(sessionChallenge, playerPrevChallenge, now),
+                "last challenge not completed");
         }
 
         uint256 amount;
@@ -275,8 +278,9 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         /// TODO add stake holding option. The stake holding option earns a passive income
         /// by user provided tokens.
         IERC20 _token = IERC20(challenge.stake);
-        require(_token.balanceOf(staker) >= amount, "not enough");
-        require(_token.transferFrom(staker, address(this), amount), "transferFrom");
+        require(_token.balanceOf(staker) >= amount, "staker balances insufficient");
+        require(_token.transferFrom(staker, address(this), amount),
+            "transferFrom staker failed");
 
         if (nftId != playerChallenge.nftId) {
             IERC721 _nft = IERC721(scape);
@@ -348,7 +352,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Staking amount
         (amount, v, r, s, nftId) = abi.decode(data, (uint256, uint8, bytes32, bytes32, uint256));
-        require(amount > 0 && nftId > 0, "scape nft+token null params");
+        require(amount > 0 && nftId > 0, "scape nft+token params null");
 
         /// Verify the Scape Nft signature.
       	/// @dev message is generated as nftId + amount + nonce
@@ -356,7 +360,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
       	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
             _messageNoPrefix));
       	address _recover = ecrecover(_message, v, r, s);
-      	require(_recover == owner(),  "scape nft+token.nftId");
+      	require(_recover == owner(),  "scape nft+token.nftId failed");
 
         return (amount, nftId);
     }
@@ -379,16 +383,16 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
-        require(!challenge.burn, "Burning tokens aren't allowed to be unstaked.");
+        require(!challenge.burn, "Can't unstake burning tokens");
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token:no exist session");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed and claimed");
-        require(playerChallenge.amount > 0, "no stake");
+        require(!playerChallenge.completed, "already completed and claimed");
+        require(playerChallenge.amount > 0, "stake amount zero");
 
         updateInterestPerToken(sessionChallenge);
 
@@ -420,8 +424,10 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         /// Transfer tokens to the Smartcontract
         /// TODO add stake holding option. The stake holding option earns a passive income
         /// by user provided tokens.
-        require(_token.balanceOf(address(this)) >= totalStake, "not enough");
-        require(_token.transfer(staker, totalStake), "transfer");
+        require(_token.balanceOf(address(this)) >= totalStake,
+            "insufficient contract balances");
+        require(_token.transfer(staker, totalStake),
+            "transfer to staker failed");
 
         _nft.transferFrom(address(this), staker, playerChallenge.nftId);
 
@@ -451,12 +457,12 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token:no exist session");
+        require(sessionChallenge.levelId > 0, "single token: session not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed and claimed");
-        require(playerChallenge.amount > 0, "no stake");
+        require(!playerChallenge.completed, "already completed and claimed");
+        require(playerChallenge.amount > 0, "stake amount zero");
 
         updateInterestPerToken(sessionChallenge);
 
@@ -488,8 +494,9 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
             /// Transfer tokens to the Smartcontract
             /// TODO add stake holding option. The stake holding option earns a passive income
             /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake, "not enough");
-            require(_token.transfer(staker, totalStake), "transfer");
+            require(_token.balanceOf(address(this)) >= totalStake,
+                "insufficient contract balances");
+            require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
             if (challenge.burn) {
                 _nft.transferFrom(address(this), address(0), playerChallenge.nftId);
@@ -511,7 +518,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "staked not enough");
+        require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
         playerChallenge.completed = true;
     }
@@ -535,7 +542,8 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 		if (sessionChallenge.amount == 0) {
 		    sessionChallenge.interestPerToken = 0;
 		} else {
-		    sessionChallenge.interestPerToken = (sessionChallenge.rewardUnit * scaler) / sessionChallenge.amount; // 0.1
+		    sessionChallenge.interestPerToken = (sessionChallenge
+            .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerToken
@@ -632,11 +640,14 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
       playerChallenge.claimedReward = claimedPerToken * playerChallenge.amount / scaler; // 0
     }
 
-    function _claim(uint256 sessionId, uint32 challengeId, address staker) internal returns(bool) {
+    function _claim(uint256 sessionId, uint32 challengeId, address staker)
+        internal
+        returns(bool)
+    {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-        require(playerChallenge.amount > 0, "no deposit");
+        require(playerChallenge.amount > 0, "didnt deposit enough");
 
         uint256 interest = calculateInterest(sessionId, challengeId, staker);
         if (interest == 0) {
@@ -724,13 +735,13 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
             .decode(data, (
-                uint32[5],
-                uint8[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint256[5],
-                uint32[5]
+            uint32[5],
+            uint8[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint32[5]
             ));
         return (id[offset], levelId[offset]);
     }
