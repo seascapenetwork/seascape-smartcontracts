@@ -313,7 +313,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
 
                 // player is removed from earning. so other users gets more.
                 if (playerChallenge.amount < sessionChallenge.stakeAmount) {
-                    sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
+                    sessionChallenge.amount = sessionChallenge
+                        .amount - sessionChallenge.stakeAmount;
 
                     updateInterestPerToken(sessionChallenge);
                 }
@@ -550,7 +551,10 @@ contract LpChallenge is ZombieFarmChallengeInterface {
         playerChallenge.claimedReward = claimedPerToken * playerChallenge.amount / scaler; // 0
     }
 
-    function _claim(uint256 sessionId, uint32 challengeId, address staker) internal returns (bool) {
+    function _claim(uint256 sessionId, uint32 challengeId, address staker)
+        internal
+        returns (bool)
+    {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
