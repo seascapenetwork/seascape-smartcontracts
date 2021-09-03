@@ -83,7 +83,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     mapping(uint256 => mapping(uint32 => mapping (address => PlayerChallenge))) public playerParams;
 
     modifier onlyZombieFarm () {
-	       require(msg.sender == zombieFarm, "onlyZombieFarm");
+	       require(msg.sender == zombieFarm, "only ZombieFarm can call");
 	       _;
     }
 
@@ -127,9 +127,9 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     );
 
     constructor (address _zombieFarm, address _scape, address _pool) public {
-        require(_zombieFarm != address(0), "_zombieFarm");
-        require(_scape != address(0), "_scape");
-        require(_pool != address(0), "_pool");
+        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
+        require(_scape != address(0), "incorrect _scape address");
+        require(_pool != address(0), "incorrect _pool address");
 
         zombieFarm = _zombieFarm;
         scape = _scape;
@@ -139,7 +139,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     /// @notice support a new Challenge of this category by Zombie Farm
     /// Each Challenge of this category is different based on their earning, staking or scape nft parameter.
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].earn == address(0), "challenge exists");
+        require(challenges[id].earn == address(0), "single token challenge exists");
 
         address _earn;
 
@@ -151,12 +151,12 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         (_earn, _nftAmount, _imgId, _generation, _quality) =
             abi.decode(data, (address, uint8, uint256[5], int8[5], uint8[5]));
 
-        require(_earn != address(0), "data.earn");
-        require(_nftAmount > 0 && _nftAmount <= 5, "nft amount");
+        require(_earn != address(0), "data.earn verification failed");
+        require(_nftAmount > 0 && _nftAmount <= 5, "nft amount should range 1-5");
         for (uint8 i = 0; i < _nftAmount; i++) {
-            require(_quality[i] <= 5, "data.quality");
+            require(_quality[i] <= 5, "data.quality should be under 6 ");
             //require(_imgIdAmount[i] <= 5, "data.imgAmount");
-            require(_generation[i] >= -1, "data.generation");
+            require(_generation[i] >= -1, "data.gen should be above -1");
         }
 
         challenges[id] = Category(_earn, _nftAmount, _imgId, _generation, _quality);
@@ -189,7 +189,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].earn != address(0),
-            "single token.challenge is not existing");
+            "single token.challenge no exist");
         require(reward[offset] > 0, "single token.reward==0");
         require(levelId[offset] > 0, "single token.level==0");
         require(sessionId > 0, "single token.session id==0");
@@ -197,7 +197,8 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         require(session.totalReward == 0, "challenge to level added before");
         require(startTime > 0 && period > 0, "single token: session time==0");
         if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].earn != address(0), "prev");
+            require(challenges[prevChallengeId[offset]].earn != address(0),
+                "previous challenge incomplete");
         }
 
         session.levelId = levelId[offset];
@@ -224,11 +225,11 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "combo token:no exist session");
+        require(sessionChallenge.levelId > 0, "combo token: session !exists");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed");
+        require(!playerChallenge.completed, "challange already completed");
 
         require(playerChallenge.nftId[0] == 0, "already staked");
 
@@ -237,7 +238,8 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
             PlayerChallenge storage playerPrevChallenge =
                 playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
             require(playerPrevChallenge.completed ||
-                isCompleted(sessionChallenge, playerPrevChallenge, now), "prev not completed");
+                isCompleted(sessionChallenge, playerPrevChallenge, now),
+                "last challenge not completed");
         }
 
         uint256[5] memory nftId;
@@ -352,10 +354,10 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "completed and claimed");
+        require(!playerChallenge.completed, "already completed and claimed");
         //check each individual nftid
         for(uint8 i = 0; i < challenge.nftAmount; i++){
-            require(playerChallenge.nftId[i] > 0, "no stake");
+            require(playerChallenge.nftId[i] > 0, "stake amount zero");
         }
 
         updateInterestPerToken(sessionChallenge);
