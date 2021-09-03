@@ -123,9 +123,9 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
     );
 
     constructor (address _zombieFarm, address _scape, address _pool) public {
-        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
-        require(_scape != address(0), "incorrect _scape address");
-        require(_pool != address(0), "incorrect _pool address");
+        require(_zombieFarm != address(0), "invalid _zombieFarm address");
+        require(_scape != address(0), "invalid _scape address");
+        require(_pool != address(0), "invalid _pool address");
 
         zombieFarm = _zombieFarm;
         scape = _scape;
@@ -150,9 +150,9 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
             .decode(data, (address, uint8, uint256[5], int8, uint8, bool));
 
         require(_earn != address(0), "data.earn verification failed");
-        require(_quality <= 5, "incorrect data.quality");
-        require(_imgIdAmount <= 5, "incorrect data.imgAmount");
-        require(_generation >= -1, "incorrect data.generation");
+        require(_quality <= 5, "invalid data.quality");
+        require(_imgIdAmount <= 5, "invalid data.imgAmount");
+        require(_generation >= -1, "invalid data.generation");
 
         challenges[id] = Category(_earn, _imgIdAmount, _imgId, _generation, _quality, _burn);
     }

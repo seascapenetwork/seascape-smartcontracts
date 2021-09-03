@@ -113,8 +113,8 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
     );
 
     constructor (address _zombieFarm, address _pool) public {
-        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
-        require(_pool != address(0), "incorrect _pool address");
+        require(_zombieFarm != address(0), "invalid _zombieFarm address");
+        require(_pool != address(0), "invalid _pool address");
 
         zombieFarm = _zombieFarm;
         pool = _pool;

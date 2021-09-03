@@ -134,9 +134,9 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
     );
 
     constructor (address _zombieFarm, address _scape, address _pool) public {
-        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
-        require(_scape != address(0), "incorrect _scape address");
-        require(_pool != address(0), "incorrect _pool address");
+        require(_zombieFarm != address(0), "invalid _zombieFarm address");
+        require(_scape != address(0), "invalid _scape address");
+        require(_pool != address(0), "invalid _pool address");
 
         zombieFarm = _zombieFarm;
         scape = _scape;
@@ -352,7 +352,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Staking amount
         (amount, v, r, s, nftId) = abi.decode(data, (uint256, uint8, bytes32, bytes32, uint256));
-        require(amount > 0 && nftId > 0, "scape nft+token params null");
+        require(amount > 0 && nftId > 0, "invalid nftId or amount");
 
         /// Verify the Scape Nft signature.
       	/// @dev message is generated as nftId + amount + nonce
@@ -360,7 +360,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
       	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
             _messageNoPrefix));
       	address _recover = ecrecover(_message, v, r, s);
-      	require(_recover == owner(),  "scape nft+token.nftId failed");
+      	require(_recover == owner(),  "verification failed");
 
         return (amount, nftId);
     }

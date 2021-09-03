@@ -127,9 +127,9 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     );
 
     constructor (address _zombieFarm, address _scape, address _pool) public {
-        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
-        require(_scape != address(0), "incorrect _scape address");
-        require(_pool != address(0), "incorrect _pool address");
+        require(_zombieFarm != address(0), "invalid _zombieFarm address");
+        require(_scape != address(0), "invalid _scape address");
+        require(_pool != address(0), "invalid _pool address");
 
         zombieFarm = _zombieFarm;
         scape = _scape;

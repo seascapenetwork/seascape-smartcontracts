@@ -53,9 +53,9 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     );
 
     constructor (address _factory, address _zombieFarm, address _pool) public {
-        require(_factory != address(0), "incorrect _factory address");
-        require(_zombieFarm != address(0), "incorrect _zombieFarm address");
-        require(_pool != address(0), "incorrect _pool address");
+        require(_factory != address(0), "invalid _factory address");
+        require(_zombieFarm != address(0), "invalid _zombieFarm address");
+        require(_pool != address(0), "invalid _pool address");
 
         factory = _factory;
         zombieFarm = _zombieFarm;
