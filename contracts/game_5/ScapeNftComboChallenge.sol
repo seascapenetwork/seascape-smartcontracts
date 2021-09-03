@@ -274,7 +274,8 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         updateTimeProgress(sessionChallenge, playerChallenge);
 
-   		  updateBalanceInterestPerToken(challenge.nftAmount, sessionChallenge.claimedPerToken, playerChallenge);
+   		  updateBalanceInterestPerToken(challenge
+            .nftAmount, sessionChallenge.claimedPerToken, playerChallenge);
 
 		    emit Stake(staker, sessionId, challengeId, nftId);
     }
@@ -506,7 +507,8 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         uint256 contractBalance = _token.balanceOf(pool);
 
     		if (interest > 0 && contractBalance < interest) {
-    			   playerChallenge.unpaidReward = (interest - contractBalance) + playerChallenge.unpaidReward;
+    			   playerChallenge.unpaidReward = (interest - contractBalance) + playerChallenge
+                .unpaidReward;
     		}
 
     		// we avoid sub. underflow, for calulating session.claimedPerToken
