@@ -205,7 +205,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 		    session.rewardUnit = reward[offset] / period;
         session.lastInterestUpdate = startTime;
         session.prevChallengeId = prevChallengeId[offset];
-    }single token: session not exist
+    }
 
     /// @notice Stake an nft and some token.
     /// For the first time whe user deposits his nft:
