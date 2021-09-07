@@ -15,14 +15,12 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
     using SafeMath for uint256;
     // The seascape NFT address
-    address scape;
-
-    address stakeToken;
-    address earnToken;
-    address zombieFarm;
+    address public scape;
+    address public stakeToken;
+    address public earnToken;
+    address public zombieFarm;
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
-
     uint256 private constant scaler = 10**18;
     uint256 private constant multiply = 10000; // The multiplier placement supports 0.00001
     uint256 public nonce = 0;
@@ -92,6 +90,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256 imgId,
         uint256 amount
     );
+
     event RewardNft(
         uint256 indexed sessionId,
         uint8 rewardType,
@@ -103,18 +102,21 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256 imgId,
         uint256 amount
     );
+
     event Stake(
         address indexed staker,
         uint256 indexed sessionId,
         uint32 challengeId,
         uint256 nftId
     );
+
     event Unstake(
         address indexed staker,
         uint256 indexed sessionId,
         uint32 challengeId,
         uint256 nftId
     );
+
     event Claim(
         address indexed staker,
         uint256 indexed sessionId,

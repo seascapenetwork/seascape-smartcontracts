@@ -16,10 +16,10 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
     using SafeMath for uint256;
     // The seascape NFT address
-    address scape;
-    address stakeToken;
-    address earnToken;
-    address zombieFarm;
+    address public scape;
+    address public stakeToken;
+    address public earnToken;
+    address public zombieFarm;
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
 
@@ -34,6 +34,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         int8[5] generation;     // Generation (-1 if not filtered)
         uint8[5] quality;       // Quality (0 if not filtered)
     }
+
     struct SessionChallenge {
         uint8 levelId;
         uint32 prevChallengeId;    // This is the previous challenge id if level is
@@ -49,12 +50,13 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 		    uint256 claimed;       		// amount of already claimed CWS
 
         uint256 rewardUnit;    		// reward per second = totalReward/period
-		    uint256 interestPerToken; 	// total earned interest per token since the beginning
-									// of the session
-		    uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
-									// since the beginning of the session
-		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+        uint256 interestPerToken; 	// total earned interest per token since the beginning
+        // of the session
+        uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
+        // since the beginning of the session
+        uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
     }
+
     struct PlayerChallenge {
         uint256 stakedTime;
 
@@ -92,6 +94,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         uint256 imgId,
         uint256 amount
     );
+
     event RewardNft(
         uint256 indexed sessionId,
         uint8 rewardType,
@@ -103,18 +106,21 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         uint256 imgId,
         uint256 amount
     );
+
     event Stake(
         address indexed staker,
         uint256 indexed sessionId,
         uint32 challengeId,
         uint256[5] nftId
     );
+
     event Unstake(
         address indexed staker,
         uint256 indexed sessionId,
         uint32 challengeId,
         uint256 nftId
     );
+
     event Claim(
         address indexed staker,
         uint256 indexed sessionId,

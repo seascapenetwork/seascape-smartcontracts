@@ -7,9 +7,9 @@ import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @notice Stake a one token, and earn another token
 contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
 
-    address stakeToken;
-    address earnToken;
-    address zombieFarm;
+    address public stakeToken;
+    address public earnToken;
+    address public zombieFarm;
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
 
@@ -80,6 +80,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         uint256 imgId,
         uint256 amount
     );
+
     event RewardNft(
         uint256 indexed sessionId,
         uint8 rewardType,
@@ -91,6 +92,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         uint256 imgId,
         uint256 amount
     );
+
     event Stake(
         address indexed staker,
         uint256 indexed sessionId,
@@ -98,6 +100,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         uint256 amount,
         uint256 sessionAmount
     );
+
     event Unstake(
         address indexed staker,
         uint256 indexed sessionId,
@@ -105,6 +108,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         uint256 amount,
         uint256 sessionAmount
     );
+
     event Claim(
         address indexed staker,
         uint256 indexed sessionId,

@@ -1,7 +1,7 @@
 pragma solidity 0.6.7;
 
-import "./../seascape_nft/NftFactory.sol";
 import "./ZombieFarmRewardInterface.sol";
+import "./../seascape_nft/NftFactory.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @notice Reward a Scape Nft with certain ERC20 token
@@ -10,10 +10,10 @@ import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// non 0 - loot box for the level
 contract ScapeNftReward is ZombieFarmRewardInterface {
 
-    address factory;
-    address zombieFarm;
+    address public factory;
+    address public zombieFarm;
     /// @dev The account that keeps all ERC20 tokens
-    address pool;
+    address public pool;
 
     struct Params {
         uint256 imgId;
@@ -21,11 +21,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
 	      uint8 quality;
         address token;
         uint256 amount;
-    }
-
-    modifier onlyZombieFarm () {
-	     require(msg.sender == zombieFarm, "only ZombieFarm can call");
-	      _;
     }
 
     mapping(uint256 => mapping(uint16 => Params)) public sessionRewards;
@@ -51,6 +46,11 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         uint256 imgId,
         uint256 amount
     );
+
+    modifier onlyZombieFarm () {
+       require(msg.sender == zombieFarm, "only ZombieFarm can call");
+        _;
+    }
 
     constructor (address _factory, address _zombieFarm, address _pool) public {
         require(_factory != address(0), "invalid _factory address");
@@ -85,7 +85,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
 
         return true;
     }
-
 
     function saveReward(uint256 sessionId, uint8 rewardType, bytes calldata data)
         external
