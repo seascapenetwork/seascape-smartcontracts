@@ -2,9 +2,10 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Stake a one token, and earn another token
-contract SingleTokenChallenge is ZombieFarmChallengeInterface {
+contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard  {
 
     address stakeToken;
     address earnToken;
@@ -199,6 +200,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Params storage challenge = challenges[challengeId];
@@ -277,6 +279,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Params storage challenge = challenges[challengeId];
@@ -363,6 +366,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Params storage challenge = challenges[challengeId];
