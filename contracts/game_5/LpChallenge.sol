@@ -356,7 +356,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
                 "insufficient contract balances");
             require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
-       		emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
+            emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
         }
     }
 
@@ -409,7 +409,7 @@ contract LpChallenge is ZombieFarmChallengeInterface {
                 "insufficient contract balances");
             require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
-       		emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
+       	    emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
         }
     }
 
@@ -488,8 +488,8 @@ contract LpChallenge is ZombieFarmChallengeInterface {
                 time = time + duration;
 
                 if (playerChallenge.overStakeAmount > 0) {
-                    time = time + (duration * ((playerChallenge.overStakeAmount
-                        * sessionChallenge.multiplier) / multiply) / scaler);
+                    time = time + (duration * ((playerChallenge
+                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
                 }
             }
         }
