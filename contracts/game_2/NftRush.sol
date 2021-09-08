@@ -183,8 +183,8 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
 
         Balance storage _balance  = balances[_sessionId][msg.sender];
 
-        require(_balance.amount.add(_amount) <= maxSpend, 
-            "NFT Rush: Can not spent more than max spending limit");
+        require(_balance.amount == 0,
+            "NFT Rush: Can not spent more than one time");
 
         _balance.amount = _balance.amount.add(_amount);
 	
