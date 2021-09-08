@@ -16,10 +16,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    /// @dev keep count of SalesObject amount
-    uint256 public salesAmount;
-
-
     /// @notice individual sale related data
     struct SalesObject {
         uint256 id;               // sales ID
@@ -33,12 +29,23 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
     }
 
+    /// @dev keep count of SalesObject amount
+    uint256 public salesAmount;
+
     /// @dev store sales objects.
     /// @param nft token address => (nft id => salesObject)
     mapping(address => mapping(uint256 => SalesObject)) salesObjects; // store sales in a mapping
+
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedNft;
     mapping(address => bool) public supportedCurrency;
+
+    /// @notice enable/disable trading
+    bool public salesEnabled;
+
+    /// @dev fee rate and fee reciever. feeAmount = (feeRate / 1000) * price
+    uint256 public feeRate;
+    address payable feeReceiver;
 
     event Buy(
         uint256 indexed id,
@@ -48,6 +55,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 tipsFee,
         address currency
     );
+
     event Sell(
         uint256 indexed id,
         uint256 tokenId,
@@ -58,6 +66,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 startTime,
         uint256 price
     );
+
     event SaleCanceled(uint256 indexed id, uint256 tokenId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
