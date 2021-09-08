@@ -3,9 +3,11 @@ pragma solidity 0.6.7;
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @notice Stake a one token, and earn another token
 contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
+    using SafeERC20 for IERC20;
 
     address public stakeToken;
     address public earnToken;
@@ -595,9 +597,9 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         playerChallenge.claimed = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            _token.transferFrom(pool, staker, contractBalance);
+            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         } else {
-            _token.transferFrom(pool, staker, interest);
+            IERC20(_token).safeTransferFrom(pool, staker, interest);
         }
 
         //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
