@@ -527,7 +527,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
 		    uint256 contractBalance = _token.balanceOf(pool);
 
-		    if (interest > 0 && contractBalance < interest) {
+		    if (contractBalance < interest) {
 			      playerChallenge.unpaidReward = (interest - contractBalance)
                 + playerChallenge.unpaidReward;
 		     }
