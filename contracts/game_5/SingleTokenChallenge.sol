@@ -2,10 +2,12 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Stake a one token, and earn another token
 contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard  {
+    using SafeERC20 for IERC20;
 
     address public stakeToken;
     address public earnToken;
@@ -241,8 +243,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         /// by user provided tokens.
         IERC20 _token = IERC20(challenge.stake);
         require(_token.balanceOf(staker) >= amount, "not enough staking token");
-        require(_token.transferFrom(staker, address(this), amount),
-            "transferFrom staker failed");
+        IERC20(_token).safeTransferFrom(staker, address(this), amount);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
         if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
@@ -344,7 +345,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
             require(_token.transfer(staker, amount), "transfer to staker failed");
 
             emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
-            
+
         } else {
             playerChallenge.amount = 0;
             playerChallenge.overStakeAmount = 0;
@@ -588,9 +589,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         playerChallenge.claimed = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            _token.transferFrom(pool, staker, contractBalance);
+            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         } else {
-            _token.transferFrom(pool, staker, interest);
+            IERC20(_token).safeTransferFrom(pool, staker, interest);
         }
 
         //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
