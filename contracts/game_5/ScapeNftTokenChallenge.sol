@@ -2,6 +2,7 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 
@@ -14,6 +15,7 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 /// If user's nft is in the game, then deposit accepts only
 ///     amount.
 contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
+    using SafeERC20 for IERC20;
 
     // The seascape NFT address
     address public scape;
@@ -282,12 +284,11 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         /// by user provided tokens.
         IERC20 _token = IERC20(challenge.stake);
         require(_token.balanceOf(staker) >= amount, "staker balances insufficient");
-        require(_token.transferFrom(staker, address(this), amount),
-            "transferFrom staker failed");
+        IERC20(_token).safeTransferFrom(staker, address(this), amount);
 
         if (nftId != playerChallenge.nftId) {
             IERC721 _nft = IERC721(scape);
-            _nft.transferFrom(staker, address(this), nftId);
+            _nft.safeTransferFrom(staker, address(this), nftId);
             playerChallenge.nftId = nftId;
         }
 
@@ -432,7 +433,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         require(_token.transfer(staker, totalStake),
             "transfer to staker failed");
 
-        _nft.transferFrom(address(this), staker, playerChallenge.nftId);
+        _nft.safeTransferFrom(address(this), staker, playerChallenge.nftId);
 
        	emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount, 0);
 
@@ -502,7 +503,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
             require(_token.transfer(staker, totalStake), "transfer to staker failed");
 
             if (challenge.burn) {
-                _nft.transferFrom(address(this), address(0), playerChallenge.nftId);
+                _nft.safeTransferFrom(address(this), address(0), playerChallenge.nftId);
             }
 
             emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
@@ -678,9 +679,9 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         playerChallenge.claimed = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            _token.transferFrom(pool, staker, contractBalance);
+            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         } else {
-            _token.transferFrom(pool, staker, interest);
+            IERC20(_token).safeTransferFrom(pool, staker, interest);
         }
 
     //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
