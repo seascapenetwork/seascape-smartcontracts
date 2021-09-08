@@ -2,6 +2,7 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
@@ -15,6 +16,8 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 /// If user's nft is in the game, then deposit is unavailable.
 abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
     // The seascape NFT address
     address public scape;
     address public stakeToken;
@@ -261,7 +264,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         updateInterestPerToken(sessionChallenge);
 
         for (uint8 i = 0; i < challenge.nftAmount; i++) {
-            _nft.transferFrom(staker, address(this), nftId[i]);
+            _nft.safeTransferFrom(staker, address(this), nftId[i]);
             playerChallenge.nftId[i] = nftId[i];
             playerChallenge.weight[i] = weight[i];
         }
@@ -376,7 +379,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
             playerChallenge.completed = true;
 
             for (uint8 i = 0; i < challenge.nftAmount; i++) {
-                _nft.transferFrom(address(this), staker, playerChallenge.nftId[i]);
+                _nft.safeTransferFrom(address(this), staker, playerChallenge.nftId[i]);
                 playerChallenge.nftId[i] = 0;
                 sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight[i]);
                 claimedAmount += playerChallenge.weight[i];
@@ -523,9 +526,9 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         playerChallenge.claimed     = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            _token.transferFrom(pool, staker, contractBalance);
+            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         } else {
-            _token.transferFrom(pool, staker, interest);
+            IERC20(_token).safeTransferFrom(pool, staker, interest);
         }
 
     		//emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);

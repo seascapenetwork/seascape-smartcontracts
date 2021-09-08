@@ -2,8 +2,8 @@ pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Stake a one token, and earn another token
 contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
