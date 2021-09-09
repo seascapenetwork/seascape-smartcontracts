@@ -280,9 +280,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         view
         returns(uint256, uint256)
     {
-        if (stakedNftId > 0) {
-            return (stakedNftId, stakedWeight);
-        }
 
         uint8 v;
         bytes32 r;
@@ -380,8 +377,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "session does not exist
-        ");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
