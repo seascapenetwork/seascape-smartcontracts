@@ -89,7 +89,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         address indexed staker,
         uint256 fee
     );
-    
+
     event Repick(
         uint256 indexed sessionId,
         uint32 indexed challengeId,
@@ -98,6 +98,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     );
 
     constructor(address _crowns) public {
+        require(_crowns != address(0),"invalid _crowns address!");
         crowns = CrownsToken(_crowns);
     }
 
