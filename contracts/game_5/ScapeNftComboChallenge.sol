@@ -236,6 +236,9 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "challange already completed");
 
+        require(isActive(sessionChallenge.startTime, sessionChallenge.endTime),
+            "Challenge should be active");
+
         require(playerChallenge.nftId[0] == 0, "already staked");
 
         // Previous Challenge should be completed
