@@ -27,6 +27,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     // Session global variables and structures
     //
     uint8 public lastSessionId;
+
     struct Session {
         uint256 startTime;
         uint256 period;
@@ -35,6 +36,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint256 speedUpFee;
         uint256 repickFee;
     }
+
     mapping(uint256 => Session) public sessions;
     /// @dev There could be only one challenge category per level.
     /// mapping structure: session -> challenge id = true|false
@@ -70,20 +72,24 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint8 levelAmount,
         uint16 grandRewardId
     );
+
     event AddSupportedReward(
         uint16 indexed rewardId,
         address indexed rewardAdress
     );
+
     event AddSupportedChallenge(
         uint32 indexed challengeId,
         address indexed challengeAddress
     );
+
     event SpeedUp(
         uint256 indexed sessionId,
         uint32 indexed challengeId,
         address indexed staker,
         uint256 fee
     );
+    
     event Repick(
         uint256 indexed sessionId,
         uint32 indexed challengeId,
@@ -268,7 +274,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         challenge.complete(sessionId, challengeId, msg.sender);
 
-        SpeedUp(sessionId, challengeId, msg.sender, fee);
+        emit SpeedUp(sessionId, challengeId, msg.sender, fee);
     }
 
     function repick(uint256 sessionId, uint32 challengeId) external {
@@ -289,7 +295,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         require(crowns.spendFrom(msg.sender, fee), "failed to spend fee");
 
-        Repick(sessionId, challengeId, msg.sender, fee);
+        emit Repick(sessionId, challengeId, msg.sender, fee);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
