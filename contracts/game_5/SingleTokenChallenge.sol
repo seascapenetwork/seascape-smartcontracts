@@ -219,6 +219,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "challange already completed");
 
+        require(isActive(sessionChallenge.startTime, sessionChallenge.endTime),
+            "Challenge should be active");
+
         // Previous Challenge should be completed
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge = playerParams[sessionId][sessionChallenge
