@@ -189,13 +189,13 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].earn != address(0),
-            "single token.challenge no exist");
-        require(reward[offset] > 0, "single token.reward==0");
-        require(levelId[offset] > 0, "single token.level==0");
-        require(sessionId > 0, "single token.session id==0");
-        require(stakePeriod[offset] > 0, "single token.stake period==0");
-        require(session.totalReward == 0, "challenge to level added before");
-        require(startTime > 0 && period > 0, "single token: session time==0");
+            "challenge does not exist");
+        require(reward[offset] > 0, "reward should be more than 0");
+        require(levelId[offset] > 0, "levelId should be more than 0");
+        require(sessionId > 0, "seesionId should be more than 0");
+        require(stakePeriod[offset] > 0, "stakeAmount should be above 0");
+        require(session.totalReward == 0, "challenge added to level before");
+        require(startTime > 0 && period > 0, "stakePeriod should be above 0");
         if (prevChallengeId[offset] > 0) {
             require(challenges[prevChallengeId[offset]].earn != address(0),
                 "previous challenge incomplete");
@@ -225,7 +225,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -328,7 +328,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -380,7 +380,8 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist
+        ");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];

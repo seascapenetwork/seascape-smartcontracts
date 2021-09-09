@@ -129,7 +129,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
     /// @notice indicates that a new challenge of this challenge category is supported by Zombie Farm
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].stake == address(0), "single token challenge exists");
+        require(challenges[id].stake == address(0), "challenge already exists");
 
         address _stake;
         address _earn;
@@ -177,14 +177,14 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].stake != address(0),
-            "single token.challenge no exist");
-        require(reward[offset] > 0, "single token.reward==0");
-        require(levelId[offset] > 0, "single token.level==0");
-        require(sessionId > 0, "single token.session id==0");
-        require(stakeAmount[offset] > 0, "single token.stake amount==0");
-        require(stakePeriod[offset] > 0, "single token.stake period==0");
-        require(session.totalReward == 0, "challenge to level added before");
-        require(startTime > 0 && period > 0, "single token: session time==0");
+            "challenge does not exist");
+        require(reward[offset] > 0, "reward should be more than 0");
+        require(levelId[offset] > 0, "levelId should be more than 0");
+        require(sessionId > 0, "seesionId should be more than 0");
+        require(stakeAmount[offset] > 0, "stakeAmount should be above 0");
+        require(stakePeriod[offset] > 0, "stakePeriod should be above 0");
+        require(session.totalReward == 0, "challenge added to level before");
+        require(startTime > 0 && period > 0, "session duration can't be 0");
         if (prevChallengeId[offset] > 0) {
             require(challenges[prevChallengeId[offset]].stake != address(0),
                 "previous challenge incomplete");
@@ -213,7 +213,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -234,7 +234,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         /// Staking amount
         uint256 amount;
         (amount) = abi.decode(data, (uint256));
-        require(amount > 0, "single token:amount==0");
+        require(amount > 0, "invalid amount: cant be 0");
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
             "time completed");
@@ -294,7 +294,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -306,7 +306,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         /// Staking amount
         uint256 amount;
         (amount) = abi.decode(data, (uint256));
-        require(amount <= totalStake, "single token:exceed stake");
+        require(amount <= totalStake, "can't unstake more than staked");
 
         updateInterestPerToken(sessionChallenge);
 
@@ -382,7 +382,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token: session not exist");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];

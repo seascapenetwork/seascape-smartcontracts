@@ -144,7 +144,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     /// @notice support a new Challenge of this category by Zombie Farm
     /// Each Challenge of this category is different based on their earning, staking or scape nft parameter.
     function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].earn == address(0), "single token challenge exists");
+        require(challenges[id].earn == address(0), "challenge already exists");
 
         address _earn;
 
@@ -194,13 +194,13 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
         require(challenges[id[offset]].earn != address(0),
-            "single token.challenge no exist");
-        require(reward[offset] > 0, "single token.reward==0");
-        require(levelId[offset] > 0, "single token.level==0");
-        require(sessionId > 0, "single token.session id==0");
-        require(stakePeriod[offset] > 0, "single token.stake period==0");
-        require(session.totalReward == 0, "challenge to level added before");
-        require(startTime > 0 && period > 0, "single token: session time==0");
+            "challenge does not exist");
+        require(reward[offset] > 0, "reward should be more than 0");
+        require(levelId[offset] > 0, "levelId should be more than 0");
+        require(sessionId > 0, "seesionId should be more than 0");
+        require(stakePeriod[offset] > 0, "stakePeriod should be above 0");
+        require(session.totalReward == 0, "challenge added to level before");
+        require(startTime > 0 && period > 0, "session duration can't be 0");
         if (prevChallengeId[offset] > 0) {
             require(challenges[prevChallengeId[offset]].earn != address(0),
                 "previous challenge incomplete");
@@ -359,7 +359,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "single token:no exist session");
+        require(sessionChallenge.levelId > 0, "session does not exist");
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
