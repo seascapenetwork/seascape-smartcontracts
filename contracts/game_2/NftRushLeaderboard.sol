@@ -55,6 +55,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     event PrizeSet(uint256[10] _spentDaily, uint256[10] _mintedAllTime);
     event AnnounceDailyWinners(uint256 indexed sessionId, address[10] spentWinners);
     event AnnounceAllTimeWinners(uint256 indexed sessionId, address[10] mintedWinners);
+    event Received(address sender, uint256 amount);
 
     //----------------------------------------------------------------------
     // Pre-game. Following methods executed once before game session begins
@@ -111,20 +112,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
+    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
         require(dailySpentWinnersAnnouncable(_sessionId), "NFT Rush: already set or too early");
         require(_winnersAmount <= 10, "NFT Rush: exceeded possible amount of winners");
 
         if (_winnersAmount > 0) {
-            uint256 _prizeSum = prizeSum(spentDailyPrizes, _winnersAmount);
-
             Session storage _session = sessions[_sessionId];
-            if(_session.rewardToken == address(0x0)) {
-                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
-            } else {
-                IERC20 _reward = IERC20(_session.rewardToken);
-                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
-            }
 
             for (uint i=0; i<_winnersAmount; i++) {     
                 address _winner = _winners[i];
@@ -150,20 +143,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
+    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
         require(allTimeMintedWinnersAnnouncable(_sessionId), "NFT Rush: all time winners set already");
         require(_winnersAmount <= 10, "NFT Rush: too many winners");
 
         if (_winnersAmount > 0) {
-            uint256 _prizeSum = prizeSum(mintedAllTimePrizes, _winnersAmount);
-
             Session storage _session = sessions[_sessionId];
-            if(_session.rewardToken == address(0x0)) {
-                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
-            } else {
-                IERC20 _reward = IERC20(_session.rewardToken);
-                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
-            }
 
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
@@ -203,8 +188,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
         uint256 _amount = spentDailyClaimables[_msgSender()][_session.rewardToken];
 
-        require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
-        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
+        if(_session.rewardToken == address(0x0)) {
+            msg.sender.transfer(_amount);
+        } else {
+            require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
+            _safeTransfer(_session.rewardToken, _msgSender(), _amount);
+        }
 
         spentDailyClaimables[_msgSender()][_session.rewardToken] = 0;
         
@@ -230,8 +219,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
         uint256 _amount = mintedAllTimeClaimables[_msgSender()][_session.rewardToken];
 
-        require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
-        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
+        if(_session.rewardToken == address(0x0)) {
+            msg.sender.transfer(_amount);
+        } else {
+            require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
+            _safeTransfer(_session.rewardToken, _msgSender(), _amount);
+        }
 
         mintedAllTimeClaimables[_msgSender()][_session.rewardToken] = 0;
         
@@ -340,5 +333,6 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     }
 
     receive() external payable {
+        emit Received(msg.sender, msg.value);
     }
 }
