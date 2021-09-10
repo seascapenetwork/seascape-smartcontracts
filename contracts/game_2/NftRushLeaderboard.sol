@@ -47,8 +47,8 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  
      *  - wallet address => token address => prizes sum
      */
-    mapping(address => address => uint256) public spentDailyClaimables;
-    mapping(address => address => uint256) public mintedAllTimeClaimables;
+    mapping(address => mapping(address => uint256)) public spentDailyClaimables;
+    mapping(address => mapping(address => uint256)) public mintedAllTimeClaimables;
 
     
     event Rewarded(address indexed owner, string rewardType, uint256 amount);
@@ -73,8 +73,8 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  @param _startTime the first day of leaderboard, to track daily winners announcement
      */
     function announceLeaderboard(uint256 _sessionId, uint256 _startTime) internal {      
-	    // this variables are part of leaderboard,
-	    // therefore located in leaderboard contract
+        // this variables are part of leaderboard,
+        // therefore located in leaderboard contract
         announcement[_sessionId] = Announcement(false, _startTime);    
     }
 
@@ -87,7 +87,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      */
     function setPrizes(uint256[10] calldata _spentDaily, uint256[10] calldata _mintedAllTime) external onlyOwner {
         spentDailyPrizes = _spentDaily;
-	    mintedAllTimePrizes = _mintedAllTime;    
+        mintedAllTimePrizes = _mintedAllTime;    
 
         emit PrizeSet(_spentDaily, _mintedAllTime);   
     }
@@ -111,7 +111,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
+    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
         require(dailySpentWinnersAnnouncable(_sessionId), "NFT Rush: already set or too early");
         require(_winnersAmount <= 10, "NFT Rush: exceeded possible amount of winners");
 
@@ -126,13 +126,13 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
                 require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
             }
 
-            for (uint i=0; i<_winnersAmount; i++) {		
+            for (uint i=0; i<_winnersAmount; i++) {     
                 address _winner = _winners[i];
             
-                spentDailyClaimables[[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);		
+                spentDailyClaimables[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);     
             }
         }
-	
+    
         setDailySpentWinnersTime(_sessionId);
         emit AnnounceDailyWinners(_sessionId, _winners);
     }
@@ -150,7 +150,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
+    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
         require(allTimeMintedWinnersAnnouncable(_sessionId), "NFT Rush: all time winners set already");
         require(_winnersAmount <= 10, "NFT Rush: too many winners");
 
@@ -187,6 +187,8 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     /**
      *  @notice Player can claim leaderboard rewards.
      *
+     *  @param _sessionId a session of the game
+     * 
      *  Emits a {Rewarded} event.
      *
      *  Requirements:
@@ -194,22 +196,25 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `spentDailyClaimables` for player should be greater than 0
      *  - transfer of Crowns from contract balance to player must be successful.
      */
-    function claimDailySpent() external {
-        require(spentDailyClaimables[_msgSender()] > 0, "NFT Rush: no claimable CWS for leaderboard");
-
+    function claimDailySpent(uint256 _sessionId) external {
         Session storage _session = sessions[_sessionId];
+
+        require(spentDailyClaimables[_msgSender()][_session.rewardToken] > 0, "NFT Rush: no claimable CWS for leaderboard");
 
         uint256 _amount = spentDailyClaimables[_msgSender()][_session.rewardToken];
 
-        require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
+        require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
+        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
-        spentDailyClaimables[_msgSender()] = 0;
+        spentDailyClaimables[_msgSender()][_session.rewardToken] = 0;
         
         emit Rewarded(_msgSender(), "DAILY_SPENT", _amount);
     }
 
     /**
      *  @notice Player can claim leaderboard rewards.
+     *
+     *  @param _sessionId a session of the game
      *
      *  Emits a {Rewarded} event.
      *
@@ -218,16 +223,17 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `mintedAllTimeClaimables` for player should be greater than 0
      *  - transfer of Crowns from contract balance to player must be successful.
      */
-    function claimAllTimeMinted() external {
-        require(mintedAllTimeClaimables[_msgSender()] > 0, "NFT Rush: no claimable CWS for leaderboard");
-
+    function claimAllTimeMinted(uint256 _sessionId) external {
         Session storage _session = sessions[_sessionId];
+
+        require(mintedAllTimeClaimables[_msgSender()][_session.rewardToken] > 0, "NFT Rush: no claimable CWS for leaderboard");
 
         uint256 _amount = mintedAllTimeClaimables[_msgSender()][_session.rewardToken];
 
-        require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
+        require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
+        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
-        mintedAllTimeClaimables[_msgSender()] = 0;
+        mintedAllTimeClaimables[_msgSender()][_session.rewardToken] = 0;
         
         emit Rewarded(_msgSender(), "ALL_TIME_MINTED", _amount);
     }
@@ -249,7 +255,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         uint256 dayAfterSession = _session.startTime.add(_session.period).add(1 days);
 
         uint256 today = announcement[_sessionId].dailySpentTime.add(1 days);
-	    
+        
         // time should be 24 hours later than last announcement.
         // as we announce leaders for the previous 24 hours.
         //
@@ -272,7 +278,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         Session storage _session = sessions[_sessionId];
         return !isActive(_sessionId)
             && _session.startTime > 0
-            && !announcement[_sessionId].minted;		    
+            && !announcement[_sessionId].minted;            
     }
 
 
@@ -286,7 +292,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  that one more day's winners were announced.
      */
     function setDailySpentWinnersTime(uint256 _sessionId) internal {
-	    announcement[_sessionId].dailySpentTime = announcement[_sessionId].dailySpentTime.add(1 days);
+        announcement[_sessionId].dailySpentTime = announcement[_sessionId].dailySpentTime.add(1 days);
     }
 
     /**
@@ -334,4 +340,5 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     }
 
     receive() external payable {
+    }
 }
