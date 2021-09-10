@@ -119,8 +119,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
             uint256 _prizeSum = prizeSum(spentDailyPrizes, _winnersAmount);
 
             Session storage _session = sessions[_sessionId];
-            IERC20 _reward = IERC20(_session.rewardToken);
-            require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");	
+            if(_session.rewardToken == address(0x0)) {
+                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
+            } else {
+                IERC20 _reward = IERC20(_session.rewardToken);
+                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
+            }
 
             for (uint i=0; i<_winnersAmount; i++) {		
                 address _winner = _winners[i];
@@ -154,8 +158,12 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
             uint256 _prizeSum = prizeSum(mintedAllTimePrizes, _winnersAmount);
 
             Session storage _session = sessions[_sessionId];
-            IERC20 _reward = IERC20(_session.rewardToken);
-            require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");
+            if(_session.rewardToken == address(0x0)) {
+                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
+            } else {
+                IERC20 _reward = IERC20(_session.rewardToken);
+                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
+            }
 
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
