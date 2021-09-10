@@ -188,12 +188,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
         uint256 _amount = spentDailyClaimables[_msgSender()][_session.rewardToken];
 
-        if(_session.rewardToken == address(0x0)) {
-            msg.sender.transfer(_amount);
-        } else {
-            require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
-            _safeTransfer(_session.rewardToken, _msgSender(), _amount);
-        }
+        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
         spentDailyClaimables[_msgSender()][_session.rewardToken] = 0;
         
@@ -219,12 +214,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
         uint256 _amount = mintedAllTimeClaimables[_msgSender()][_session.rewardToken];
 
-        if(_session.rewardToken == address(0x0)) {
-            msg.sender.transfer(_amount);
-        } else {
-            require(IERC20(_session.rewardToken).transferFrom(address(this), _msgSender(), _amount), "NFT Rush: failed to transfer rewards to winner");
-            _safeTransfer(_session.rewardToken, _msgSender(), _amount);
-        }
+        _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
         mintedAllTimeClaimables[_msgSender()][_session.rewardToken] = 0;
         
