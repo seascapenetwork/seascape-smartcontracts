@@ -1,5 +1,7 @@
 pragma solidity 0.6.7;
 
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
@@ -40,7 +42,7 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
     /// @dev session id =>(wallet address => (Balance struct))
     mapping(uint256 => mapping(address => Balance)) public balances;
 
-    event SessionStarted(uint256 indexed sessionId, uint256 interval, uint256 period, uint256 generation);
+    event SessionStarted(address indexed rewardToken, uint256 indexed sessionId, uint256 interval, uint256 period, uint256 generation);
     event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
     event NftFactorySet(address factory);
@@ -82,16 +84,20 @@ contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
      *
      *  - if some other session was launched before, that session should be ended.
      */
-    function startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external onlyOwner {
+    function startSession(address _rewardToken, uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external onlyOwner {
         if (lastSessionId() > 0) {
             require(!isActive(lastSessionId()), "NFT Rush: Can't start when session is active");
         }
 
-        uint256 _sessionId = _startSession(_interval, _period, _startTime, _generation);
+        if(_rewardToken != address(0)) {
+            IERC20 _reward = IERC20(_rewardToken);
+        }
+
+        uint256 _sessionId = _startSession(_rewardToken, _interval, _period, _startTime, _generation);
         
         announceLeaderboard(_sessionId, _startTime);
 
-        emit SessionStarted(_sessionId, _interval, _period, _generation);
+        emit SessionStarted(_rewardToken, _sessionId, _interval, _period, _generation);
     }
 
     

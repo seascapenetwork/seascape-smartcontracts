@@ -1,9 +1,11 @@
 pragma solidity 0.6.7;
 
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./NftRushGameSession.sol";
-import "./NftRushCrowns.sol";
+//import "./NftRushCrowns.sol";
 
 /// @notice There are four types of leaderboards in the game:
 ///
@@ -11,7 +13,7 @@ import "./NftRushCrowns.sol";
 /// - top daily minters
 /// 
 /// @author Medet Ahmetson
-contract Leaderboard is Ownable, GameSession, Crowns {
+contract Leaderboard is Ownable, GameSession { //, Crowns {
     using SafeMath for uint256;
 
     struct Announcement {
@@ -116,7 +118,9 @@ contract Leaderboard is Ownable, GameSession, Crowns {
         if (_winnersAmount > 0) {
             uint256 _prizeSum = prizeSum(spentDailyPrizes, _winnersAmount);
 
-            require(crowns.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");	
+            Session storage _session = sessions[_sessionId];
+            IERC20 _reward = IERC20(_session.rewardToken);
+            require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");	
 
             for (uint i=0; i<_winnersAmount; i++) {		
                 address _winner = _winners[i];
@@ -148,7 +152,10 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 
         if (_winnersAmount > 0) {
             uint256 _prizeSum = prizeSum(mintedAllTimePrizes, _winnersAmount);
-            require(crowns.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");
+
+            Session storage _session = sessions[_sessionId];
+            IERC20 _reward = IERC20(_session.rewardToken);
+            require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough CWS to give as a reward");
 
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
@@ -184,7 +191,8 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 
         uint256 _amount = spentDailyClaimables[_msgSender()];
 
-        require(crowns.transfer(_msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
+        Session storage _session = sessions[_sessionId];
+        require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
 
         spentDailyClaimables[_msgSender()] = 0;
         
@@ -206,7 +214,8 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 
         uint256 _amount = mintedAllTimeClaimables[_msgSender()];
 
-        require(crowns.transfer(_msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
+        Session storage _session = sessions[_sessionId];
+        require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
 
         mintedAllTimeClaimables[_msgSender()] = 0;
         
@@ -293,4 +302,26 @@ contract Leaderboard is Ownable, GameSession, Crowns {
 
         return _sum;
     }
+
+    function _safeTransfer(address _token, address _to, uint256 _amount) internal {
+        if (_token != address(0)) {
+            IERC20 _rewardToken = IERC20(_token);
+
+            uint256 _balance = _rewardToken.balanceOf(address(this));
+            if (_amount > _balance) {
+                _rewardToken.transfer(_to, _balance);
+            } else {
+                _rewardToken.transfer(_to, _amount);
+            }
+        } else {
+            uint256 _balance = address(this).balance;
+            if (_amount > _balance) {
+                payable(_to).transfer(_balance);
+            } else {
+                payable(_to).transfer(_amount);
+            }
+        }
+    }
+
+    receive() external payable {
 }

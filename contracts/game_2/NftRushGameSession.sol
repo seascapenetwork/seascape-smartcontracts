@@ -16,6 +16,7 @@ contract GameSession is Ownable {
     Counters.Counter private sessionId;
 
     struct Session {
+        address rewardToken,   // The token that user get from leaderboards
         uint256 interval;      // period between intervals
         uint256 period;        // duration of session
         uint256 startTime;     // unix timestamp when session starts
@@ -26,7 +27,7 @@ contract GameSession is Ownable {
     /// Game session is active for a certain period of time only
     mapping(uint256 => Session) public sessions;
 
-    event SessionStarted(uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
+    event SessionStarted(address indexed rewardToken, uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
     
     //--------------------------------------------------
     // Only owner
