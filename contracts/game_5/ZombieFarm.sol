@@ -516,7 +516,10 @@ contract ZombieFarm is Ownable, IERC721Receiver{
                 return false;
             } else if (playerChallenges[i] == 0) {
                 full = false;
+            } else {
+                full = true;
             }
+
         }
         return full;
     }
