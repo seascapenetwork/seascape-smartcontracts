@@ -308,6 +308,8 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         uint256 amount;
         (amount) = abi.decode(data, (uint256));
         require(amount <= totalStake, "can't unstake more than staked");
+        require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
+            "stake amount should be >= amount");
 
         updateInterestPerToken(sessionChallenge);
 
@@ -390,6 +392,8 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
         require(!playerChallenge.completed, "already completed and claimed");
         require(playerChallenge.amount > 0, "stake amount zero");
+        require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
+            "stake amount should be >= amount");
 
         updateInterestPerToken(sessionChallenge);
 
