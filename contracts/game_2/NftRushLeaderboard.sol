@@ -45,10 +45,10 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *
      *  Structure:
      *  
-     *  - wallet address => prizes sum
+     *  - wallet address => token address => prizes sum
      */
-    mapping(address => uint256) public spentDailyClaimables;
-    mapping(address => uint256) public mintedAllTimeClaimables;
+    mapping(address => address => uint256) public spentDailyClaimables;
+    mapping(address => address => uint256) public mintedAllTimeClaimables;
 
     
     event Rewarded(address indexed owner, string rewardType, uint256 amount);
@@ -129,7 +129,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
             for (uint i=0; i<_winnersAmount; i++) {		
                 address _winner = _winners[i];
             
-                spentDailyClaimables[_winner] = spentDailyClaimables[_winner].add(spentDailyPrizes[i]);		
+                spentDailyClaimables[[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);		
             }
         }
 	
@@ -169,7 +169,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
                 address _winner = _winners[i];
             
                 // increase amount of daily rewards that msg.sender could claim
-                mintedAllTimeClaimables[_winner] = mintedAllTimeClaimables[_winner].add(mintedAllTimePrizes[i]);
+                mintedAllTimeClaimables[_winner][_session.rewardToken] = mintedAllTimeClaimables[_winner][_session.rewardToken].add(mintedAllTimePrizes[i]);
             }
         }
 
@@ -197,9 +197,10 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     function claimDailySpent() external {
         require(spentDailyClaimables[_msgSender()] > 0, "NFT Rush: no claimable CWS for leaderboard");
 
-        uint256 _amount = spentDailyClaimables[_msgSender()];
-
         Session storage _session = sessions[_sessionId];
+
+        uint256 _amount = spentDailyClaimables[_msgSender()][_session.rewardToken];
+
         require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
 
         spentDailyClaimables[_msgSender()] = 0;
@@ -220,9 +221,10 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     function claimAllTimeMinted() external {
         require(mintedAllTimeClaimables[_msgSender()] > 0, "NFT Rush: no claimable CWS for leaderboard");
 
-        uint256 _amount = mintedAllTimeClaimables[_msgSender()];
-
         Session storage _session = sessions[_sessionId];
+
+        uint256 _amount = mintedAllTimeClaimables[_msgSender()][_session.rewardToken];
+
         require(_safeTransfer(_session.rewardToken, _msgSender(), _amount), "NFT Rush: failed to transfer CWS to winner");
 
         mintedAllTimeClaimables[_msgSender()] = 0;
