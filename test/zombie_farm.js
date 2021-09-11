@@ -105,13 +105,13 @@ contract("Game 5: Zombie Farm", async accounts => {
 
   it("2. should add scape nft reward to zombie farm", async () => {
     let initialAmount = await zombieFarm.supportedRewardsAmount();
-    
+
     await zombieFarm.addSupportedReward(scapeNftReward.address);
 
     let amount = await zombieFarm.supportedRewardsAmount();
     let idToAddr = await zombieFarm.supportedRewards(1);
     let addrToId = await zombieFarm.rewardAddresses(scapeNftReward.address);
-    
+
     assert.equal(initialAmount, 0, "initial amount");
     assert.equal(amount, 1, "amount after reward support");
     assert.equal(idToAddr, scapeNftReward.address, "reward address");
@@ -194,15 +194,15 @@ contract("Game 5: Zombie Farm", async accounts => {
     let data = web3.eth.abi.encodeParameters(
       ['uint8[5]', 'uint256[5]', 'uint256[5]', 'uint8[5]', 'address[5]', 'uint256[5]'],
       [
-        [1, 2, 3, 4, 0], 
-        [imgId, imgId + 1, imgId -1, imgId + 2, 0], 
-        [generation, generation, generation, generation, 0], 
-        [quality, 1, 2, 3, 0], 
-        [crowns.address, crowns.address, crowns.address, crowns.address, zombieFarm.address], 
+        [1, 2, 3, 4, 0],
+        [imgId, imgId + 1, imgId -1, imgId + 2, 0],
+        [generation, generation, generation, generation, 0],
+        [quality, 1, 2, 3, 0],
+        [crowns.address, crowns.address, crowns.address, crowns.address, zombieFarm.address],
         [wei, wei, wei, wei, 0]
       ]
     );
-    
+
     //addCategoryRewards(uint8 sessionId, uint8 rewardAmount, uint16 rewardId, bytes calldata data)
     await zombieFarm.addCategoryRewards(sessionId, levelAmount, rewardId, data);
 
@@ -228,7 +228,7 @@ contract("Game 5: Zombie Farm", async accounts => {
     let data = web3.eth.abi.encodeParameters(
       ['uint32[5]', 'uint8[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint256[5]', 'uint32[5]'],
       [[challengeId, challengeId + 1, challengeId + 2, 0, 0], [1, 1, 1, 0, 0], [wei, wei, wei, 0, 0],
-      [stakeAmountWei, stakeAmountWei, stakeAmountWei, 0, 0], [stakePeriod, stakePeriod, stakePeriod, 0, 0], 
+      [stakeAmountWei, stakeAmountWei, stakeAmountWei, 0, 0], [stakePeriod, stakePeriod, stakePeriod, 0, 0],
       [multiply, multiply, multiply, 0, 0], [prevChallengeId, prevChallengeId, prevChallengeId, 0, 0]]
     );
 
@@ -303,7 +303,7 @@ contract("Game 5: Zombie Farm", async accounts => {
 
     await sleep(2000);
 
-    await zombieFarm.claim(sessionId, challengeId, data, {from: player});
+    await zombieFarm.claim(sessionId, challengeId, {from: player});
 
     let afterSession = await singleTokenChallenge.sessionChallenges(sessionId, challengeId);
 

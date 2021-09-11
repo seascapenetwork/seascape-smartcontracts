@@ -11,14 +11,14 @@ async function getAccount(id) {
 }
 
 module.exports = async function(deployer, network) {
-    if (network == "development") {
+    if (network == "development" || network == "ganache") {
         let pool = await getAccount(0);
 
         await deployer.deploy(ZombieFarm, Crowns.address);
         await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
         await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool);
         await deployer.deploy(LpChallenge, ZombieFarm.address, pool);
-        
+
         console.log("ZombieFarm contract was deployed at address: " + ZombieFarm.address);
 		console.log("ScapeNftReward contract was deployed at address: " + ScapeNftReward.address);
 		console.log("SingleTokenChallenge contract was deployed at address: " + SingleTokenChallenge.address);
