@@ -8,7 +8,7 @@ async function getAccount(id) {
 }
 
 
-const tipsFeeRate = 100;	// 1 = 0.1%, 10 = 1%, 100 = 10%
+const tipsFeeRate = 10;	// 1 = 0.1%, 10 = 1%, 100 = 10%
 
 module.exports = function(deployer, network) {
       if (network == "ganache") {
@@ -27,12 +27,28 @@ module.exports = function(deployer, network) {
         });
       }
       else if (network == 'bsc') {
-        let feesReciever = "0x155E13c0a337e80f5924732706Efe858D7003c20";
+        let feesReciever = "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
 
         deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
           .then(function() {
             console.log(`Scape Store on ${NftMarket.address}`);
             console.log(`Now, set supported currencies by calling scripts/nft_market/init.js`);
           });
-      }
+      } else if (network == 'moonriver') {
+        let feesReciever = "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
+
+        deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
+          .then(function() {
+            console.log(`Scape Store on ${NftMarket.address}`);
+            console.log(`Now, set supported currencies by calling scripts/nft_market/init.js`);
+          });
+      } else if (network == 'mainnet') {
+      let feesReciever = "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
+
+      deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
+        .then(function() {
+          console.log(`Scape Store on ${NftMarket.address}`);
+          console.log(`Now, set supported currencies by calling scripts/nft_market/init.js`);
+        });
+    }
 };
