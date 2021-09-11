@@ -38,7 +38,7 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
 
     constructor(address _nftBrawl, address payable _gelato) public {
         gelato = _gelato;
-        nftBrawl = NftRush(_nftBrawl);
+        nftBrawl = NftRush(payable(_nftBrawl));
         payment = address(0);
     }
 
@@ -67,8 +67,8 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
         nftBrawl.transferOwnership(newOwner);
     }
 
-    function startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external override onlyOwner {
-        nftBrawl.startSession(_interval, _period, _startTime, _generation);
+    function startSession(address _rewardToken, uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external override onlyOwner {
+        nftBrawl.startSession(_rewardToken, _interval, _period, _startTime, _generation);
     }
 
     function setNftFactory(address _address) external override onlyOwner {

@@ -3,7 +3,7 @@ pragma solidity 0.6.7;
 /// @notice The list of methods that Manager can call.
 /// @author Medet Ahmetson
 interface NftBrawlInterface {
-    function startSession(uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external;
+    function startSession(address _rewardToken, uint256 _interval, uint256 _period, uint256 _startTime, uint256 _generation) external;
 
     function setNftFactory(address _address) external;
 
