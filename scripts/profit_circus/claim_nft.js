@@ -11,7 +11,7 @@ let accounts;
  */
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
-    let res = init(networkId);
+    let res = await init(networkId);
     console.log("Nft token was claimed successfully!");
 
     callback(null, res);
@@ -19,22 +19,25 @@ module.exports = async function(callback) {
 
 let init = async function(networkId) {
     web3.eth.getAccounts(function(err,res) { accounts = res; });
-    let profitCircus = await ProfitCircus.deployed();
-    let lpToken = await LpToken.deployed();
 
-    let lastSessionId = await profitCircus.lastSessionIds[lpToken];
+    // // rinkeby
+    // let profitCircus    =  await ProfitCircus.at("0x9Ee9fb0930f2B5e3Dd4ad1BA2edB87D8549A9e07").catch(console.error);
+  	// let crowns          = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D").catch(console.error);
 
-    let nft = await Nft.deployed();
-    let balance = await nft.balanceOf(accounts[0]);
+    // // rinkeby v2
+    // let profitCircus       = await ProfitCircus.at("0x1C9F8cF1bcC7900Ea784E4b8312c6eFc250958F6");
+    // let crowns             = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
+    
+    // moonbase
+    let profitCircus    = await ProfitCircus.at("0xa7a98F2BCa3dFe72010841cE6B12Ce4810D0f8F4");
+    let crowns          = await Crowns.at("0xb3B32cBF0397AB03018504404EB1DDcd3a85cCB6");
+  
+    let lastSessionId = await profitCircus.lastSessionIds(crowns.address).catch(console.error);
 
-    let crowns = await Crowns.deployed();
-    let factory = await Factory.deployed();
-
-    return await claimNft(profitCircus, lastSessionId);
-    console.log(res.logs[0]);
+    await claimNft(profitCircus, lastSessionId).catch(console.error);
+    console.log("Claimed");
 }.bind(this);
 
-let claimNft = async function(lpMining, lastSessionId) {
-
-    return await lpMining.claimNft(lastSessionId, {from: accounts[0]});
+let claimNft = async function(profitCircus, lastSessionId) {
+    return await profitCircus.claimNft(lastSessionId, {from: accounts[0]});
 }.bind(this);

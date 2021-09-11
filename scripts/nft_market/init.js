@@ -37,4 +37,5 @@ let init = async function(networkId) {
       .catch(console.error);
     console.log("currency address added");
 
+    
 }.bind(this);
