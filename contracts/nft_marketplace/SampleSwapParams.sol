@@ -39,7 +39,7 @@ contract SampleSwapParams is Ownable{
     function decodeParams (bytes memory _encodedData)
         public
         view
-        returns (uint256 imgId)
+        returns (uint256)
     {
         uint256 imgId = abi.decode(_encodedData, (uint256));
 

@@ -8,15 +8,15 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
-import "./ReentrancyGuard.sol";
-import "./Crowns.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./NftMarketCrowns.sol";
 import "./NftSwapParamsInterface.sol";
 
 /// @title Nft Swap is a part of Seascape marketplace platform.
 /// It allows users to obtain desired nfts in exchange for their offered nfts,
 /// a fee and an optional bounty
 /// @author Nejc Schneider
-contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
+contract NftSwap is NftMarketCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -200,7 +200,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 _bounty,
         address _bountyAddress
     )
-        external
+        public
         returns(uint256)
     {
         /// require statements
@@ -232,8 +232,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             require(_offeredTokens[index].tokenId > 0, "nft id must be greater than 0");
             require(supportedNftAddresses[_offeredTokens[index].tokenAddress] != address(0),
                 "offered nft address unsupported");
-            IERC721 nft = IERC721(_offeredTokens[index].tokenAddress);
-            require(nft.ownerOf(_offeredTokens[index].tokenId) == msg.sender,
+            IERC721 _nft = IERC721(_offeredTokens[index].tokenAddress);
+            require(_nft.ownerOf(_offeredTokens[index].tokenId) == msg.sender,
                 "sender not owner of nft");
         }
         // verify requested nft oddresses
@@ -301,11 +301,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param _offerId offer unique ID
     function acceptOffer(
         uint256 _offerId,
-        uint256 [5] memory _requestedTokenIds,
-        address [5] memory _requestedTokenAddresses,
-        uint8 [5] memory _v,
-        bytes32 [5] memory _r,
-        bytes32 [5] memory _s
+        uint256 [5] calldata _requestedTokenIds,
+        address [5] calldata _requestedTokenAddresses,
+        uint8 [5] calldata _v,
+        bytes32 [5] calldata _r,
+        bytes32 [5] calldata _s
     )
         external
         nonReentrant
@@ -320,8 +320,8 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             require(_requestedTokenIds[i] > 0, "nft id must be greater than 0");
             require(_requestedTokenAddresses[i] == obj.requestedTokens[i].tokenAddress,
                 "wrong requested token address");
-            IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
-            require(nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
+            IERC721 _nft = IERC721(obj.requestedTokens[i].tokenAddress);
+            require(_nft.ownerOf(_requestedTokenIds[i]) == msg.sender,
                 "sender not owner of nft");
 
             /// digital signature part
@@ -390,7 +390,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         // send crowns and bounty from SC to seller
         if (obj.bounty > 0 && address(crowns) == obj.bountyAddress)
-            require(crowns.transfer(msg.sender, obj.fee + obj.bounty);
+            require(crowns.transfer(msg.sender, obj.fee + obj.bounty), "Failed to transfer");
         else {
             if (obj.bounty > 0){
                 IERC20 token = IERC20(obj.bountyAddress);
@@ -415,9 +415,19 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     function getOffer(uint _offerId)
         external
         view
-        returns(OfferObject memory)
+        returns(uint256, uint8, uint8, uint256, address, address payable, uint256)
     {
-        return offerObjects[_offerId];
+        OfferObject storage o = offerObjects[_offerId];
+
+        return (
+            o.offerId,                   // offer ID
+            o.offeredTokensAmount,         // total offered tokens
+            o.requestedTokensAmount,       // total requested tokens
+            o.bounty,                    // reward for the buyer
+            o.bountyAddress,             // currency address for paying bounties
+            o.seller,            // seller's address
+            o.fee                       // fee amount at the time offer was created
+        );
     }
 
     //--------------------------------------------------
