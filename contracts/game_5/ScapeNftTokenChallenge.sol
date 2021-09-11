@@ -289,7 +289,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         require(_token.balanceOf(staker) >= amount, "staker balances insufficient");
         IERC20(_token).safeTransferFrom(staker, address(this), amount);
 
-        if (nftId != playerChallenge.nftId && playerChallenge == 0) {
+        if (nftId != playerChallenge.nftId && playerChallenge.nftId == 0) {
             IERC721 _nft = IERC721(scape);
             _nft.safeTransferFrom(staker, address(this), nftId);
             playerChallenge.nftId = nftId;
