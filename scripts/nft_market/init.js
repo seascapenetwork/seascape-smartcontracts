@@ -15,27 +15,33 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftMarket = await NftMarket.at("0xF4C4Ea5508Fe0EEb3E2f300AB8AfFDa1881cf96a");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-
+    let nftMarket = await NftMarket.at("0xae54f8927ADAdB65EC79f7130B1a46FEd35E8bFd");
+    let nft     = await Nft.at("0x607cBd90BE76e9602548Fbe63931AbE9E8af8aA7");
+    let crowns  = await Crowns.at("0x6fc9651f45B262AE6338a701D563Ab118B1eC0Ce");
 
     let user = accounts[0];
     console.log(`Using ${user}`);
 
     // enable sales (onlyOwner) -only needs to run once
-    let salesStarted = await nftMarket.enableSales(true, {from: user});
+    let salesStarted = await nftMarket.enableSales(true, {from: user}).catch(console.log);
     console.log(`salesEnabled was set`);
 
     // add nft address -only needs to run once per nft
-    let nftAddressAdded = await nftMarket.addSupportedNft(nft.address, {from: user})
+    let nftAddressAdded = await nftMarket.addSupportedNft(nft.address, {from: user}).catch(console.error)
       .catch(console.error);
     console.log("nft address added");
 
     // add currency address -only needs to run once per currency
     let currencyAddressAdded = await nftMarket.addSupportedCurrency(crowns.address, {from: user})
       .catch(console.error);
-    console.log("currency address added");
+    console.log("crowns address added");
 
+    await nftMarket.addSupportedCurrency("0x0000000000000000000000000000000000000000", {from: user})
+      .catch(console.error);
+    console.log("native address added");
+
+    await nftMarket.addSupportedCurrency("0xbD90A6125a84E5C512129D622a75CDDE176aDE5E", {from: user})
+    .catch(console.error);
+  console.log("rib address added");
     
 }.bind(this);
