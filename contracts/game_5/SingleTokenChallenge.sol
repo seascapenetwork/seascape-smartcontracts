@@ -318,6 +318,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         IERC20 _token = IERC20(challenge.stake);
 
+        ///@dev reseting the timer if user unstaked any token
+        playerChallenge.stakedDuration = 0;
+
         if (!isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
             if (amount > playerChallenge.overStakeAmount) {
                 uint256 cut = amount - playerChallenge.overStakeAmount;
@@ -333,7 +336,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
             } else {
                 playerChallenge.overStakeAmount = playerChallenge.overStakeAmount - amount;
             }
-            playerChallenge.stakedDuration = 0;
             if (playerChallenge.amount == sessionChallenge.stakeAmount) {
                 playerChallenge.stakedTime = now;
             } else {
@@ -353,7 +355,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
             playerChallenge.amount = 0;
             playerChallenge.overStakeAmount = 0;
             playerChallenge.stakedTime = 0;
-            playerChallenge.stakedDuration = 0;
 
             playerChallenge.completed = true;
 
