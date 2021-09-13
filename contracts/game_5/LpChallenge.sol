@@ -585,7 +585,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
-        require(playerChallenge.amount > 0, "didnt deposit enough");
+        require(playerChallenge.amount > 0, "nothing to claim");
 
         uint256 interest = calculateInterest(sessionId, challengeId, staker);
         if (interest == 0) {
