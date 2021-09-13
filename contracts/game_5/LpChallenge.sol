@@ -359,7 +359,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
             require(_token.balanceOf(address(this)) >= amount, "insufficient contract balances");
             require(_token.transfer(staker, amount), "transfer to staker failed");
 
-       	emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
+       	    emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
         } else {
             playerChallenge.amount = 0;
             playerChallenge.overStakeAmount = 0;

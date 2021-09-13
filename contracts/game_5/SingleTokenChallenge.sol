@@ -452,6 +452,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         returns(bool)
     {
         uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
+        if (sessionChallenge.lastInterestUpdate >= sessionCap) {
+            return false;
+        }
 
         // I calculate previous claimed rewards
         // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)

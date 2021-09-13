@@ -289,11 +289,11 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         require(_token.balanceOf(staker) >= amount, "staker balances insufficient");
         IERC20(_token).safeTransferFrom(staker, address(this), amount);
 
-        if (nftId != playerChallenge.nftId && playerChallenge == 0) {
+        /* if (nftId != playerChallenge.nftId && playerChallenge == 0) {
             IERC721 _nft = IERC721(scape);
             _nft.safeTransferFrom(staker, address(this), nftId);
             playerChallenge.nftId = nftId;
-        }
+        } */
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
         if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
@@ -538,7 +538,10 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
       returns(bool)
   {
 	    uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
-
+      if (sessionChallenge.lastInterestUpdate >= sessionCap) {
+          return false;
+      }
+      
         // I calculate previous claimed rewards
         // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
       sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
