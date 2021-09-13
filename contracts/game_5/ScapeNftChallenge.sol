@@ -249,6 +249,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256 weight;
         // It does verification that nft id is valid
         (nftId, weight) = decodeStakeData(playerChallenge.nftId, playerChallenge.weight, data);
+        nonce++;
 
         IERC721 _nft = IERC721(scape);
         require(_nft.ownerOf(nftId) == staker, "not your nft");

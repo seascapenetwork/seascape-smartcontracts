@@ -276,6 +276,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         uint256 nftId;
         // It does verification that nft id is valid
         (amount, nftId) = decodeStakeData(playerChallenge.nftId, data);
+        nonce++;
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
             "time completed");
