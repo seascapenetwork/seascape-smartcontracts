@@ -25,8 +25,8 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
 
-    uint256 private constant scaler = 10**18;
-    uint256 private constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public constant scaler = 10**18;
+    uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
     uint256 public nonce = 0;
 
     struct Category {

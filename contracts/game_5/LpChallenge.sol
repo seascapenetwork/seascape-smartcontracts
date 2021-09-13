@@ -15,8 +15,8 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
 
-    uint256 private constant scaler = 10**18;
-    uint256 private constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public constant scaler = 10**18;
+    uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
 
     struct Params {
         address stake;
@@ -301,6 +301,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         require(sessionChallenge.levelId > 0, "session does not exist");
+
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
@@ -693,4 +694,16 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
     {
         return sessionChallenges[sessionId][challengeId].levelId;
     }
+
+    //TODO LCS-06 pay unpaid reward
+    function payDebt(uint256 _sessionId, address _address) external {
+  		/* Balance storage _balance = balances[_sessionId][_address];
+  		if (_balance.unpaidReward > 0) {
+  			uint256 crownsBalance = CWS.balanceOf(address(this));
+  			require(crownsBalance >= _balance.unpaidReward, "not enough Crowns to transfer!");
+
+  			_safeTransfer(_address, _balance.unpaidReward);
+  			_balance.unpaidReward = 0;
+  		} */
+  	}
 }

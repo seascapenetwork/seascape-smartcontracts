@@ -26,8 +26,8 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
     /// @dev The account that keeps all ERC20 rewards
     address public pool;
 
-    uint256 private constant scaler = 10**18;
-    uint256 private constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public constant scaler = 10**18;
+    uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
     uint256 public nonce = 0;
 
     struct Category {
@@ -255,6 +255,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         // It does verification that nft id is valid
         (nftId, weight) = decodeStakeData(
             challenge.nftAmount, playerChallenge.nftId, playerChallenge.weight, data);
+        nonce++;
 
         IERC721 _nft = IERC721(scape);
         for (uint8 i = 0; i < challenge.nftAmount; i++) {
@@ -290,6 +291,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
 
     /// @dev it returns amount for stake and nft id.
     /// If user already staked, then return the previous staked token.
+    ///@dev SCC-10 TODO we need to pass staker to ECRECOVER and make nonce mapping for every user
     function decodeStakeData(
         uint8 nftAmount,
         uint256[5] memory stakedNftId,
