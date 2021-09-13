@@ -247,8 +247,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
     		IERC20 _token = IERC20(challenge.stake);
     		require(_token.balanceOf(staker) >= amount, "not enough staking token");
         uint256 preTotalAmount = _token.balanceOf(address(this));
-    		require(_token.transferFrom(staker, address(this), amount),
-            "transferFrom staker failed");
+    		IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         uint256 actualAmount = _token.balanceOf(address(this)) - preTotalAmount;
         if (actualAmount != amount) {
             amount = actualAmount;
@@ -315,7 +314,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         (amount) = abi.decode(data, (uint256));
         require(amount <= totalStake, "can't unstake more than staked");
         require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
-            "stake amount should be >= amount");
+            "stakeAmount should be >= amount");
 
         updateInterestPerToken(sessionChallenge);
 
@@ -399,7 +398,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         require(!playerChallenge.completed, "already completed and claimed");
         require(playerChallenge.amount > 0, "stake amount zero");
         require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
-            "stake amount should be >= amount");
+            "stakeAmount should be >= amount");
 
         updateInterestPerToken(sessionChallenge);
 

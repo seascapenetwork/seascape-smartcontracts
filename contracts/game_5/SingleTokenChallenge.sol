@@ -246,7 +246,12 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         /// by user provided tokens.
         IERC20 _token = IERC20(challenge.stake);
         require(_token.balanceOf(staker) >= amount, "not enough staking token");
+        uint256 preTotalAmount = _token.balanceOf(address(this));
         IERC20(_token).safeTransferFrom(staker, address(this), amount);
+        uint256 actualAmount = _token.balanceOf(address(this)) - preTotalAmount;
+        if (actualAmount != amount) {
+            amount = actualAmount;
+        }
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
         if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
