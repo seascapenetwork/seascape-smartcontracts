@@ -112,12 +112,21 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
+    function announceDailySpentWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
         require(dailySpentWinnersAnnouncable(_sessionId), "NFT Rush: already set or too early");
         require(_winnersAmount <= 10, "NFT Rush: exceeded possible amount of winners");
 
         if (_winnersAmount > 0) {
             Session storage _session = sessions[_sessionId];
+
+            uint256 _prizeSum = prizeSum(spentDailyPrizes, _winnersAmount);
+
+            if(_session.rewardToken == address(0x0)) {
+                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
+            } else {
+                IERC20 _reward = IERC20(_session.rewardToken);
+                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
+            }
 
             for (uint i=0; i<_winnersAmount; i++) {     
                 address _winner = _winners[i];
@@ -143,12 +152,21 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  - `_winnersAmount` must be atmost equal to 10.
      *  - if there are winners, then contract owner should transfer enough CWS to contract to payout players
      */
-    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner {
+    function announceAllTimeMintedWinners(uint256 _sessionId, address[10] calldata _winners, uint8 _winnersAmount) external onlyOwner payable {
         require(allTimeMintedWinnersAnnouncable(_sessionId), "NFT Rush: all time winners set already");
         require(_winnersAmount <= 10, "NFT Rush: too many winners");
 
         if (_winnersAmount > 0) {
             Session storage _session = sessions[_sessionId];
+
+            uint256 _prizeSum = prizeSum(mintedAllTimePrizes, _winnersAmount);
+
+            if(_session.rewardToken == address(0x0)) {
+                require(msg.value >= _prizeSum, "NFT Rush: not enough native token to give as a reward");
+            } else {
+                IERC20 _reward = IERC20(_session.rewardToken);
+                require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
+            }
 
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];

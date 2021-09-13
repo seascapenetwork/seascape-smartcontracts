@@ -73,7 +73,7 @@ contract GameSession is Ownable {
      *  @notice Whether the given session is active or not
      */
     function isActive(uint256 _sessionId) public view returns(bool) {
-        if (now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+        if (now < sessions[_sessionId].startTime || now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
             return false;
         }
 
