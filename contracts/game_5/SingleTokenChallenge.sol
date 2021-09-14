@@ -6,7 +6,7 @@ import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Stake a one token, and earn another token
-contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard  {
+contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  {
     using SafeERC20 for IERC20;
 
     address public stakeToken;

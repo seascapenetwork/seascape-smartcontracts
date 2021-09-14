@@ -6,6 +6,7 @@ import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 /// @notice Stake a single scape NFT, and earn ERC20 token
@@ -14,7 +15,11 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 /// First time whe user deposits his nft:
 ///     It receives nft id, signature.
 /// If user's nft is in the game, then deposit is unavailable.
-abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownable {
+abstract contract ScapeNftComboChallenge is
+    ZombieFarmChallengeInterface,
+    Ownable,
+    ReentrancyGuard
+{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -139,6 +144,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         zombieFarm = _zombieFarm;
         scape = _scape;
         pool = _pool;
+        initReentrancyStatus();
     }
 
     /// @notice support a new Challenge of this category by Zombie Farm
@@ -224,6 +230,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
@@ -341,6 +348,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         revert();
     }
@@ -354,6 +362,7 @@ abstract contract ScapeNftComboChallenge is ZombieFarmChallengeInterface, Ownabl
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];

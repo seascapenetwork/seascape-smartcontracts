@@ -5,6 +5,7 @@ import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 /// @notice Stake a single scape NFT and erc20 token, and earn ERC20 token
@@ -14,7 +15,7 @@ import "./../openzeppelin/contracts/access/Ownable.sol";
 ///     It receives nft id, signature and amount of staking.
 /// If user's nft is in the game, then deposit accepts only
 ///     amount.
-contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
+contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // The seascape NFT address
@@ -146,6 +147,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         zombieFarm = _zombieFarm;
         scape = _scape;
         pool = _pool;
+        initReentrancyStatus();
     }
 
     /// @notice support a new Challenge of this category by Zombie Farm
@@ -248,6 +250,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
@@ -294,7 +297,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         if (actualAmount != amount) {
             amount = actualAmount;
         }
-        
+
         /* if (nftId != playerChallenge.nftId && playerChallenge == 0) {
             IERC721 _nft = IERC721(scape);
             _nft.safeTransferFrom(staker, address(this), nftId);
@@ -393,6 +396,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
@@ -464,6 +468,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable {
         external
         override
         onlyZombieFarm
+        nonReentrant
     {
         /// General information regarding the Staking token and Earning token
         Category storage challenge = challenges[challengeId];
