@@ -6,7 +6,7 @@ import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Stake a one token, and earn another token
-contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
+contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public stakeToken;
@@ -247,7 +247,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
     		IERC20 _token = IERC20(challenge.stake);
     		require(_token.balanceOf(staker) >= amount, "not enough staking token");
         uint256 preTotalAmount = _token.balanceOf(address(this));
-    		IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
+    		//IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
         uint256 actualAmount = _token.balanceOf(address(this)) - preTotalAmount;
         if (actualAmount != amount) {
             amount = actualAmount;
@@ -694,15 +694,27 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         return sessionChallenges[sessionId][challengeId].levelId;
     }
 
-    //TODO LCS-06 pay unpaid reward
-    function payDebt(uint256 _sessionId, address _address) external {
-  		/* Balance storage _balance = balances[_sessionId][_address];
-  		if (_balance.unpaidReward > 0) {
-  			uint256 crownsBalance = CWS.balanceOf(address(this));
-  			require(crownsBalance >= _balance.unpaidReward, "not enough Crowns to transfer!");
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
 
-  			_safeTransfer(_address, _balance.unpaidReward);
-  			_balance.unpaidReward = 0;
-  		} */
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Params storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+    			require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+    		}
   	}
 }

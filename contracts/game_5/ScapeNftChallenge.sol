@@ -617,4 +617,28 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
     {
         return sessionChallenges[sessionId][challengeId].levelId;
     }
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Category storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
+    }
 }
