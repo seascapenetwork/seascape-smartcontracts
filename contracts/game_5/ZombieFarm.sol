@@ -151,21 +151,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit StartSession(lastSessionId, startTime, period, levelAmount, grandRewardId);
     }
 
-    function isActive(uint256 sessionId) internal view returns(bool) {
-        if (sessionId == 0) {
-            return false;
-        }
-        return (now >= sessions[sessionId].startTime && now <= sessions[sessionId]
-            .startTime + sessions[sessionId].period);
-    }
-
-    function isStarting(uint8 sessionId) internal view returns(bool) {
-        if (sessionId == 0) {
-            return false;
-        }
-        return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
-    }
-
     function lastSession() external view returns(uint8, uint256, uint256, uint8, uint16) {
         Session storage session = sessions[lastSessionId];
 
@@ -227,16 +212,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
             sessionChallenges[sessionId][actualId[i]] = true;
         }
-    }
-
-    function countChallenges(uint32 challenge, uint32[5] memory ids) internal pure returns(uint8) {
-        uint8 count;
-        for (uint8 i = 0; i < 5; i++) {
-            if (ids[i] == challenge) {
-                count++;
-            }
-        }
-        return count;
     }
 
     function addSupportedChallenge(address _address, bytes calldata _data) external onlyOwner {
@@ -476,30 +451,23 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         challenge.claim(sessionId, challengeId, msg.sender);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////
 
-    function isLevelCompleted(uint256 sessionId, uint8 levelId, address staker)
-        internal
-        view
-        returns(bool)
+    /// @dev encrypt token data
+    /// @return encrypted data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    )
+        external
+        override
+        returns (bytes4)
     {
-        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
-
-        for (uint8 i = 0; i < 3; i++) {
-            if (playerChallenges[i] == 0) {
-                return false;
-            }
-
-            uint32 challengeId = playerChallenges[i];
-            address challengeAddress = supportedChallenges[challengeId];
-
-            ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
-            if (!challenge.isFullyCompleted(sessionId, challengeId, staker)) {
-                return false;
-            }
-        }
-        return true;
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker)
         public
@@ -522,6 +490,29 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         }
         return full;
+    }
+
+    function isLevelCompleted(uint256 sessionId, uint8 levelId, address staker)
+        internal
+        view
+        returns(bool)
+    {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == 0) {
+                return false;
+            }
+
+            uint32 challengeId = playerChallenges[i];
+            address challengeAddress = supportedChallenges[challengeId];
+
+            ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
+            if (!challenge.isFullyCompleted(sessionId, challengeId, staker)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     function isChallengeInLevel(
@@ -564,19 +555,18 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         playerChallenges[empty] = challengeId;
     }
 
-    /// @dev encrypt token data
-    /// @return encrypted data
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    )
-        external
-        override
-        returns (bytes4)
-    {
-        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    function isActive(uint256 sessionId) internal view returns(bool) {
+        if (sessionId == 0) {
+            return false;
+        }
+        return (now >= sessions[sessionId].startTime && now <= sessions[sessionId]
+            .startTime + sessions[sessionId].period);
     }
 
+    function isStarting(uint8 sessionId) internal view returns(bool) {
+        if (sessionId == 0) {
+            return false;
+        }
+        return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
+    }
 }
