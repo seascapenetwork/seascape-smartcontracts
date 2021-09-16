@@ -418,6 +418,76 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
 
         emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
+    function getIdAndLevel(uint8 offset, bytes calldata data)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint32, uint8)
+    {
+        uint32[5] memory id;
+        uint8[5] memory levelId;
+        uint256[5] memory reward;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory multiplier;
+        uint32[5] memory prevChallengeId;
+
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = abi.decode(
+            data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
+
+        return (id[offset], levelId[offset]);
+    }
+
+    function getLevel(uint256 sessionId, uint32 challengeId)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint8)
+    {
+        return sessionChallenges[sessionId][challengeId].levelId;
+    }
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Category storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
+    }
+
+    function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
+        external
+        override
+        view
+        returns(bool)
+    {
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+
+        if (playerChallenge.completed) {
+            return true;
+        }
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+
+        return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+    }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
     /// of the session to 1 token. It also updates the portion of it for the user.
@@ -473,23 +543,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
             return duration >= sessionChallenge.stakePeriod;
         }
         return false;
-    }
-
-    function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
-        external
-        override
-        view
-        returns(bool)
-    {
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-
-        if (playerChallenge.completed) {
-            return true;
-        }
-
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-
-        return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
     }
 
     function updateTimeProgress(
@@ -586,59 +639,5 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
       	uint256 interest = (claimedPerToken / scaler) - playerChallenge.claimedReward;
 
 		    return interest;
-    }
-
-    function getIdAndLevel(uint8 offset, bytes calldata data)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint32, uint8)
-    {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakePeriod;
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
-
-        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = abi.decode(
-            data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
-
-        return (id[offset], levelId[offset]);
-    }
-
-    function getLevel(uint256 sessionId, uint32 challengeId)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint8)
-    {
-        return sessionChallenges[sessionId][challengeId].levelId;
-    }
-
-    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
-        external
-        nonReentrant
-    {
-        require(staker == msg.sender, "only staker can call");
-
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        Category storage challenge = challenges[challengeId];
-
-        if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
-
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
-
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
-        }
     }
 }
