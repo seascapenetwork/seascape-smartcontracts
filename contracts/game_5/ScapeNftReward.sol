@@ -62,30 +62,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         pool = _pool;
     }
 
-    function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {
-        uint256 imgId;
-        uint256 generation;
-        uint8 quality;
-        address token;
-        uint256 amount;
-
-        (imgId, generation, quality, token, amount) = abi
-            .decode(data, (uint256, uint256, uint8, address, uint256));
-
-        if (quality < 1 || quality > 5) {
-            return false;
-        }
-        if (imgId == 0 || amount == 0) {
-            return false;
-        }
-
-        if (token == address(0)) {
-            return false;
-        }
-
-        return true;
-    }
-
     function saveReward(uint256 sessionId, uint8 rewardType, bytes calldata data)
         external
         override
@@ -187,5 +163,29 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
             params.imgId,
             params.amount
         );
+    }
+
+    function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {
+        uint256 imgId;
+        uint256 generation;
+        uint8 quality;
+        address token;
+        uint256 amount;
+
+        (imgId, generation, quality, token, amount) = abi
+            .decode(data, (uint256, uint256, uint8, address, uint256));
+
+        if (quality < 1 || quality > 5) {
+            return false;
+        }
+        if (imgId == 0 || amount == 0) {
+            return false;
+        }
+
+        if (token == address(0)) {
+            return false;
+        }
+
+        return true;
     }
 }
