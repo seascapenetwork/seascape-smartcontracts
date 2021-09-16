@@ -405,67 +405,6 @@ abstract contract ScapeNftComboChallenge is
         emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
 
-    /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
-  	/// of the session to 1 token. It also updates the portion of it for the user.
-    /// @param sessionChallenge is this challenge
-  	function updateInterestPerToken(SessionChallenge storage sessionChallenge)
-        internal
-        returns(bool)
-    {
-		    uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
-        if (sessionChallenge.lastInterestUpdate >= sessionCap) {
-            return false;
-        }
-
-        // I calculate previous claimed rewards
-        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
-        sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
-  			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
-
-        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
-        // I update the session.lastInterestUpdate to now
-    		if (sessionChallenge.amount == 0) {
-            sessionChallenge.interestPerToken = 0;
-    		} else {
-            sessionChallenge.interestPerToken = (sessionChallenge
-                .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
-    		}
-
-    		// we avoid sub. underflow, for calulating session.claimedPerToken
-    		sessionChallenge.lastInterestUpdate = sessionCap;
-  	}
-
-    function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
-        if (!isActive(startTime, endTime)) {
-        return endTime;
-		}
-        return block.timestamp;
-    }
-
-    function isActive(uint256 startTime, uint256 endTime) internal view returns(bool) {
-        if (startTime == 0) {
-            return false;
-        }
-        return (now >= startTime && now <= endTime);
-    }
-
-    function isCompleted(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge,
-        uint256 currentTime
-    )
-        internal
-        view
-        returns(bool)
-    {
-        if (playerChallenge.stakedTime > 0) {
-            uint256 duration = (currentTime - playerChallenge.stakedTime);
-            return duration >= sessionChallenge.stakePeriod;
-        }
-
-        return false;
-    }
-
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
         external
         override
@@ -481,6 +420,60 @@ abstract contract ScapeNftComboChallenge is
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+    }
+
+    function getIdAndLevel(uint8 offset, bytes calldata data)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint32, uint8)
+    {
+        uint32[5] memory id;
+        uint8[5] memory levelId;
+        uint256[5] memory reward;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory multiplier;
+        uint32[5] memory prevChallengeId;
+
+        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = abi
+            .decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
+
+        return (id[offset], levelId[offset]);
+    }
+
+    function getLevel(uint256 sessionId, uint32 challengeId)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint8)
+    {
+        return sessionChallenges[sessionId][challengeId].levelId;
+    }
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Category storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
     }
 
     function updateTimeProgress(
@@ -584,57 +577,65 @@ abstract contract ScapeNftComboChallenge is
     		return interest;
     }
 
-    function getIdAndLevel(uint8 offset, bytes calldata data)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint32, uint8)
+
+    /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
+  	/// of the session to 1 token. It also updates the portion of it for the user.
+    /// @param sessionChallenge is this challenge
+  	function updateInterestPerToken(SessionChallenge storage sessionChallenge)
+        internal
+        returns(bool)
     {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakePeriod;
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
-
-        (id, levelId, reward, stakePeriod, multiplier, prevChallengeId) = abi
-            .decode(data, (uint32[5], uint8[5], uint256[5], uint256[5], uint256[5], uint32[5]));
-
-        return (id[offset], levelId[offset]);
-    }
-
-    function getLevel(uint256 sessionId, uint32 challengeId)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint8)
-    {
-        return sessionChallenges[sessionId][challengeId].levelId;
-    }
-
-    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
-        external
-        nonReentrant
-    {
-        require(staker == msg.sender, "only staker can call");
-        
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        Category storage challenge = challenges[challengeId];
-
-        if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
-
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
-
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
+		    uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
+        if (sessionChallenge.lastInterestUpdate >= sessionCap) {
+            return false;
         }
+
+        // I calculate previous claimed rewards
+        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
+        sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
+  			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
+
+        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
+        // I update the session.lastInterestUpdate to now
+    		if (sessionChallenge.amount == 0) {
+            sessionChallenge.interestPerToken = 0;
+    		} else {
+            sessionChallenge.interestPerToken = (sessionChallenge
+                .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
+    		}
+
+    		// we avoid sub. underflow, for calulating session.claimedPerToken
+    		sessionChallenge.lastInterestUpdate = sessionCap;
+  	}
+
+    function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
+        if (!isActive(startTime, endTime)) {
+        return endTime;
+		}
+        return block.timestamp;
+    }
+
+    function isActive(uint256 startTime, uint256 endTime) internal view returns(bool) {
+        if (startTime == 0) {
+            return false;
+        }
+        return (now >= startTime && now <= endTime);
+    }
+
+    function isCompleted(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge,
+        uint256 currentTime
+    )
+        internal
+        view
+        returns(bool)
+    {
+        if (playerChallenge.stakedTime > 0) {
+            uint256 duration = (currentTime - playerChallenge.stakedTime);
+            return duration >= sessionChallenge.stakePeriod;
+        }
+
+        return false;
     }
 }
