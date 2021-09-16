@@ -191,7 +191,10 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
         uint8 offset,
         bytes calldata data
     )
-        external override onlyZombieFarm {
+        external
+        override
+        onlyZombieFarm
+    {
         uint32[5] memory id;                    // Challenge Id
         uint8[5] memory levelId;                // Level of Zombie Farm to which challenge was added
         uint32[5] memory prevChallengeId;       // Previous Level Challenge that player should complete
@@ -344,41 +347,6 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
             sessionChallenge.amount,
             playerChallenge.nftId
         );
-    }
-
-    /// @dev it returns amount for stake and nft id.
-    /// If user already staked, then return the previous staked token.
-    function decodeStakeData(uint256 stakedNftId, bytes memory data)
-        internal
-        view
-        returns(uint256, uint256)
-    {
-        uint256 amount;
-
-        if (stakedNftId > 0) {
-            (amount) = abi.decode(data, (uint256));
-            require(amount > 0, "scape nft+token.amount==0");
-            return (amount, stakedNftId);
-        }
-
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        uint256 nftId;
-
-        /// Staking amount
-        (amount, v, r, s, nftId) = abi.decode(data, (uint256, uint8, bytes32, bytes32, uint256));
-        require(amount > 0 && nftId > 0, "invalid nftId or amount");
-
-        /// Verify the Scape Nft signature.
-      	/// @dev message is generated as nftId + amount + nonce
-      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, amount, nonce));
-      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-            _messageNoPrefix));
-      	address _recover = ecrecover(_message, v, r, s);
-      	require(_recover == owner(),  "verification failed");
-
-        return (amount, nftId);
     }
 
     /// @notice Unstake an nft and some token.
@@ -539,6 +507,68 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
         playerChallenge.completed = true;
+    }
+
+    function getIdAndLevel(uint8 offset, bytes calldata data)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint32, uint8)
+    {
+        uint32[5] memory id;
+        uint8[5] memory levelId;
+        uint256[5] memory reward;
+        uint256[5] memory stakeAmount;
+        uint256[5] memory stakePeriod;
+        uint256[5] memory multiplier;
+        uint32[5] memory prevChallengeId;
+
+        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
+            .decode(data, (
+            uint32[5],
+            uint8[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint256[5],
+            uint32[5]
+            ));
+        return (id[offset], levelId[offset]);
+    }
+
+    function getLevel(uint256 sessionId, uint32 challengeId)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint8)
+    {
+        return sessionChallenges[sessionId][challengeId].levelId;
+    }
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Category storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
@@ -739,65 +769,38 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
         return interest;
     }
 
-    function getIdAndLevel(uint8 offset, bytes calldata data)
-        external
-        override
+    /// @dev it returns amount for stake and nft id.
+    /// If user already staked, then return the previous staked token.
+    function decodeStakeData(uint256 stakedNftId, bytes memory data)
+        internal
         view
-        onlyZombieFarm
-        returns(uint32, uint8)
+        returns(uint256, uint256)
     {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakeAmount;
-        uint256[5] memory stakePeriod;
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
+        uint256 amount;
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
-            .decode(data, (
-            uint32[5],
-            uint8[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint32[5]
-            ));
-        return (id[offset], levelId[offset]);
-    }
-
-    function getLevel(uint256 sessionId, uint32 challengeId)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint8)
-    {
-        return sessionChallenges[sessionId][challengeId].levelId;
-    }
-
-    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
-        external
-        nonReentrant
-    {
-        require(staker == msg.sender, "only staker can call");
-
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        Category storage challenge = challenges[challengeId];
-
-        if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
-
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
-
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
+        if (stakedNftId > 0) {
+            (amount) = abi.decode(data, (uint256));
+            require(amount > 0, "scape nft+token.amount==0");
+            return (amount, stakedNftId);
         }
+
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 nftId;
+
+        /// Staking amount
+        (amount, v, r, s, nftId) = abi.decode(data, (uint256, uint8, bytes32, bytes32, uint256));
+        require(amount > 0 && nftId > 0, "invalid nftId or amount");
+
+        /// Verify the Scape Nft signature.
+      	/// @dev message is generated as nftId + amount + nonce
+      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, amount, nonce));
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
+            _messageNoPrefix));
+      	address _recover = ecrecover(_message, v, r, s);
+      	require(_recover == owner(),  "verification failed");
+
+        return (amount, nftId);
     }
 }
