@@ -19,7 +19,16 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-
+    /// @dev keep count of offers (aka offerIds)
+    uint256 public lastOfferId;
+    /// @notice enable/disable creating and accepting offer.
+    bool public tradeEnabled;
+    /// @dev fee for creating an offer
+    uint256 public fee;
+    /// @dev maximum amount of offered Tokens
+    uint256 public maxOfferedTokens = 5;
+    /// @dev maximum amount of requested Tokens
+    uint256 public maxRequestedTokens = 5;
 
     /// @notice individual offer related data
     struct OfferObject{
@@ -33,11 +42,13 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         mapping(uint256 => OfferedToken) offeredTokens;       // offered tokens data
         mapping(uint256 => RequestedToken) requestedTokens;   // requested tokensdata
     }
+
     /// @notice individual offered token related data
     struct OfferedToken{
         uint256 tokenId;                    // offered token id
         address tokenAddress;               // offered token address
     }
+
     /// @notice individual requested token related data
     struct RequestedToken{
         address tokenAddress;              // requested token address
@@ -46,18 +57,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         bytes32 r;
         bytes32 s;
     }
-
-
-    /// @dev keep count of offers (aka offerIds)
-    uint256 public lastOfferId;
-    /// @notice enable/disable creating and accepting offer.
-    bool public tradeEnabled;
-    /// @dev fee for creating an offer
-    uint256 public fee;
-    /// @dev maximum amount of offered Tokens
-    uint256 public maxOfferedTokens = 5;
-    /// @dev maximum amount of requested Tokens
-    uint256 public maxRequestedTokens = 5;
 
     /// @dev store offer objects.
     /// @param offerId => OfferObject
@@ -79,6 +78,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         OfferedToken [5] offeredTokens,
         RequestedToken [5] requestedTokens
     );
+
     event AcceptedOffer(
         uint256 indexed offerId,
         address indexed buyer,
@@ -90,10 +90,12 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 offeredTokensAmount,
         uint256 [5] offeredTokenIds
     );
+
     event CanceledOffer(
         uint256 indexed offerId,
         address indexed seller
     );
+
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
     /// @param _feeRate - fee amount
