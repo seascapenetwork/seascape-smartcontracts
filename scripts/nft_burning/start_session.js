@@ -16,10 +16,10 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftBurning = await NftBurning.at("0x4cd0babd70E6CFBc487F00DE1d6E032d10E134Bf");
-    let crowns  = await Crowns.at("0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B");
-    let factory  = await Factory.at("0x3eB88c3F2A719369320D731FbaE062b0f82F22e4");
-    let nft     = await Nft.at("0x66638F4970C2ae63773946906922c07a583b6069");
+    let nftBurning = await NftBurning.at("0x24F30161085c082A637fc3B6B7F3969455260CD1");
+    let crowns  = await Crowns.at("0xFde9cad69E98b3Cc8C998a8F2094293cb0bD6911");
+    let factory  = await Factory.at("0x06fddbD58cb286DC1e7a9eB50eF67c9215478670");
+    let nft     = await Nft.at("0x9ceAB9b5530762DE5409F2715e85663405129e54");
 
     // show current account
     let owner = accounts[0];
@@ -27,13 +27,13 @@ let init = async function(networkId) {
 
 
     // startSession parameters
-    let startTime = Math.floor(Date.now()/1000) + 60;
-    let period = 600; // one day * 5
+    let startTime = Math.floor(Date.now()/1000) + 300;
+    let period = 3600 * 24 * 7; // one day * 5
     let generation = 1;
     let interval = 120; // 5 minutes
     let fee = web3.utils.toWei("1", "ether");
     let minStake = web3.utils.toWei("100", "milli"); // 0.1 ether
-    let maxStake = web3.utils.toWei("1", "ether");
+    let maxStake = web3.utils.toWei("100", "ether");
 
 
     // call startSession
