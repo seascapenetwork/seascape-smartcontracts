@@ -31,21 +31,18 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
     /// @dev keep count of SalesObject amount
     uint256 public salesAmount;
+    /// @notice enable/disable trading
+    bool public salesEnabled;
+    /// @dev fee rate and fee reciever. feeAmount = (feeRate / 1000) * price
+    uint256 public feeRate;
+    address payable feeReceiver;
 
     /// @dev store sales objects.
     /// @param nft token address => (nft id => salesObject)
     mapping(address => mapping(uint256 => SalesObject)) salesObjects; // store sales in a mapping
-
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedNft;
     mapping(address => bool) public supportedCurrency;
-
-    /// @notice enable/disable trading
-    bool public salesEnabled;
-
-    /// @dev fee rate and fee reciever. feeAmount = (feeRate / 1000) * price
-    uint256 public feeRate;
-    address payable feeReceiver;
 
     event Buy(
         uint256 indexed id,
