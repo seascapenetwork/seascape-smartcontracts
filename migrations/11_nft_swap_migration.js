@@ -15,22 +15,27 @@ const _feeRate = web3.utils.toWei("1", "ether");
 
 module.exports = async function(deployer, network) {
     if (network == "ganache") {
-        deployer.deploy(NftSwap, _feeRate, Crowns.address, Nft.address).then(function(){
+        deployer.deploy(NftSwap, _feeRate, Crowns.address).then(function(){
             console.log("NftSwap contract was deployed at address: "+NftSwap.address);
             console.log("It is using Crowns (CWS) Token at address: "+Crowns.address);
-            console.log("It is using Scape NFT contract at address: "+Nft.address);
         });
 
         deployer.deploy(ScapeSwapParams).then(function(){
             console.log("ScapeSwapParams contract was deployed at address: "+ScapeSwapParams.address);
         });
 
+        // deployer.deploy(Nft).then(function(){
+        //     console.log("SeascapeNft contract was deployed at address: "+Nft.address);
+        // });
+
         deployer.deploy(SampleERC20Token).then(function(){
             console.log("SampleERC20Token contract was deployed at address: "+SampleERC20Token.address);
         });
+
         deployer.deploy(SampleSwapParams).then(function(){
             console.log("SampleSwapParams contract was deployed at address: "+SampleSwapParams.address);
         });
+
         deployer.deploy(SampleNft).then(function(){
             console.log("SampleNft contract was deployed at address: "+SampleNft.address);
         });
