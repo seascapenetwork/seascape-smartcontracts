@@ -294,16 +294,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit AddSupportedReward(supportedRewardsAmount, _address);
     }
 
-    function countLevels(uint8 levelId, uint8[5] memory ids) internal pure returns(uint8) {
-        uint8 count;
-        for (uint8 i = 0; i < MAX_LEVEL; i++) {
-            if (ids[i] == levelId) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     /// @notice Add possible rewards for each level
     /// @param sessionId the session for which its added
     /// @param rewardAmount how many rewards of the same category is added
@@ -451,7 +441,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         challenge.claim(sessionId, challengeId, msg.sender);
     }
 
-
     /// @dev encrypt token data
     /// @return encrypted data
     function onERC721Received(
@@ -466,8 +455,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     {
         return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker)
         public
@@ -490,6 +477,25 @@ contract ZombieFarm is Ownable, IERC721Receiver{
 
         }
         return full;
+    }
+
+    function fillLevel(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker)
+        internal
+    {
+        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
+
+        uint8 empty = 0;
+
+        for (uint8 i = 0; i < 3; i++) {
+            if (playerChallenges[i] == challengeId) {
+                return;
+            } else if (playerChallenges[i] == 0) {
+                empty = i;
+                break;
+            }
+        }
+
+        playerChallenges[empty] = challengeId;
     }
 
     function isLevelCompleted(uint256 sessionId, uint8 levelId, address staker)
@@ -536,25 +542,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         return false;
     }
 
-    function fillLevel(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker)
-        internal
-    {
-        uint32[3] storage playerChallenges = playerLevels[sessionId][staker][levelId];
-
-        uint8 empty = 0;
-
-        for (uint8 i = 0; i < 3; i++) {
-            if (playerChallenges[i] == challengeId) {
-                return;
-            } else if (playerChallenges[i] == 0) {
-                empty = i;
-                break;
-            }
-        }
-
-        playerChallenges[empty] = challengeId;
-    }
-
     function isActive(uint256 sessionId) internal view returns(bool) {
         if (sessionId == 0) {
             return false;
@@ -568,5 +555,25 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             return false;
         }
         return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
+    }
+
+    function countLevels(uint8 levelId, uint8[5] memory ids) internal pure returns(uint8) {
+        uint8 count;
+        for (uint8 i = 0; i < MAX_LEVEL; i++) {
+            if (ids[i] == levelId) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function countChallenges(uint32 challenge, uint32[5] memory ids) internal pure returns(uint8) {
+        uint8 count;
+        for (uint8 i = 0; i < 5; i++) {
+            if (ids[i] == challenge) {
+                count++;
+            }
+        }
+        return count;
     }
 }
