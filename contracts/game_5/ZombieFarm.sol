@@ -197,9 +197,11 @@ contract ZombieFarm is Ownable, IERC721Receiver{
                 supportedChallenges[id]);
             (actualId[i], levelId[i]) = challenge.getIdAndLevel(i, data);
 
-            require(sessionChallenges[sessionId][actualId[i]] == false, "challenge!=session challenge");
+            require(sessionChallenges[sessionId][actualId[i]] == false,
+                "challenge!=session challenge");
             require(levelId[i] > 0, "levelId should be above 0");
-            require(levelId[i] <= sessions[sessionId].levelAmount, "levelId must be <= levelAmount");
+            require(levelId[i] <= sessions[sessionId].levelAmount,
+                "levelId must be <= levelAmount");
             require(supportedChallenges[actualId[i]] != address(0), "unsupported challenge");
             require(countChallenges(actualId[i], actualId) == 1, "same challenge arguments");
         }
