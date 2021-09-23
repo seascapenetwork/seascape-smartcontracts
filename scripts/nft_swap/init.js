@@ -6,6 +6,7 @@ let ScapeSwapParams = artifacts.require("ScapeSwapParams");
 
 
 let accounts;
+let feeRate = web3.utils.toWei("100", "milli");
 
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
@@ -40,5 +41,8 @@ let init = async function(networkId) {
       .catch(console.error);
     console.log("nft address added");
 
+    // change the fee rate
+    let feeSet = await nftSwap.setFee(feeRate, {from: user});
+    console.log(`feeRate was changed`);
 
 }.bind(this);
