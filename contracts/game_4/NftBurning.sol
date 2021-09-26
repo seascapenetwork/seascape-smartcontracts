@@ -25,13 +25,14 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
 
     /// @notice holds session related data. Since event is a solidity keyword, we call them session instead.
     struct Session {
-        uint256 period;       // session duration
-        uint256 startTime;    // session start in unixtimestamp
-        uint256 generation;		// Seascape Nft generation
-        uint256 interval;   	// duration between every minting
-        uint256 fee;          // amount of CWS token to spend to mint a new nft
-        uint256 minStake;     // minimum amount of crowns deposit, only for staking
-        uint256 maxStake;     // maximum amount of crowns deposit, only for staking
+        uint256 period;          // session duration
+        uint256 startTime;       // session start in unixtimestamp
+        uint256 generation;		 // Seascape Nft generation
+        uint256 comboGeneration; // when hit combination Nft's generation
+        uint256 interval;   	 // duration between every minting
+        uint256 fee;             // amount of CWS token to spend to mint a new nft
+        uint256 minStake;        // minimum amount of crowns deposit, only for staking
+        uint256 maxStake;        // maximum amount of crowns deposit, only for staking
     }
     /// @notice keeps track of balances for each user
     struct Balance {
@@ -59,6 +60,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
     event SessionStarted(
         uint256 indexed sessionId,
         uint256 generation,
+        uint256 comboGeneration,
         uint256 fee,
         uint256 interval,
         uint256 start_time,
@@ -106,6 +108,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
         uint256 _startTime,
         uint256 _period,
         uint256 _generation,
+        uint256 _comboGeneration,
         uint256 _interval,
         uint256 _fee,
         uint256 _minStake,
@@ -135,6 +138,7 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
             _period,
             _startTime,
             _generation,
+            _comboGeneration,
             _interval,
             _fee,
             _minStake,
@@ -144,13 +148,16 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
         sessionId.increment();
         lastSessionId = _sessionId;
 
+        uint256 end_time = _startTime + _period;
+
         emit SessionStarted(
             _sessionId,
             _generation,
+            _comboGeneration,
             _fee,
             _interval,
             _startTime,
-            _startTime + _period,
+            end_time,
             _minStake,
             _maxStake
         );
@@ -218,7 +225,12 @@ contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
             nft.burn(_nfts[_index]);
         }
         /// @dev mint new nft
-        uint256 mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
+        uint256 mintedNftId = 0;
+        if(_balance.totalStaked == _session.maxStake) {
+            mintedNftId = nftFactory.mintQuality(msg.sender, _session.comboGeneration, _quality);
+        } else {
+            mintedNftId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
+        }
         require(mintedNftId > 0, "Failed to mint a token");
         _balance.mintedTime = block.timestamp;
         emit Minted(_sessionId, msg.sender, _nfts, _balance.mintedTime, _imgId, mintedNftId);
