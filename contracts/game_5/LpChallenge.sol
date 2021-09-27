@@ -227,7 +227,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge
                 = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
-            require(isCompleted(sessionId, playerPrevChallenge, staker),
+            require(isCompleted(sessionChallenge, playerPrevChallenge, now),
                 "last challenge not completed");
         }
 

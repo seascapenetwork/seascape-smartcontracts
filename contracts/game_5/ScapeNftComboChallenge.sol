@@ -562,7 +562,7 @@ abstract contract ScapeNftComboChallenge is
             .lastInterestUpdate) * sessionChallenge.interestPerToken);
 
         uint256 claimableReward = 0;
-  		for (uint8 i = 0; i < challange.nftAmount; i++) {
+  		for (uint8 i = 0; i < challenge.nftAmount; i++) {
             claimableReward += claimedPerToken * playerChallenge.weight[i] / scaler; // 0
         }
 

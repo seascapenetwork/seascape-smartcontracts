@@ -601,10 +601,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         return time >= sessionChallenge.stakePeriod;
     }
 
-    
-
-    }
-
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
         PlayerChallenge storage playerChallenge
