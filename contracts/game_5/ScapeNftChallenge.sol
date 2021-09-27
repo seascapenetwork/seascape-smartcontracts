@@ -260,8 +260,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         playerChallenge.claimedTime = block.timestamp;
         playerChallenge.stakedTime = block.timestamp;
 
-        updateTimeProgress(sessionChallenge, playerChallenge);
-
    		  updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
 
 		emit Stake(staker, sessionId, challengeId, playerChallenge.nftId);
@@ -481,17 +479,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
-    }
-
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        if (isCompleted(sessionChallenge, playerChallenge, now)) {
-            playerChallenge.completed = true;
-        }
     }
 
     function updateBalanceInterestPerToken(

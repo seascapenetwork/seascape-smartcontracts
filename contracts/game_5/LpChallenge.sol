@@ -216,14 +216,13 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "challange already completed");
+        require(!isCompleted(sessionChallenge, playerChallenge, now), "challange already completed");
 
         // Previous Challenge should be completed
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge
                 = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
-            require(playerPrevChallenge.completed ||
-                isCompleted(sessionChallenge, playerPrevChallenge, now),
+            require(isCompleted(sessionId, playerPrevChallenge, staker),
                 "last challenge not completed");
         }
 
@@ -267,13 +266,11 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         if (total < sessionChallenge.stakeAmount) {
             playerChallenge.amount = total;
         } else {
-            updateTimeProgress(sessionChallenge, playerChallenge);
-
             playerChallenge.amount = sessionChallenge.stakeAmount;
             playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
             playerChallenge.stakedTime = block.timestamp;
 
-    		    updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
+    		updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
         }
 
 		emit Stake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
@@ -344,7 +341,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
             require(_token.balanceOf(address(this)) >= amount, "insufficient contract balances");
             require(_token.transfer(staker, amount), "transfer to staker failed");
 
-       	emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
+       	    emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
         } else {
             playerChallenge.amount = 0;
             playerChallenge.overStakeAmount = 0;
@@ -436,7 +433,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.completed = true;
+        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
@@ -497,8 +494,7 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
                 time = time + duration;
 
                 if (playerChallenge.overStakeAmount > 0) {
-                    time = time + (duration * ((playerChallenge
-                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
+                    time = time + (duration * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
                 }
             }
         }
@@ -524,30 +520,6 @@ contract LpChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard {
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
-    }
-
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        // update time progress
-        // previous stake time
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            playerChallenge.stakedTime > 0) {
-            uint256 time = block.timestamp - playerChallenge.stakedTime;
-
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + (time * ((playerChallenge
-                    .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
-            }
-
-            playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
-            if (playerChallenge.stakedDuration >= sessionChallenge.stakePeriod) {
-                playerChallenge.completed = true;
-            }
-        }
     }
 
     function updateBalanceInterestPerToken(

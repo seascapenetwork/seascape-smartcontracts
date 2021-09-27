@@ -263,8 +263,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         if (total < sessionChallenge.stakeAmount) {
             playerChallenge.amount = total;
         } else {
-            updateTimeProgress(sessionChallenge, playerChallenge);
-
             playerChallenge.amount = sessionChallenge.stakeAmount;
             playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
             playerChallenge.stakedTime = block.timestamp;
@@ -431,7 +429,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.completed = true;
+        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
@@ -514,31 +512,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface,  ReentrancyGuard 
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
-    }
-
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        // update time progress
-        // previous stake time
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            playerChallenge.stakedTime > 0) {
-
-            uint256 time = block.timestamp - playerChallenge.stakedTime;
-
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + (time * ((playerChallenge.overStakeAmount * sessionChallenge
-                    .multiplier) / multiply) / scaler);
-            }
-
-            playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
-            if (playerChallenge.stakedDuration >= sessionChallenge.stakePeriod) {
-                playerChallenge.completed = true;
-            }
-        }
     }
 
     function updateBalanceInterestPerToken(
