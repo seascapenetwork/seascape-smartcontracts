@@ -218,7 +218,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "challange already completed");
+        require(!isCompleted(sessionChallenge, playerChallenge, now), "challange already completed");
 
         require(isActive(sessionChallenge.startTime, sessionChallenge.endTime),
             "Challenge should be active");
@@ -227,8 +227,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         if (sessionChallenge.prevChallengeId > 0) {
             PlayerChallenge storage playerPrevChallenge
                 = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
-            require(playerPrevChallenge.completed ||
-                isCompleted(sessionChallenge, playerPrevChallenge, now),
+            require(isCompleted(sessionId, playerPrevChallenge, staker),
                 "last challenge not completed");
         }
 
@@ -276,13 +275,11 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         if (total < sessionChallenge.stakeAmount) {
             playerChallenge.amount = total;
         } else {
-            updateTimeProgress(sessionChallenge, playerChallenge);
-
             playerChallenge.amount = sessionChallenge.stakeAmount;
             playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
             playerChallenge.stakedTime = block.timestamp;
 
-    		    updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
+    		updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
         }
 
 		    emit Stake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
@@ -451,7 +448,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.completed = true;
+        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
     function isFullyCompleted(
@@ -599,37 +596,14 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
                 time = time + duration;
 
                 if (playerChallenge.overStakeAmount > 0) {
-                    time = time + (duration * ((playerChallenge
-                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
+                    time = time + (duration * ((playerChallenge.overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
                 }
             }
         }
         return time >= sessionChallenge.stakePeriod;
     }
 
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        // update time progress
-        // previous stake time
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            playerChallenge.stakedTime > 0) {
-            uint256 time = block.timestamp - playerChallenge.stakedTime;
 
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + (time * ((playerChallenge
-                    .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
-            }
-
-            playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
-            if (playerChallenge.stakedDuration >= sessionChallenge.stakePeriod) {
-                playerChallenge.completed = true;
-            }
-        }
-    }
 
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,

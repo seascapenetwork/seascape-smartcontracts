@@ -55,7 +55,7 @@ abstract contract ScapeNftComboChallenge is
         uint256 startTime;     		// session start in unixtimestamp
         uint256 endTime;
 
-		    uint256 claimed;       		// amount of already claimed CWS
+		uint256 claimed;       		// amount of already claimed CWS
 
         uint256 rewardUnit;    		// reward per second = totalReward/period
         uint256 interestPerToken; 	// total earned interest per token since the beginning
@@ -288,8 +288,6 @@ abstract contract ScapeNftComboChallenge is
         playerChallenge.claimedTime = block.timestamp;
         playerChallenge.stakedTime = block.timestamp;
 
-        updateTimeProgress(sessionChallenge, playerChallenge);
-
    		  updateBalanceInterestPerToken(challenge
             .nftAmount, sessionChallenge.claimedPerToken, playerChallenge);
 
@@ -476,16 +474,6 @@ abstract contract ScapeNftComboChallenge is
         }
     }
 
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        if (isCompleted(sessionChallenge, playerChallenge, now)) {
-            playerChallenge.completed = true;
-        }
-    }
 
     function updateBalanceInterestPerToken(
         uint8 nftAmount,
@@ -495,11 +483,12 @@ abstract contract ScapeNftComboChallenge is
         internal
         returns(bool)
     {
+        playerChallenge.claimedReward = 0;
   		for (uint8 i = 0; i < nftAmount; i++) {
-              playerChallenge.claimedReward = claimedPerToken * playerChallenge
-                  .weight[i] / scaler; // 0
-          }
-      }
+            playerChallenge.claimedReward += claimedPerToken * playerChallenge
+                .weight[i] / scaler; // 0
+        }
+    }
 
     function _claim(uint256 sessionId, uint32 challengeId, address staker)
         internal
@@ -550,6 +539,7 @@ abstract contract ScapeNftComboChallenge is
         view
         returns(uint256)
     {
+        Category storage challenge = challenges[challengeId];
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
@@ -571,10 +561,15 @@ abstract contract ScapeNftComboChallenge is
     		uint256 claimedPerToken = sessionChallenge.claimedPerToken + ((sessionCap - sessionChallenge
             .lastInterestUpdate) * sessionChallenge.interestPerToken);
 
-    		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
-        uint256 interest = (claimedPerToken / scaler) - playerChallenge.claimedReward;
+        uint256 claimableReward = 0;
+  		for (uint8 i = 0; i < challange.nftAmount; i++) {
+            claimableReward += claimedPerToken * playerChallenge.weight[i] / scaler; // 0
+        }
 
-    		return interest;
+    		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
+        uint256 interest = claimableReward - playerChallenge.claimedReward;
+
+    	return interest;
     }
 
 

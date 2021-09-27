@@ -330,8 +330,6 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
         if (total < sessionChallenge.stakeAmount) {
             playerChallenge.amount = total;
         } else {
-            updateTimeProgress(sessionChallenge, playerChallenge);
-
             playerChallenge.amount = sessionChallenge.stakeAmount;
             playerChallenge.overStakeAmount = total - sessionChallenge.stakeAmount;
             playerChallenge.stakedTime = block.timestamp;
@@ -506,7 +504,7 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.completed = true;
+        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
     function getIdAndLevel(uint8 offset, bytes calldata data)
@@ -655,30 +653,6 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
-    }
-
-    function updateTimeProgress(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge
-    )
-        internal
-    {
-        // update time progress
-        // previous stake time
-        if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            playerChallenge.stakedTime > 0) {
-
-            uint256 time = block.timestamp - playerChallenge.stakedTime;
-
-            if (playerChallenge.overStakeAmount > 0) {
-                time = time + (time * ((playerChallenge.overStakeAmount * sessionChallenge
-                    .multiplier) / multiply) / scaler);
-            }
-            playerChallenge.stakedDuration = playerChallenge.stakedDuration + time;
-            if (playerChallenge.stakedDuration >= sessionChallenge.stakePeriod) {
-                playerChallenge.completed = true;
-            }
-        }
     }
 
     function updateBalanceInterestPerToken(
