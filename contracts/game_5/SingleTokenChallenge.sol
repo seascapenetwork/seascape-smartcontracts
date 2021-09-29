@@ -361,7 +361,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             playerChallenge.overStakeAmount = 0;
             playerChallenge.stakedTime = 0;
 
-            playerChallenge.completed = true;
+            playerChallenge.stakedDuration = sessionChallenge.stakePeriod;
 
             sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
 
