@@ -361,7 +361,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             playerChallenge.overStakeAmount = 0;
             playerChallenge.stakedTime = 0;
 
-            playerChallenge.stakedDuration = sessionChallenge.stakePeriod;
+            playerChallenge.completed = true;
 
             sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
 
@@ -448,7 +448,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
+        playerChallenge.completed = true;
     }
 
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
