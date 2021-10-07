@@ -64,7 +64,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         uint256 price
     );
 
-    event SaleCanceled(uint256 indexed id, uint256 salesId);
+    event CancelSale(uint256 indexed id, uint256 tokenId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
     /// @dev set fee reciever address and fee rate
@@ -147,7 +147,8 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         obj.status = 2;
         IERC721 nft = IERC721(obj.nft);
         nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
-        emit SaleCanceled(_tokenId, obj.id);
+
+        emit CancelSale(_tokenId, obj.id);
     }
 
     /// @notice put nft for sale
