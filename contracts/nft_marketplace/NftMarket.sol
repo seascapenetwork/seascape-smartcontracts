@@ -158,7 +158,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @param _currency currency token address
     /// @return salesAmount total amount of sales
     function sell(uint256 _tokenId, uint256 _price, address _nftAddress, address _currency)
-        public
+        external
         nonReentrant
         returns(uint)
     {
@@ -224,7 +224,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @param _nftAddress nft token address
     /// @param _currency currency token address
     function buy(uint _tokenId, address _nftAddress, address _currency)
-        public
+        external
         nonReentrant
         payable
     {
@@ -265,7 +265,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @param _nftAddress nft token address
     /// @return SalesObject at given index
     function getSales(uint _tokenId, address _nftAddress)
-        public
+        external
         view
         returns(SalesObject memory)
     {
