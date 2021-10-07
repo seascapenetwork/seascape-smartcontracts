@@ -128,29 +128,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         feeRate = _rate;
     }
 
-    /// @notice returns sales amount
-    /// @return total amount of sales objects
-    function getSalesAmount() external view returns(uint) { return salesAmount; }
-
-    //--------------------------------------------------
-    // Public methods
-    //--------------------------------------------------
-
-    /// @notice cancel nft sale
-    /// @param _tokenId nft unique ID
-    /// @param _nftAddress nft token address
-    function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
-        SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
-        require(obj.status == 0, "status: sold or canceled");
-        require(obj.seller == msg.sender, "seller not nft owner");
-        require(salesEnabled, "sales are closed");
-        obj.status = 2;
-        IERC721 nft = IERC721(obj.nft);
-        nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
-
-        emit CancelSale(_tokenId, obj.id);
-    }
-
     /// @notice put nft for sale
     /// @param _tokenId nft unique ID
     /// @param _price required price to pay by buyer. Seller receives less: price - fees
@@ -167,10 +144,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         require(salesEnabled, "sales are closed");
         require(supportedNft[_nftAddress], "nft address unsupported");
         require(supportedCurrency[_currency], "currency not supported");
+
+
         IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         salesAmount++;
-
         salesObjects[_nftAddress][_tokenId] = SalesObject(
             salesAmount,
             _tokenId,
@@ -197,6 +175,86 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         return salesAmount;
     }
 
+    /// @notice buy nft
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
+    /// @param _currency currency token address
+    function buy(uint _tokenId, address _nftAddress, address _currency)
+        external
+        nonReentrant
+        payable
+    {
+        SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
+        require(obj.status == 0, "status: sold or canceled");
+        require(obj.startTime <= now, "not yet for sale");
+        require(salesEnabled, "sales are closed");
+        require(msg.sender != obj.seller, "cant buy from yourself");
+        require(obj.currency == _currency, "must pay same currency as sold");
+
+        uint256 price = this.getSalesPrice(_tokenId, _nftAddress);
+        uint256 tipsFee = price.mul(feeRate).div(1000);
+        uint256 purchase = price.sub(tipsFee);
+
+        if (obj.currency == address(0x0)) {
+            require (msg.value >= price, "your price is too low");
+            uint256 returnBack = msg.value.sub(price);
+            if (returnBack > 0)
+                msg.sender.transfer(returnBack);
+            if (tipsFee > 0)
+                feeReceiver.transfer(tipsFee);
+            obj.seller.transfer(purchase);
+        } else {
+            IERC20(obj.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
+            IERC20(obj.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
+        }
+
+        IERC721 nft = IERC721(obj.nft);
+        nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
+
+        obj.buyer = msg.sender;
+        obj.status = 1;
+
+        emit Buy(obj.id, obj.tokenId, msg.sender, price, tipsFee, obj.currency);
+    }
+
+    /// @notice cancel nft sale
+    /// @param _tokenId nft unique ID
+    /// @param _nftAddress nft token address
+    function cancelSell(uint _tokenId, address _nftAddress) external nonReentrant {
+        SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
+
+        require(obj.status == 0, "status: sold or canceled");
+        require(obj.seller == msg.sender, "seller not nft owner");
+        require(salesEnabled, "sales are closed");
+
+        IERC721 nft = IERC721(obj.nft);
+        nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
+
+        obj.status = 2;
+
+        emit CancelSale(_tokenId, obj.id);
+    }
+
+    /// @notice returns sales amount
+    /// @return total amount of sales objects
+    function getSalesAmount() external view returns(uint) { return salesAmount; }
+
+    /// @dev fetch sale object at nftId and nftAddress
+    /// @param _tokenId unique nft ID
+    /// @param _nftAddress nft token address
+    /// @return SalesObject at given index
+    function getSales(uint _tokenId, address _nftAddress)
+        external
+        view
+        returns(SalesObject memory)
+    {
+        return salesObjects[_nftAddress][_tokenId];
+    }
+
+    //--------------------------------------------------
+    // Public methods
+    //--------------------------------------------------
+
     /// @dev encrypt token data
     function onERC721Received(
         address operator,
@@ -217,59 +275,6 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         //success
         emit NftReceived(operator, from, tokenId, data);
         return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
-    }
-
-    /// @notice buy nft
-    /// @param _tokenId nft unique ID
-    /// @param _nftAddress nft token address
-    /// @param _currency currency token address
-    function buy(uint _tokenId, address _nftAddress, address _currency)
-        external
-        nonReentrant
-        payable
-    {
-        SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
-        require(obj.status == 0, "status: sold or canceled");
-        require(obj.startTime <= now, "not yet for sale");
-        require(salesEnabled, "sales are closed");
-        require(msg.sender != obj.seller, "cant buy from yourself");
-
-        require(obj.currency == _currency, "must pay same currency as sold");
-        uint256 price = this.getSalesPrice(_tokenId, _nftAddress);
-        uint256 tipsFee = price.mul(feeRate).div(1000);
-        uint256 purchase = price.sub(tipsFee);
-
-        if (obj.currency == address(0x0)) {
-            require (msg.value >= price, "your price is too low");
-            uint256 returnBack = msg.value.sub(price);
-            if (returnBack > 0)
-                msg.sender.transfer(returnBack);
-            if (tipsFee > 0)
-                feeReceiver.transfer(tipsFee);
-            obj.seller.transfer(purchase);
-        } else {
-            IERC20(obj.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
-            IERC20(obj.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
-        }
-
-        IERC721 nft = IERC721(obj.nft);
-        nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
-        obj.buyer = msg.sender;
-
-        obj.status = 1;
-        emit Buy(obj.id, obj.tokenId, msg.sender, price, tipsFee, obj.currency);
-    }
-
-    /// @dev fetch sale object at nftId and nftAddress
-    /// @param _tokenId unique nft ID
-    /// @param _nftAddress nft token address
-    /// @return SalesObject at given index
-    function getSales(uint _tokenId, address _nftAddress)
-        external
-        view
-        returns(SalesObject memory)
-    {
-        return salesObjects[_nftAddress][_tokenId];
     }
 
     /// @dev returns the price of sale
