@@ -243,6 +243,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             require(swapParamsAddress != address(0),
                 "requested nft address unsupported");
             // verify nft parameters
+            // external but trusted contract maintained by Seascape
             NftSwapParamsInterface requestedToken = NftSwapParamsInterface (swapParamsAddress);
             require(requestedToken.isValidParams(lastOfferId, _requestedTokens[_index].tokenParams,
               _requestedTokens[_index].v, _requestedTokens[_index].r, _requestedTokens[_index].s),
