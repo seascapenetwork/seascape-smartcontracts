@@ -116,16 +116,16 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     // @param _nftSwapParams contract address
     function enableSupportedNftAddress(
         address _nftAddress,
-        address _nftSwapParamsAddress
+        address _nftMetadataAddress
     )
         external
         onlyOwner
     {
         require(_nftAddress != address(0x0), "invalid nft address");
-        require(_nftSwapParamsAddress != address(0x0), "invalid nftSwapParams address");
+        require(_nftMetadataAddress != address(0x0), "invalid NftMetadata address");
         require(supportedNftAddresses[_nftAddress] == address(0x0),
             "nft address already enabled");
-        supportedNftAddresses[_nftAddress] = _nftSwapParamsAddress;
+        supportedNftAddresses[_nftAddress] = _nftMetadataAddress;
     }
 
     /// @notice disable supported nft token
