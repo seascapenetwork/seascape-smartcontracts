@@ -3,7 +3,7 @@ pragma solidity ^0.6.7;
 
 /// @dev Interface of the nftSwapParams
 
-interface NftSwapParamsInterface {
+interface NftMetadataInterface {
 
     /// @dev Returns true if signature is valid
     function isValidParams(uint256 _offerId, bytes calldata _encodedParams,
