@@ -9,7 +9,7 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./Crowns.sol";
-import "./NftSwapParamsInterface.sol";
+import "./NftMetadataInterface.sol";
 
 /// @title Nft Swap is a part of Seascape marketplace platform.
 /// It allows users to obtain desired nfts in exchange for their offered nfts,
@@ -60,7 +60,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedBountyAddresses;
     /// @dev parse metadata contract addresses (1 per individual nftSeries)
-    /// @param nftAddress => nftSwapParams contract address
+    /// @param nftAddress => nftMetadata contract address
     mapping(address => address) public supportedNftAddresses;
 
     event CreateOffer(
@@ -113,7 +113,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice add supported nft contract
     /// @param _nftAddress ERC721 contract address
-    // @param _nftSwapParams contract address
+    // @param _nftMetadataAddress contract address
     function enableSupportedNftAddress(
         address _nftAddress,
         address _nftMetadataAddress
@@ -235,15 +235,15 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         }
         // verify requested nft oddresses
         for (uint _index = 0; _index < _requestedTokensAmount; _index++) {
-            address swapParamsAddress = supportedNftAddresses[_requestedTokens[_index].tokenAddress];
-            require(swapParamsAddress != address(0),
+            address nftMetadataAddress = supportedNftAddresses[_requestedTokens[_index].tokenAddress];
+            require(nftMetadataAddress != address(0),
                 "requested nft address unsupported");
             // verify nft parameters
             // external but trusted contract maintained by Seascape
-            NftSwapParamsInterface requestedToken = NftSwapParamsInterface (swapParamsAddress);
-            require(requestedToken.isValidParams(lastOfferId, _requestedTokens[_index].tokenParams,
+            NftMetadataInterface requestedToken = NftMetadataInterface (nftMetadataAddress);
+            require(requestedToken.metadataIsValid(lastOfferId, _requestedTokens[_index].tokenParams,
               _requestedTokens[_index].v, _requestedTokens[_index].r, _requestedTokens[_index].s),
-                "required nft params are invalid");
+                "invalid nft metadata");
         }
 
         /// make transactions
