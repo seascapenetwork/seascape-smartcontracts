@@ -1,0 +1,160 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_offerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_encodedData",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint8",
+        "name": "v",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "metadataIsValid",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_offerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_imgId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_generation",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_quality",
+        "type": "uint8"
+      }
+    ],
+    "name": "encodeParams",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "message",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "_encodedData",
+        "type": "bytes"
+      }
+    ],
+    "name": "decodeParams",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "imgId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "generation",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "quality",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  }
+]
