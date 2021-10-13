@@ -1,14 +1,14 @@
-pragma solidity ^0.6.7;
+pragma solidity 0.6.7;
 pragma experimental ABIEncoderV2;
 
 import "./../openzeppelin/contracts/access/Ownable.sol";
 
-/// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
+/// @title ScapeMetadata is a digital signature verifyer, nft metadata encoder / decoder
 /// @author Nejc Schneider
-contract ScapeSwapParams is Ownable{
+contract ScapeMetadata is Ownable{
 
     // takes in _encodedData and converts to seascape
-    function isValidParams (uint256 _offerId, bytes memory _encodedData,
+    function metadataIsValid (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 
       (uint256 imgId, uint256 generation, uint8 quality) = decodeParams(_encodedData);
