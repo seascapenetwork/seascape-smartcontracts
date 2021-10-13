@@ -1,10 +1,10 @@
 var NftSwap = artifacts.require("./NftSwap.sol");
-let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol");
+let ScapeMetadata = artifacts.require("./ScapeMetadata.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
 var Nft = artifacts.require("./SeascapeNft.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 var SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
-let SampleSwapParams = artifacts.require("./SampleSwapParams.sol")
+let SampleMetadata = artifacts.require("./SampleMetadata.sol")
 let SampleNft = artifacts.require("./SampleNft.sol");
 
 
@@ -20,8 +20,8 @@ module.exports = async function(deployer, network) {
             console.log("It is using Crowns (CWS) Token at address: "+Crowns.address);
         });
 
-        deployer.deploy(ScapeSwapParams).then(function(){
-            console.log("ScapeSwapParams contract was deployed at address: "+ScapeSwapParams.address);
+        deployer.deploy(ScapeMetadata).then(function(){
+            console.log("ScapeMetadata contract was deployed at address: "+ScapeMetadata.address);
         });
 
         // deployer.deploy(Nft).then(function(){
@@ -32,8 +32,8 @@ module.exports = async function(deployer, network) {
             console.log("SampleERC20Token contract was deployed at address: "+SampleERC20Token.address);
         });
 
-        deployer.deploy(SampleSwapParams).then(function(){
-            console.log("SampleSwapParams contract was deployed at address: "+SampleSwapParams.address);
+        deployer.deploy(SampleMetadata).then(function(){
+            console.log("SampleMetadata contract was deployed at address: "+SampleMetadata.address);
         });
 
         deployer.deploy(SampleNft).then(function(){
@@ -44,11 +44,11 @@ module.exports = async function(deployer, network) {
         var crowns = "0x168840Df293413A930d3D40baB6e1Cd8F406719D";
 		    var nft = "0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a";
 
-        // await deployer.deploy(NftSwap, _feeRate, crowns);
-        // console.log("NftSwap contract was deployed at address: " +NftSwap.address);
+        await deployer.deploy(NftSwap, _feeRate, crowns);
+        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
 
-        await deployer.deploy(ScapeSwapParams);
-        console.log("ScapeSwapParams contract was deployed at address: " +ScapeSwapParams.address);
+        await deployer.deploy(ScapeMetadata);
+        console.log("ScapeMetadata contract was deployed at address: " +ScapeMetadata.address);
 
     } else if (network == "bsctestnet") {
         var crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
