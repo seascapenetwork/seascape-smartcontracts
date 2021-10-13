@@ -19,16 +19,12 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    /// @dev keep count of offers (aka offerIds)
-    uint256 public lastOfferId;
-    /// @notice enable/disable creating and accepting offer.
-    bool public tradeEnabled;
-    /// @dev fee for creating an offer
-    uint256 public fee;
-    /// @dev maximum amount of offered Tokens
-    uint256 public maxOfferedTokens = 5;
-    /// @dev maximum amount of requested Tokens
-    uint256 public maxRequestedTokens = 5;
+
+    uint256 public lastOfferId;             /// @dev keep count of offers (aka offerIds)
+    bool public tradeEnabled;               /// @dev enable/disable create and accept offer
+    uint256 public fee;                     /// @dev fee for creating an offer
+    uint256 public maxOfferedTokens = 5;    /// @dev maximum amount of offered Tokens
+    uint256 public maxRequestedTokens = 5;  /// @dev maximum amount of requested Tokens
 
     /// @notice individual offer related data
     struct OfferObject{
@@ -67,7 +63,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param nftAddress => nftSwapParams contract address
     mapping(address => address) public supportedNftAddresses;
 
-    event CreatedOffer(
+    event CreateOffer(
         uint256 indexed offerId,
         address indexed seller,
         uint256 bounty,
@@ -79,7 +75,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         RequestedToken [5] requestedTokens
     );
 
-    event AcceptedOffer(
+    event AcceptOffer(
         uint256 indexed offerId,
         address indexed buyer,
         uint256 bounty,
@@ -91,7 +87,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         uint256 [5] offeredTokenIds
     );
 
-    event CanceledOffer(
+    event CancelOffer(
         uint256 indexed offerId,
         address indexed seller
     );
@@ -284,7 +280,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         offerObjects[lastOfferId].fee = fee;
 
         /// emit events
-        emit CreatedOffer(
+        emit CreateOffer(
             lastOfferId,
             msg.sender,
             _bounty,
@@ -359,7 +355,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         delete offerObjects[_offerId];
 
         /// emit events
-        emit AcceptedOffer(
+        emit AcceptOffer(
             obj.offerId,
             msg.sender,
             obj.bounty,
@@ -403,7 +399,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         delete offerObjects[_offerId];
 
         /// emit events
-        emit CanceledOffer(
+        emit CancelOffer(
             obj.offerId,
             obj.seller
         );
