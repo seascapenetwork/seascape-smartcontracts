@@ -3,9 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "./../openzeppelin/contracts/access/Ownable.sol";
 
-/// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
+/// @title SampleMetadata is a digital signature verifyer / nft parameters encoder / decoder
 /// @author Nejc Schneider
-contract SampleSwapParams is Ownable{
+contract SampleMetadata is Ownable{
 
     // takes in _encodedData and converts to seascape
     function isValidParams (uint256 _offerId, bytes memory _encodedData,
