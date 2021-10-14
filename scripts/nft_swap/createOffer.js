@@ -23,7 +23,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftSwap       = await NftSwap.at("0x4EcD5b851374186badA70e36Bc6df738F0484Cab");
+    let nftSwap       = await NftSwap.at("0x8E61f5028eEA48fdd58FD3809fc2202ABdBDC126");
     let crowns        = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let nft           = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
@@ -36,7 +36,7 @@ let init = async function(networkId) {
     //--------------------------------------------------
 
     // enter amounts of offered tokens and requested tokens
-    let offeredTokensAmount = 2;
+    let offeredTokensAmount = 1;
     let requestedTokensAmount = 1;
 
     // get tokenId and lastOfferId
@@ -58,7 +58,7 @@ let init = async function(networkId) {
     let offeredTokensArray = [                            // this array must contain sample data for empty slots
       // structure: [nftId, nftAddress]
       [tokenIds[0], nft.address],
-      [tokenIds[1], nft.address],
+      ["0", "0x0000000000000000000000000000000000000000"],
       ["0", "0x0000000000000000000000000000000000000000"],
       ["0", "0x0000000000000000000000000000000000000000"],
       ["0", "0x0000000000000000000000000000000000000000"],
@@ -82,11 +82,11 @@ let init = async function(networkId) {
     //--------------------------------------------------
 
     await signNfts();
-    // if(feeValue>0)
-    //   await approveCrowns();
-    // if(bountyValue > 0 && bountyAddress != crowns.address)
-    //   await approveBounty();
-    // await approveNfts();
+    if(feeValue>0)
+      await approveCrowns();
+    if(bountyValue > 0 && bountyAddress != crowns.address)
+      await approveBounty();
+    await approveNfts();
     await createOffer();
 
     // --------------------------------------------------
@@ -109,7 +109,7 @@ let init = async function(networkId) {
         let tokenId = await nft.tokenOfOwnerByIndex(user, index);
         tokenIds[index] = parseInt(tokenId.toString());
         //.catch(console.error);
-        console.log(`Nft at index ${index} has id ${tokenIds[index]}`);
+        console.log(`nft at index ${index} has id ${tokenIds[index]}`);
       }
       return tokenIds;
     }
@@ -142,7 +142,7 @@ let init = async function(networkId) {
       await nft.setApprovalForAll(nftSwap.address, true, {from: user})
         .catch(console.error);
       // check if nfts are approved
-      console.log("Checking if Nfts are approved ?");
+      console.log("checking if Nfts are approved ?");
       let approved = await nft.isApprovedForAll(user, nftSwap.address);
       console.log(approved);
     }
