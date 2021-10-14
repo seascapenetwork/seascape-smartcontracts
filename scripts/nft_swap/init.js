@@ -37,21 +37,21 @@ let init = async function(networkId) {
     //--------------------------------------------------
 
     let feeRate = web3.utils.toWei("500", "milli");
-    let tradeEnabled = false;
+    let tradeEnabled = true;
     let currencyAddress = crowns.address;
     let nftAddress = nft.address;
     let nftMetadataAddress = scapeMetadata.address;
-    let tokensAmount = 2;
+    let tokensAmount = 3;
 
     // contract calls
-    await addSupportedCurrency();
-    await removeSupportedCurrency();
-    await addSupportedNft();
-    await removeSupportedNft();
+    // await addSupportedCurrency();
+    // await removeSupportedCurrency();
+    // await addSupportedNft();
+    // await removeSupportedNft();
     await setMaxOfferedTokens();
-    await setMaxRequestedTokens();
-    await setFee();
-    await enableTrade();
+    // await setMaxRequestedTokens();
+    // await setFee();
+    // await enableTrade();
 
     //--------------------------------------------------
     // Functions operating the contract

@@ -23,41 +23,42 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftSwap = await NftSwap.at("0xa7354413e805458c405aa00A680FDB179AfCedd5");
-    let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let nftSwap       = await NftSwap.at("0x4EcD5b851374186badA70e36Bc6df738F0484Cab");
+    let crowns        = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
+    let nft           = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
 
-    let owner = accounts[0];
-    console.log(`Using ${owner}`);
+    let user = accounts[0];
+    console.log(`Using ${user}`);
 
     //--------------------------------------------------
     // Parameters setup
     //--------------------------------------------------
 
+    // enter amounts of offered tokens and requested tokens
+    let offeredTokensAmount = 2;
+    let requestedTokensAmount = 1;
+
     // get tokenId and lastOfferId
-    let tokenId = await getTokenId();
     let offerId = await getOfferId();
+    let tokenIds = await getTokenIds();
 
     // enter fee and bounty values and desirable nomination (micro/milli/ether/grand...)
-    let feeValue = 1;
-    let bountyValue = 0;
-    let fee = web3.utils.toWei(feeValue.toString(), "ether");
-    let bounty = web3.utils.toWei(bountyValue.toString(), "ether");
+    let nomination = "milli";
+    let feeValue = 500;
+    let bountyValue = 1000;
+    let fee = web3.utils.toWei(feeValue.toString(), nomination);
+    let bounty = web3.utils.toWei(bountyValue.toString(), nomination);
 
     // set the bounty address if bountyValue > 0
     let bountyAddress = crowns.address;            // address must be supported by nftSwap
 
-    // enter amounts of offered tokens and requested tokens
-    let offerTokensAmount = 1;
-    let requestedTokensAmount = 1;
-
     // adjust contents of offeredTokens array and requestedTokenMetadata dynamically,
-    // depending on size of offerTokensAmount and requestedTokensAmount
+    // depending on size of offeredTokensAmount and requestedTokensAmount
     let offeredTokensArray = [                            // this array must contain sample data for empty slots
       // structure: [nftId, nftAddress]
-      [tokenId, nft.address],
-      ["0", "0x0000000000000000000000000000000000000000"],
+      [tokenIds[0], nft.address],
+      [tokenIds[1], nft.address],
       ["0", "0x0000000000000000000000000000000000000000"],
       ["0", "0x0000000000000000000000000000000000000000"],
       ["0", "0x0000000000000000000000000000000000000000"],
@@ -81,9 +82,9 @@ let init = async function(networkId) {
     //--------------------------------------------------
 
     await signNfts();
-    if(feeValue>0)
-      await approveCrowns();
-    // if(bountyValue>0)
+    // if(feeValue>0)
+    //   await approveCrowns();
+    // if(bountyValue > 0 && bountyAddress != crowns.address)
     //   await approveBounty();
     // await approveNfts();
     await createOffer();
@@ -100,20 +101,27 @@ let init = async function(networkId) {
       return _offerId;
     }
 
-    // get tokenId at index 0
-    async function getTokenId(){
-      let _tokenId = await nft.tokenOfOwnerByIndex(owner, 0);
-      _tokenId = parseInt(_tokenId.toString());
-      console.log(`Token at index 0 has id ${_tokenId}`);
-      return _tokenId;
+    // fetch  token Ids for offeredTokens
+    async function getTokenIds(){
+
+      let tokenIds = new Array(offeredTokensAmount);
+      for(let index = 0; index < offeredTokensAmount; index++){
+        let tokenId = await nft.tokenOfOwnerByIndex(user, index);
+        tokenIds[index] = parseInt(tokenId.toString());
+        //.catch(console.error);
+        console.log(`Nft at index ${index} has id ${tokenIds[index]}`);
+      }
+      return tokenIds;
     }
 
     // approve crowns and check allowance
     async function approveCrowns(){
       console.log("attemping to approve crowns...");
-      await crowns.approve(nftSwap.address, fee, {from: owner});
+      if(bountyValue > 0 && bountyAddress == crowns.address)
+          fee = web3.utils.toWei((feeValue + bountyValue).toString(), nomination);
+      await crowns.approve(nftSwap.address, fee, {from: user});
       console.log("checking allowance");
-      let allowance = await crowns.allowance(owner, nftSwap.address);
+      let allowance = await crowns.allowance(user, nftSwap.address);
       allowance = allowance.toString();
       console.log(`nftSwap was approved to spend ${allowance/multiplier} crowns`);
     }
@@ -121,9 +129,9 @@ let init = async function(networkId) {
     // approve bounty and check allowance
     async function approveBounty(){
       console.log("attemping to approve bounty...");
-      await crowns.approve(bountyAddress, bounty, {from: owner});
+      await crowns.approve(bountyAddress, bounty, {from: user});
       console.log("checking allowance");
-      let allowance = await bountyAddress.allowance(owner, nftSwap.address);
+      let allowance = await bountyAddress.allowance(user, nftSwap.address);
       allowance = allowance.toString();
       console.log(`nftSwap was approved to spend ${allowance/multiplier} bounty`);
     }
@@ -131,19 +139,19 @@ let init = async function(networkId) {
     // approve transfer of nfts
     async function approveNfts(){
       console.log("approving nftSwap to spend nfts...")
-      await nft.setApprovalForAll(nftSwap.address, true, {from: owner})
+      await nft.setApprovalForAll(nftSwap.address, true, {from: user})
         .catch(console.error);
       // check if nfts are approved
       console.log("Checking if Nfts are approved ?");
-      let approved = await nft.isApprovedForAll(owner, nftSwap.address);
+      let approved = await nft.isApprovedForAll(user, nftSwap.address);
       console.log(approved);
     }
 
     // create offer
     async function createOffer(){
       console.log("attempting to create new offer...");
-      let offerCreated = await nftSwap.createOffer(offerTokensAmount, offeredTokensArray, requestedTokensAmount,
-        requestedTokensArray, bounty, bountyAddress,  {from: owner}).catch(console.error);
+      let offerCreated = await nftSwap.createOffer(offeredTokensAmount, offeredTokensArray, requestedTokensAmount,
+        requestedTokensArray, bounty, bountyAddress, {from: user}).catch(console.error);
       console.log(`new offer was created.`);
     }
 
@@ -175,7 +183,7 @@ let init = async function(networkId) {
       let bytes32 = web3.eth.abi.encodeParameters(
         ["uint256"], [offerId]);
       let data = web3.utils.keccak256(bytes32 + bytes.substr(2));
-      let hash = await web3.eth.sign(data, owner);
+      let hash = await web3.eth.sign(data, user);
 
       let r = hash.substr(0,66);
       let s = "0x" + hash.substr(66,64);
