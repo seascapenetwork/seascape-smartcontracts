@@ -139,7 +139,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice add supported currency address for bounty
     /// @param _bountyAddress ERC20 contract address
-    function addSupportedBountyAddresses(address _bountyAddress) external onlyOwner {
+    function addSupportedBountyAddress(address _bountyAddress) external onlyOwner {
         require(_bountyAddress != address(0x0), "invalid address");
         require(!supportedBountyAddresses[_bountyAddress], "bounty already supported");
         supportedBountyAddresses[_bountyAddress] = true;
@@ -147,7 +147,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice disable supported currency address for bounty
     /// @param _bountyAddress ERC20 contract address
-    function removeSupportedBountyAddresses(address _bountyAddress) external onlyOwner {
+    function removeSupportedBountyAddress(address _bountyAddress) external onlyOwner {
         require(_bountyAddress != address(0x0), "invalid address");
         require(supportedBountyAddresses[_bountyAddress], "bounty already removed");
         supportedBountyAddresses[_bountyAddress] = false;
