@@ -1,10 +1,10 @@
 let NftSwap = artifacts.require("./NftSwap.sol");
-let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol")
+let ScapeMetadata = artifacts.require("./ScapeMetadata.sol")
 let Crowns = artifacts.require("./CrownsToken.sol");
 let Nft = artifacts.require("./SeascapeNft.sol");
 let Factory = artifacts.require("./NftFactory.sol");
 let SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
-let SampleSwapParams = artifacts.require("./SampleSwapParams.sol")
+let SampleMetadata = artifacts.require("./SampleMetadata.sol")
 let SampleNft = artifacts.require("./SampleNft.sol");
 
 
@@ -78,11 +78,11 @@ contract("Nft Swap", async accounts => {
     // following vars present contracts
     let nft = null;
     let factory = null;
-    let scapeSwapParams = null;
+    let scapeMetadata = null;
     let nftSwap = null;
     let crowns = null;
     let sampleERC20 = null;
-    let sampleSwapParams = null;
+    let sampleMetadata = null;
     let sampleNft = null;
 
     //accounts
@@ -104,14 +104,14 @@ contract("Nft Swap", async accounts => {
 
 
     it("0.1 should link required contracts", async () => {
-	     // scapeSwapParams = await ScapeSwapParams.deployed();
+	     // scapeMetadata = await ScapeMetadata.deployed();
        factory = await Factory.deployed();
 	     nftSwap = await NftSwap.deployed();
-       scapeSwapParams =  await ScapeSwapParams.deployed();
+       scapeMetadata =  await ScapeMetadata.deployed();
 	     nft     = await Nft.deployed();
        crowns = await Crowns.deployed();
        sampleERC20Token = await SampleERC20Token.deployed();
-       sampleSwapParams = await SampleSwapParams.deployed();
+       sampleMetadata = await SampleMetadata.deployed();
        sampleNft = await SampleNft.deployed();
 
        //initialize accounts
@@ -126,11 +126,11 @@ contract("Nft Swap", async accounts => {
 
 
     it("0.2 should mint required ERC721 tokens", async () => {
-      let tokenAmountSeller = 0; //9
-      let tokenAmountBuyer = 0;   //5
+      let tokenAmountSeller = 1; //9
+      let tokenAmountBuyer = 1;   //5
 
-      let sampleTokenAmountSeller = 1;  //1
-      let sampleTokenAmountBuyer = 1;   //1
+      let sampleTokenAmountSeller = 0;  //1
+      let sampleTokenAmountBuyer = 0;   //1
 
       //check nft user balance before
       let balanceBeforeSeller = await nft.balanceOf(seller);
@@ -209,12 +209,12 @@ contract("Nft Swap", async accounts => {
 
       it("1. should initialize the contract", async () => {
         // configure the contract
-        let nftAddressAdded = await nftSwap.enableSupportedNftAddress(nft.address, scapeSwapParams.address,
+        let nftAddressAdded = await nftSwap.enableSupportedNftAddress(nft.address, scapeMetadata.address,
           {from: gameOwner}).catch(console.error);
         let tradeEnabled = await nftSwap.enableTrade(true, {from: gameOwner}).catch(console.error);
 
         // verify swapParams address added to mappping
-        // assert.equal(nftSwap.supportedNftAddresses[nft.address], scapeSwapParams.address
+        // assert.equal(nftSwap.supportedNftAddresses[nft.address], scapeMetadata.address
         //   ,"swap params address not added");
         assert.equal(tradeEnabled.receipt.status, true, "trade is not enabled");
       });
@@ -438,7 +438,7 @@ contract("Nft Swap", async accounts => {
       });
 
 
-    xit("6. should create offer id2: no bounty 1 for 1 nft", async() => {
+    it("6. should create offer id2: no bounty 1 for 1 nft", async() => {
       // parameters for createOffer
       let offerTokensAmount = 1;
       let requestedTokensAmount = 1;
@@ -681,7 +681,7 @@ contract("Nft Swap", async accounts => {
 
       // configure the contract
       try{
-      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(sampleNft.address, sampleSwapParams.address,
+      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(sampleNft.address, sampleMetadata.address,
         {from: gameOwner}).catch(console.error);
       } catch(e) {
         console.log("nft address could not be added.");
@@ -848,7 +848,7 @@ contract("Nft Swap", async accounts => {
 
     });
 
-    it("13. should create offer id6 with (1 for 1) SampleNft token", async() => {
+    xit("13. should create offer id6 with (1 for 1) SampleNft token", async() => {
       // parameters for createOffer
       let offerTokensAmount = 1;
       let requestedTokensAmount = 1;
@@ -895,7 +895,7 @@ contract("Nft Swap", async accounts => {
 
       // configure the contract
       try{
-      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(sampleNft.address, sampleSwapParams.address,
+      let nftAddressAdded = await nftSwap.enableSupportedNftAddress(sampleNft.address, sampleMetadata.address,
         {from: gameOwner}).catch(console.error);
       } catch(e) {
         console.log("nft address could not be added.");
@@ -917,7 +917,7 @@ contract("Nft Swap", async accounts => {
          "Seller didnt pay enough fee");
     });
 
-     it("14. should accept offer id6 with sampleNft token", async() => {
+     xit("14. should accept offer id6 with sampleNft token", async() => {
        let offerId = offersAmount;
        let offeredTokensAmount = 1;
        let requestedTokensAmount = 1;
