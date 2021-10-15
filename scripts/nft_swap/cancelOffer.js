@@ -22,20 +22,20 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftSwap = await NftSwap.at("0x4EcD5b851374186badA70e36Bc6df738F0484Cab");
+    let nftSwap = await NftSwap.at("0x8E61f5028eEA48fdd58FD3809fc2202ABdBDC126");
     let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
 
 
     let user = accounts[0];
-    console.log(`Using ${user}`);
+    console.log(`Using account ${user}`);
 
     //--------------------------------------------------
     // Parameters setup and function calls
     //--------------------------------------------------
 
-    let offerId = 1;
+    let offerId = 2;
 
     // contract calls
     await cancelOffer(offerId)
@@ -48,7 +48,7 @@ let init = async function(networkId) {
     async function cancelOffer(_offerId){
       console.log("attempting to cancel offer...");
       await nftSwap.cancelOffer(_offerId, {from: user}).catch(console.error);
-      console.log("offer canceled");
+      console.log("offer canceled.");
     }
 
 

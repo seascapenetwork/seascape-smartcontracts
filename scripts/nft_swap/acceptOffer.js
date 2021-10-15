@@ -98,7 +98,7 @@ let init = async function(networkId) {
       console.log(`attempting to accept offer id ${offerId}...`);
       let offerAccepted = await nftSwap.acceptOffer(offerId, requestedTokenIds,
         requestedTokenAddresses, sig[0], sig[1], sig[2], {from: user}).catch(console.error);
-      console.log(`offer was accepted`);
+      console.log(`offer was accepted.`);
     }
 
     // --------------------------------------------------

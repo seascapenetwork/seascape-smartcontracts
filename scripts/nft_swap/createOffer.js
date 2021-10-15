@@ -29,7 +29,7 @@ let init = async function(networkId) {
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
 
     let user = accounts[0];
-    console.log(`Using ${user}`);
+    console.log(`Using account ${user}`);
 
     //--------------------------------------------------
     // Parameters setup
@@ -53,8 +53,7 @@ let init = async function(networkId) {
     // set the bounty address if bountyValue > 0
     let bountyAddress = crowns.address;            // address must be supported by nftSwap
 
-    // adjust contents of offeredTokens array and requestedTokenMetadata dynamically,
-    // depending on size of offeredTokensAmount and requestedTokensAmount
+    // adjust contents of offeredTokens array relative to size of offeredTokensAmount
     let offeredTokensArray = [                            // this array must contain sample data for empty slots
       // structure: [nftId, nftAddress]
       [tokenIds[0], nft.address],
@@ -71,6 +70,7 @@ let init = async function(networkId) {
       [nft.address, "0x00", "0", "0x00", "0x00"],
       [nft.address, "0x00", "0", "0x00", "0x00"],
     ];
+    // adjust contents of requestedTokenMetadata array relative to size of requestedTokensAmount
     let requestedTokenMetadata = [
       //structure: [tokenAddress, imgId, generation, quality]
       [nft.address, "24", "0", "4"],
