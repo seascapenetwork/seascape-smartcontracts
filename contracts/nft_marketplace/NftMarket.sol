@@ -232,7 +232,7 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
 
         obj.status = 2;
 
-        emit CancelSale(_tokenId, obj.id);
+        emit CancelSale(obj.tokenId, obj.id);
     }
 
     /// @notice returns sales amount
