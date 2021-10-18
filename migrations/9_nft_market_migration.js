@@ -8,7 +8,7 @@ async function getAccount(id) {
 }
 
 
-const tipsFeeRate = 100;	// 1 = 0.1%, 100 = 10%
+const tipsFeeRate = 10;	// 1 = 0.1%, 100 = 10%
 
 module.exports = function(deployer, network) {
       if (network == "ganache") {
@@ -19,6 +19,22 @@ module.exports = function(deployer, network) {
         });
       }
       else if (network == "rinkeby") {
+          var feesReciever = "0x5bDed8f6BdAE766C361EDaE25c5DC966BCaF8f43";
+
+          deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
+           .then(function(){
+              console.log("Market contract was deployed at address: "+NftMarket.address);
+          });
+      }
+      else if (network == "bsctestnet") {
+          var feesReciever = "0x5bDed8f6BdAE766C361EDaE25c5DC966BCaF8f43";
+
+          deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
+           .then(function(){
+              console.log("Market contract was deployed at address: "+NftMarket.address);
+          });
+      }
+      else if (network == "moonbase") {
           var feesReciever = "0x5bDed8f6BdAE766C361EDaE25c5DC966BCaF8f43";
 
           deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
