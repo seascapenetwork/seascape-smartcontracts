@@ -73,7 +73,7 @@ let init = async function(networkId) {
     // adjust contents of requestedTokenMetadata array relative to size of requestedTokensAmount
     let requestedTokenMetadata = [
       //structure: [tokenAddress, imgId, generation, quality]
-      [nft.address, "24", "0", "4"],
+      [nft.address, "0", "0", "1"],
       [null], [null], [null], [null]
     ];
 
@@ -162,6 +162,11 @@ let init = async function(networkId) {
     // encode requestedToken metadata
     async function signNfts(){
       for(let i = 0; i < requestedTokensAmount; i++){
+        //[nft.address, "24", "0", "4"],
+        console.log("Requested tokens metadata:")
+        console.log(`token #${i} nftAddress: ${requestedTokenMetadata[i][0]}\nimgId: ${requestedTokenMetadata[i][1]}
+          generation: ${requestedTokenMetadata[i][2]} quality: ${requestedTokenMetadata[i][3]}\n`);
+
         encodedData = encodeNft(requestedTokenMetadata[i][1],
           requestedTokenMetadata[i][2], requestedTokenMetadata[i][3]);
         let sig = await signParams(offerId, encodedData);
