@@ -7,8 +7,7 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../seascape_nft/SeascapeNft.sol";
-import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./NftSwapParamsInterface.sol";
+
 
 /// @title RiverboatNft is a nft service platform
 /// User can buy nft at a slots 1-5
@@ -19,29 +18,19 @@ contract RiverboatNft is IERC721Receiver, Ownable {
     using SafeMath for uint256;
 
     struct Session(
+        address currencyAddress;     // currency address
+        address nftAddress;          // nft token address
         uint256 startPrice;	         // nft price in the initial interval
         uint256 priceIncrease;		   // how much nftPrice increase every interval
-        uint32 startTime;			       // session start timestamp (max 2106)
+        uint32 startTime;			       // session start timestamp
         uint32 intervalDuration;		 // duration of single interval – in seconds
         uint32 intervalsAmount;	     // total of intervals
         uint32 slotsAmount;          // total of slots
-        address supportedCurrency;   // nft Token address
-        // instead of intervalsAmount we coule use endTime
-        // uint32 endTime			     // session end timestamp
-        // slotIndex -> soldTokens
-        mapping(uint256 => SoldToken) soldTokens;
+        uint32 soldNftsCount[slotsAmount];  // count sold nfts amount per slot
     );
 
-    struct SoldToken(
-        uint256 intervalNumber;
-        uint256 slotNumber;
-        uint256 buyTime;
-        uint256 buyPrice;
-        address buyer;
-    );
-
-    uint256 public currentPrice;       // price of nfts in current interval
-    uint256 public currentInterval;    // number of current interval
+    // uint256 public currentPrice;       // price of nfts in current interval
+    // uint256 public currentInterval;    // number of current interval
     uint256 public tradeEnabled;       // enable/disable buy function
     uint256 public sessionId;          // current sessionId
     address public priceReceiver;      // this address receives the money from bought tokens
@@ -52,35 +41,35 @@ contract RiverboatNft is IERC721Receiver, Ownable {
     mapping(address=>bool) public supportedNfts;
     // ERC20 => true/false
     mapping(address=>bool) public supportedCurrencies;
-    // sessionId => intervalId => slotId => buyersAddress
+    // sessionId => slotId => intervalId => buyersAddress
     mapping(uint256 => mapping(uint256 => mapping(uint256 => address))) public mintedNfts;
 
     event Buy(
         uint256 indexed sessionId,
-        uint256 slotId
+        uint256 indexed slotId,
+        uint256 indexed intervalNumber,
         uint256 price,
+        address nftAddress,
         address feeReceiver,
-        address indexed sender,
+        address indexed sender
     );
 
     event startSession(
-        uint256 indexed sessionId;
-        uint256 indexed priceIncrease;
-        uint32 startTime;
-        uint32 interval
-    );
-
-    event updateSession(
-        uint256 indexed sessionId;
-        uint256 priceIncrease;
-        uint256 intervalDuration;
-        uint256 intervalsAmount;
+        uint256 indexed sessionId,
+        address currencyAddress,
+        address indexed nftAddress,
+        uint256 startPrice,
+        uint256 priceIncrease,
+        uint32 startTime,
+        uint32 intervalDuration,
+        uint32 intervalsAmount,
+        uint32 slotsAmount
     );
 
     // @dev initialize the contract
     // @param _priceReceiver
     // @param _nftAddress initial supported nft series
-    // @param _set receiver
+    // @param _currencyAddress initial supported currency (ERC20)
     constructor(address _priceReceiver, address _nftAddress, address _currencyAddress) public {
           require(_nftAddress != address(0), "Invalid nft address");
           require(_priceReceiver != address(0), "Invalid money receiver address");
@@ -89,53 +78,12 @@ contract RiverboatNft is IERC721Receiver, Ownable {
           supportedNfts[_nftAddress] = true;
           supportedCurrencies[_currencyAddress] = true;
 
-          // sessionId.increment(); 	// starts at value 1
+          sessionId.increment(); 	// starts at value 1
           // nftFactory = NftFactory(_nftFactory);
     }
 
     //--------------------------------------------------------------------
-    // Beta functions that modifiy state variables or session data
-    //--------------------------------------------------------------------
-
-    /// CAUTION this function is highly experimental and dangerous to use.
-    /// Should be avoided until extensive tests are complete.
-    /// @notice update current price during the session
-    /// @dev the consecutive intervals price will also be different
-    /// @param _newPrice new price to be set
-    function updateCurrentPrice(uint256 _newPrice) external onlyOwner returns (currentPrice){
-        require(_newPrice > 0, "price should be higher than 0");
-
-        currentPrice = _newPrice;
-        return currentPrice;
-    }
-
-    /// CAUTION this function is highly experimental and dangerous to use.
-    /// Should be avoided until extensive tests are complete.
-    /// @dev Update existing/running session data
-    function updateSessionData(
-        uint256 priceIncrease,
-        uint256 intervalDuration,
-        uint256 intervalsAmount
-    )
-        external
-        onlyOwner
-    {
-
-        // TODO require statements
-        // session can either be starting in the future or currently running
-        // cant be finished
-
-        // priceIncrease will apply during next interval
-        // intervalDuration can either apply immediately or in next interval
-        // intervalsAmount will be applied immediately
-
-        // update session data
-
-        // emit event
-    }
-
-    //--------------------------------------------------------------------
-    // onlyOwner functions
+    // onlyOwner external functions
     //--------------------------------------------------------------------
 
     /// @notice enable/disable buy function
@@ -174,6 +122,7 @@ contract RiverboatNft is IERC721Receiver, Ownable {
         supportedCurrencies[_currencyAddress] = false;
     }
 
+    /// TODO requires factory contract
     // authorize address to mint unsold nfts
     function withdrawUnsoldNfts(uint _sessionId, address _authorizedAddress) external onlyOwner {
         if(_authorizedAddress ! Authorized){
@@ -184,9 +133,62 @@ contract RiverboatNft is IERC721Receiver, Ownable {
     }
 
     /// @dev start a new session, during which players are allowed to buy nfts
-    /// @parm **NEED TO INPUT ALL SESSION PARAMS
-    function startSession(struct session) onlyOwner external {
-        require(!isActive(session), "another session already active)
+    /// @parm _currencyAddress ERC20 token to be used during the session
+    /// @param _nftAddress ERC721 token to be used during the session
+    /// @param _startPrice nfts price in the first interval
+    /// @param _priceIncrease how much price increases each interval
+    /// @param _startTime timestamp at which session becomes active
+    /// @param _intervalDuration duration of each interval
+    /// @param _intervalsAmount how many intervals are in a session
+    /// @param _slotsAmount how many nft slots are in a session
+    function startSession(
+        address _currencyAddress,
+        address _nftAddress,
+        uint256 _startPrice,
+        uint256 _priceIncrease,
+        uint32 _startTime,
+        uint32 _intervalDuration,
+        uint32 _intervalsAmount,
+        uint32 _slotsAmount
+    )
+        onlyOwner
+        external
+    {
+        /// cant start new session when another is active
+        if (sessionId > 0)
+            require(!isActive(sessionId), "another session is still active");
+        require(supportedCurrencies[_currencyAddress], "unsupported currency");
+        require(supportedNfts[_nftAddress], "unsupported nft");
+        require(_startPrice > 0, "start price can't be 0");
+        // following require statement may be omitted
+        require(_priceIncrease > 0, "price increase can't be 0");
+        require(_startTime > block.timestamp, "session should start in future");
+        require(_intervalDuration > 0, "interval duration can't be 0");
+        require(_intervalsAmount > 0, "intervals amount can't be 0");
+        require(_slotsAmount > 0, "slots amount can't be 0");
+
+        sessions[sessionId] = Session(
+            _currencyAddress,
+            _nftAddress,
+            _startPrice,
+            _priceIncrease,
+            _startTime,
+            _intervalDuration,
+            _intervalsAmount,
+            _slotsAmount
+            // may need to add empty arry size of _slotsAmount
+        );
+        sessionId.increment();
+
+        emit Buy(
+          _sessionId,
+          _slotNumber,
+          currentInterval,
+          currentPrice,
+          sessions[_sessionId].supportedNft,
+          feeReceiver,
+          msg.sender
+        );
     }
 
     //--------------------------------------------------------------------
@@ -197,7 +199,7 @@ contract RiverboatNft is IERC721Receiver, Ownable {
     // @dev if _slotId input is 5, sum of all unsold nfts per session will be returned
     // @param _sessionId id of session to querry
     // @param _slotId id of the slot to querry (0-4)
-    function getUnsoldNftsPerSlot(uint256 _sessionId, uint256 _slotId) public view {
+    /* function getUnsoldNftsPerSlot(uint256 _sessionId, uint256 _slotId) public view {
         Session memory session = sessions[_sessionId];
         // require session is finished
         uint256 memory unsoldNfts;
@@ -207,68 +209,134 @@ contract RiverboatNft is IERC721Receiver, Ownable {
         }
     }
 
-    function getCurrentInterval() public view returns(uint) {
-        return currentInterval;
-    }
-
     function getSessionData(uint256 _sessionId) public returns(struct) {
         // TODO return struct session
-    }
+    } */
 
     //--------------------------------------------------------------------
     // External functions
     //--------------------------------------------------------------------
 
-    /// @notice
-    function Buy(uint256 _sessionId, uint256 _slotIndex) external returns (currentPrice) {
-      //require stamements
-      // session must be running
-      // nftAtSlot must be available
-      // user must have enough balance
+    /// @notice buy nft at selected slot
+    /// @param _sessionId session unique identifier
+    /// @param _slotNumber number of selected slot
+    /// @return currentPrice, at which nft was bought
+    function Buy(uint256 _sessionId, uint256 _slotNumber) external returns (currentPrice) {
+        //require stamements
+        require(isActive(_sessionId), "session is not active");
+        require(nftAtSlotAvailable(_slotNumber))
 
-      // save user address to mapping (and maybe to soldTokens struct ?)
+        // must determine current interval and current price
+        uint256 currentInterval = getCurrentInterval(_sessionId);
+        uint256 currentPrice = getCurrentPrice(_sessionId, currentInterval);
 
-      // transfer currentPrice from buyer to priceReceiver
-      // transfer nft from factory to buyer
+        // require: user must have enough balance
 
-      // emit Buy
+        // save user address to storage, increase soldNftsCount
+        mintedNfts[_sessionId][_slotNumber][currentInterval] = msg.sender;
+        sessions[_sessionId].soldNftsCount[_slotNumber]++;
+
+        // transfer currentPrice from buyer to priceReceiver
+        IERC20(crowns).safeTransferFrom(msg.sender, priceReceiver, currentPrice);
+        // TODO mint nft using factory (passing _slotNumber)
+
+
+        emit Buy(
+          _sessionId,
+          _slotNumber
+          currentPrice,
+          currentInterval,
+          sessions[_sessionId].supportedNft,
+          feeReceiver,
+          msg.sender
+        );
+
+        return currentPrice;
     }
+
+    //--------------------------------------------------------------------
+    // internal functions
+    //--------------------------------------------------------------------
 
     /// @notice check that nft at slot is available for sell
     /// @param _seesionId session unique identifier
     /// @param _intervalNumber number of the interval
-    /// @param _slotIndex slot number
+    /// @param _slotNumber slot index
     /// @return true if nft at slot is unsold
-    function isNftAtSlotAvailable(uint _sessionId, uint _intervalNumber, uint _slotIndex)
+    function nftAtSlotAvailable(uint _sessionId, uint _intervalNumber, uint _slotNumber)
         internal
         view
         returns (bool)
     {
-      	if(mintedNfts[_sessionId][_intervalNumber][_slotIndex] == address(0))
+        require(_slotNumber < sessions[_sessionId].slotsAmount,
+            "slot number too high");
+        require(_intervalNumber < sessions[_sessionId].intervalsAmount,
+            "interval number too high")
+      	if(mintedNfts[_sessionId][_slotNumber][_intervalNumber] == address(0))
             return true;
         return false;
     }
 
-    /// @dev returns true if session is active
+    // NOTE this function requires extensive testing
+    /// @dev calculate current interval number
+    /// @param _sessionId session unique identifier
+    /// @return interval number
+    function getCurrentInterval(uint256 _sessionId) internal view returns(uint) {
+        currentInterval = (now - sessions[_sessionId].startTime) / sessions[_sessionId]
+            .intervalDuration;
+        // NOTE currentInterval will start with 0 so lastInterval should be intervalsAmoun-1
+        require(currentInterval < sessions[_sessionId].intervalsAmount,
+            "currentInterval > intervalsAmount, session should be finished");
+        return currentInterval;
+    }
+
+    // NOTE this function requires extensive testing
+    /// @dev calculate current nft price
+    /// @param _sessionId session unique identifier
+    /// @param currentInterval number of the current interval
+    /// @return nft price
+    function getCurrentPrice(uint256 _sessionId, uint256 currentInterval)
+        internal
+        view
+        returns (uint)
+    {
+        // if currentInterval = 0, session.startPrice will be returned
+        currentPrice = sessions[_sessionId].startPrice + sessions[_sessionId]
+            .priceIncrease * currentInterval;
+        return currentPrice;
+    }
+
+    /// @dev check if session is currently active
     /// @param _sessionId id to verify
     /// @return true/false depending on timestamp period of the sesson
     function isActive(uint256 _sessionId) internal view returns (bool){
         Session memory session = sessions[_sessionId];
         //reformat following require inside if
         if(now > session.startTime && now < session
-            .startTime + session.intervalsAmount * session.intervalsDuration){
+            .startTime + session.intervalsAmount * session.intervalsDuration) {
             return true;
         }
         return false;
     }
 
-    /// @dev returns true if session is about to start
+    /// @dev check if session is about to start
     /// @param _sessionId id to verify
     /// @return true/false depending on start time of the sesson
     function isAboutToStart(uint256 _sessionId) internal view returns (bool){
         Session memory session = sessions[_sessionId];
         //reformat following require inside if
         if(now < session.startTime)
+            return true;
+        return false;
+    }
+
+    /// @dev check if session is already finished
+    /// @param _sessionId id to verify
+    /// @return true if session is finished
+    function isFinished(uint256 _sessionId) internal view returns (bool){
+        Session memory session = sessions[_sessionId];
+        //reformat following require inside if
+        if(now > ssession.startTime + session.intervalsAmount * session.intervalsDuration)
             return true;
         return false;
     }
