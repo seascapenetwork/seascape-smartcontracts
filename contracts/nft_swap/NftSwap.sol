@@ -327,7 +327,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 _requestedTokenIds[i],
                 _requestedTokenAddresses[i],
                 msg.sender
-
             ));
             bytes32 _message = keccak256(abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32", _messageNoPrefix));
@@ -351,9 +350,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         if(obj.bounty > 0)
             IERC20(obj.bountyAddress).safeTransfer(msg.sender, obj.bounty);
 
-        /// update states
-        delete offerObjects[_offerId];
-
         /// emit events
         emit AcceptOffer(
             obj.offerId,
@@ -370,6 +366,9 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
             obj.offeredTokens[3].tokenId,
             obj.offeredTokens[4].tokenId]
         );
+
+        /// update states
+        delete offerObjects[_offerId];
     }
 
     /// @notice cancel the offer
