@@ -23,12 +23,13 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftSwap       = await NftSwap.at("0x8E61f5028eEA48fdd58FD3809fc2202ABdBDC126");
+    let nftSwap       = await NftSwap.at("0xEA4920658614AA8F432f76d5505b7a31a4C3Eb57");
     let crowns        = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let nft           = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
 
-    let user = accounts[0];
+    let user = accounts[1];
+    let owner = accounts[0];
     console.log(`Using account ${user}`);
 
     //--------------------------------------------------
@@ -44,9 +45,9 @@ let init = async function(networkId) {
     let tokenIds = await getTokenIds();
 
     // enter fee and bounty values and desirable nomination (micro/milli/ether/grand...)
-    let nomination = "milli";
-    let feeValue = 500;
-    let bountyValue = 1000;
+    let nomination = "ether";
+    let feeValue = 1;
+    let bountyValue = 0;
     let fee = web3.utils.toWei(feeValue.toString(), nomination);
     let bounty = web3.utils.toWei(bountyValue.toString(), nomination);
 
@@ -86,7 +87,7 @@ let init = async function(networkId) {
       await approveCrowns();
     if(bountyValue > 0 && bountyAddress != crowns.address)
       await approveBounty();
-    await approveNfts();
+    //await approveNfts();
     await createOffer();
 
     // --------------------------------------------------
@@ -162,13 +163,12 @@ let init = async function(networkId) {
     // encode requestedToken metadata
     async function signNfts(){
       for(let i = 0; i < requestedTokensAmount; i++){
-        //[nft.address, "24", "0", "4"],
         console.log("Requested tokens metadata:")
-        console.log(`token #${i} nftAddress: ${requestedTokenMetadata[i][0]}\nimgId: ${requestedTokenMetadata[i][1]}
-          generation: ${requestedTokenMetadata[i][2]} quality: ${requestedTokenMetadata[i][3]}\n`);
+        console.log(`token at index ${i} nftAddress: ${requestedTokenMetadata[i][0]} imgId: ${requestedTokenMetadata[i][1]} generation: ${requestedTokenMetadata[i][2]} quality: ${requestedTokenMetadata[i][3]}`);
 
         encodedData = encodeNft(requestedTokenMetadata[i][1],
           requestedTokenMetadata[i][2], requestedTokenMetadata[i][3]);
+
         let sig = await signParams(offerId, encodedData);
 
         requestedTokensArray[i] = [requestedTokenMetadata[i][0], encodedData, sig[0], sig[1], sig[2]];
@@ -179,7 +179,6 @@ let init = async function(networkId) {
     function encodeNft(_imgId, _gen, _quality) {
       let bytes32 = web3.eth.abi.encodeParameters(
         ["uint256", "uint256", "uint8"], [_imgId, _gen, _quality]);
-
       return bytes32;
     }
 
@@ -188,7 +187,7 @@ let init = async function(networkId) {
       let bytes32 = web3.eth.abi.encodeParameters(
         ["uint256"], [offerId]);
       let data = web3.utils.keccak256(bytes32 + bytes.substr(2));
-      let hash = await web3.eth.sign(data, user);
+      let hash = await web3.eth.sign(data, owner);
 
       let r = hash.substr(0,66);
       let s = "0x" + hash.substr(66,64);
