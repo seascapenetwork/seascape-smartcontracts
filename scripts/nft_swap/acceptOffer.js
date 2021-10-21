@@ -23,12 +23,13 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftSwap       = await NftSwap.at("0x8E61f5028eEA48fdd58FD3809fc2202ABdBDC126");
+    let nftSwap       = await NftSwap.at("0xEA4920658614AA8F432f76d5505b7a31a4C3Eb57");
     let crowns        = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
     let nft           = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
     let scapeMetadata = await ScapeMetadata.at("0x8BDc19BAb95253B5B30D16B9a28E70bAf9e0101A");
 
-    let user = accounts[1];
+    let user = accounts[0];
+    let owner = accounts[0];
     console.log(`Using ${user}`);
 
     //--------------------------------------------------
@@ -61,12 +62,7 @@ let init = async function(networkId) {
     //--------------------------------------------------
 
     let sig = await encodeNfts();
-    console.log(offerId);
-    console.log(requestedTokenIds);
-    console.log(requestedTokenAddresses);
-    console.log(sig[0]);
-    console.log(sig[1]);
-    console.log(sig[2]);
+    await approveNfts();
     await acceptOffer();
 
     // --------------------------------------------------
@@ -83,12 +79,13 @@ let init = async function(networkId) {
 
     // fetch  token Ids for offeredTokens
     async function getTokenIds(){
+
       let tokenIds = new Array(requestedTokensAmount);
       for(let index = 0; index < requestedTokensAmount; index++){
         let tokenId = await nft.tokenOfOwnerByIndex(user, index);
         tokenIds[index] = parseInt(tokenId.toString());
         //.catch(console.error);
-        console.log(`Nft at index ${index} has id ${tokenIds[index]}`);
+        console.log(`nft at index ${index} has id ${tokenIds[index]}`);
       }
       return tokenIds;
     }
@@ -101,6 +98,17 @@ let init = async function(networkId) {
       console.log(`offer was accepted.`);
     }
 
+    // approve transfer of nfts
+    async function approveNfts(){
+      console.log("approving nftSwap to spend nfts...")
+      await nft.setApprovalForAll(nftSwap.address, true, {from: user})
+        .catch(console.error);
+      // check if nfts are approved
+      console.log("checking if Nfts are approved ?");
+      let approved = await nft.isApprovedForAll(user, nftSwap.address);
+      console.log(approved);
+    }
+
     // --------------------------------------------------
     // Internal functions - digital signature part
     // --------------------------------------------------
@@ -108,7 +116,6 @@ let init = async function(networkId) {
 
     // encode requestedToken parameters
     async function encodeNfts(){
-      console.log("attempting to encode nfts")
       let v = ["0", "0", "0", "0", "0"];
       let r = ["0x00","0x00","0x00","0x00","0x00"];
       let s = ["0x00","0x00","0x00","0x00","0x00"];
@@ -123,14 +130,15 @@ let init = async function(networkId) {
     }
 
     async function encodeRequestedNft(_offerId, _tokenId, _tokenAddress){
-      console.log("attempting to encode nft")
 
-      let bytes32 = web3.eth.abi.encodeParameters(
+      console.log("args to be passed into noPrefix: ",_offerId, _tokenId, _tokenAddress);
+      let uints = web3.eth.abi.encodeParameters(
         ["uint256", "uint256"], [_offerId, _tokenId]);
 
-      let str = bytes32.substr(2) + _tokenAddress + user;
-      let data = web3.utils.keccak256(bytes32);
-      let hash = await web3.eth.sign(data, user);
+      // str needs to start with "0x"
+      let str = uints + _tokenAddress.substr(2) + user.substr(2);
+      let message = web3.utils.keccak256(str);
+      let hash = await web3.eth.sign(message, owner);
 
       let r = hash.substr(0,66);
       let s = "0x" + hash.substr(66,64);
