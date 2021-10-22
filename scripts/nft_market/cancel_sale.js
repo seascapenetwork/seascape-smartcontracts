@@ -25,7 +25,7 @@ let init = async function(networkId) {
     let user = accounts[0];
 
     // cancel sale, only nft owner can call
-    await nftMarket.cancelSell(nftId, nft.address, {from: user})
+    await nftMarket.cancelSale(nftId, nft.address, {from: user})
     .catch(console.error);
     console.log(`NftID ${nftId} is not on sale anymore`);
 
