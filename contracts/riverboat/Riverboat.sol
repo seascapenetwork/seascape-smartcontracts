@@ -112,7 +112,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// TODO may need to move factory to session struct and remove this function
     function setNftFactory(address _address) external onlyOwner {
         require(_address != 0x0, "address can't be 0x0");
-        // TODO require session is not active or about to start
+        // TODO require last session is finished
         nftFactory = NftFactory(_address);
     }
 
@@ -167,7 +167,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @param _startTime timestamp at which session becomes active
     /// @param _intervalDuration duration of each interval
     /// @param _intervalsAmount how many intervals are in a session
-    /// @param _slotsAmount how many nft slots are in a session
+    /// @param _slotsAmount amount of nft slots in a session
     function startSession(
         address _currencyAddress,
         address _nftAddress,
@@ -233,16 +233,11 @@ contract Riverboat is IERC721Receiver, Ownable {
     {
         //require stamements
         require(isActive(_sessionId), "session is not active");
-
-        // must determine current interval and current price
         uint256 _currentInterval = getCurrentInterval(_sessionId);
         uint256 _currentPrice = getCurrentPrice(_sessionId, _currentInterval);
-
         require(nftAtSlotAvailable(_sessionId, _intervalNumber, _slotNumber));
-        // require: user must have enough balance
 
-        Session storage session = sessions[_sessionId];
-        // mark nft as sold with buyer address and increase soldNftsCount
+        // update state
         nftMinters[_sessionId][_slotNumber][_currentInterval] = msg.sender;
         soldNftsCount[_sessionId][_slotId]++;
 
@@ -258,9 +253,8 @@ contract Riverboat is IERC721Receiver, Ownable {
         address _recover = ecrecover(_message, _v, _r, _s);
         require(_recover == owner(), "Verification failed");
 
-        // transfer _currentPrice from buyer to priceReceiver
+        /// make transactions
         IERC20(session.currencyAddress).safeTransferFrom(msg.sender, priceReceiver, _currentPrice);
-        // TODO mint nft using factory (passing _slotNumber)
         uint256 _mintedTokenId = nftFactory.mintType(msg.sender, _slotNumber);
 	      require(_mintedTokenId > 0,	"failed to mint a token");
 
@@ -324,7 +318,7 @@ contract Riverboat is IERC721Receiver, Ownable {
             .intervalDuration;
         // NOTE _currentInterval will start with 0 so lastInterval should be intervalsAmoun-1
         require(_currentInterval < sessions[_sessionId].intervalsAmount,
-            "_currentInterval > intervalsAmount, session should be finished");
+            "_currentInterval > intervalsAmount, session is finished");
         return _currentInterval;
     }
 
@@ -366,6 +360,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         return false;
     }
 
+    /// NOTE maybe dont need this function, if other 2 are false it must be true
     /// @dev check if session is already finished
     /// @param _sessionId id to verify
     /// @return true if session is finished
