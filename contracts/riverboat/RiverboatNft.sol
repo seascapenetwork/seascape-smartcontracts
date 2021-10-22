@@ -8,7 +8,7 @@ import "./../openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
 
 /// @author Nejc Schneider
-contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
+contract RiverboatNft is ERC721, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private tokenId;
@@ -17,7 +17,7 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     /// tokenId => type
     mapping(uint256 => uint256) public typeOf;
 
-    event Minted(address indexed owner, uint256 indexed id, uint256 type);
+    event Minted(address indexed owner, uint256 indexed id/*, uint256 type*/);
 
     /**
      * @dev Sets the {name} and {symbol} of token.
@@ -43,7 +43,7 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
 
         _safeMint(_to, _tokenId);
 
-        emit Minted(_to, _tokenId, _type);
+        emit Minted(_to, _tokenId/*, _type*/);
         return _tokenId;
     }
 

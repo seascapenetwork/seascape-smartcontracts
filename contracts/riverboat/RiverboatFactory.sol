@@ -18,7 +18,7 @@ contract RiverboatFactory is AccessControl {
     }
 
     //--------------------------------------------------
-    // Only Seascape Staking contract
+    // Only Riverboat Minting contract
     //--------------------------------------------------
 
     function mintType(address _owner, uint256 _type) public returns(uint256) {
