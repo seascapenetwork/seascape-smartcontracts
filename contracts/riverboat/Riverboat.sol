@@ -17,7 +17,7 @@ import "./RiverboatFactory.sol";
 /// @author Nejc Schneider
 contract Riverboat is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
-    using Counters for Counters.Counter;
+    using Counters for Counters.Counter;    /// TODO use counters for sessionId
     /// TODO dont forget to use safeMath where needed (incl. uint32)
     using SafeMath for uint256;
 
@@ -34,8 +34,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         uint32 intervalDuration;		 // duration of single interval – in seconds
         uint32 intervalsAmount;	     // total of intervals
         uint32 slotsAmount;          // total of slots
-        /// @notice to mint nft, using nft factory
-        RiverboatFactory nftFactory;
+        RiverboatFactory factoryAddress; // factory used for minting nfts
     }
 
     /// @dev session id => Session struct
@@ -64,27 +63,34 @@ contract Riverboat is IERC721Receiver, Ownable {
         uint32 intervalDuration,
         uint32 intervalsAmount,
         uint32 slotsAmount,
-        address indexed nftFactory
+        address indexed factoryAddress
     );
 
     /// @dev initialize the contract
     /// @param _priceReceiver recipient of the price during nft buy
     constructor(address _priceReceiver) public {
-          require(_priceReceiver != address(0), "Invalid price receiver address");
+        require(_priceReceiver != address(0), "Invalid price receiver address");
 
-          priceReceiver = _priceReceiver;
-          //sessionId.increment(); 	// starts at value 1
-          sessionId++;
+        priceReceiver = _priceReceiver;
+        //sessionId.increment(); 	// starts at value 1
+        // sessionId++;
     }
 
     //--------------------------------------------------------------------
-    // onlyOwner external functions
+    //  external onlyOwner functions
     //--------------------------------------------------------------------
 
     /// @notice enable/disable buy function
     /// @param _tradeEnabled set tradeEnabled to true/false
     function enableTrade(bool _tradeEnabled) external onlyOwner {
         tradeEnabled = _tradeEnabled;
+    }
+
+    /// @notice change price receiver address
+    /// @param _priceReceiver address of new receiver
+    function setPriceReceiver(address _priceReceiver) external onlyOwner {
+        require(_priceReceiver != address(0), "Invalid address");
+        priceReceiver = _priceReceiver;
     }
 
     /// @dev start a new session, during which players are allowed to buy nfts
@@ -110,7 +116,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         onlyOwner
     {
         if (sessionId > 0)
-            require(isFinished(sessionId), "last session is still active");
+            require(isFinished(sessionId), "last session hasnt finished yet");
         require(_currencyAddress != address(0), "invalid currency address");
         require(_factoryAddress != address(0), "invalid factory address");
         require(_startPrice > 0, "start price can't be 0");
@@ -121,6 +127,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         require(_intervalsAmount > 0, "intervals amount can't be 0");
         require(_slotsAmount > 0, "slots amount can't be 0");
 
+        sessionId++;
         sessions[sessionId] = Session(
             _currencyAddress,
             _startPrice,
@@ -132,17 +139,16 @@ contract Riverboat is IERC721Receiver, Ownable {
             RiverboatFactory(_factoryAddress)
         );
         initializeUnsoldNftsCount(sessionId);
-        sessionId++;
 
         emit StartSession(
-          sessionId,
-          _startPrice,
-          _priceIncrease,
-          _startTime,
-          _intervalDuration,
-          _intervalsAmount,
-          _slotsAmount,
-          _factoryAddress
+            sessionId,
+            _startPrice,
+            _priceIncrease,
+            _startTime,
+            _intervalDuration,
+            _intervalsAmount,
+            _slotsAmount,
+            _factoryAddress
         );
     }
 
@@ -158,10 +164,11 @@ contract Riverboat is IERC721Receiver, Ownable {
                 unsoldNftsCount[_sessionId][_slotId].sub(1);
 
                 uint256 _mintedTokenId = sessions[_sessionId]
-                    .nftFactory.mintType(_receiverAddress, _slotId);
+                    .factoryAddress.mintType(_receiverAddress, _slotId);
                 require(_mintedTokenId > 0,	"failed to mint a token");
             }
         }
+        /// TODO add event, maybe return value
     }
 
     //--------------------------------------------------------------------
@@ -202,7 +209,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         /// make transactions
         address _currencyAddress = sessions[_sessionId].currencyAddress;
         IERC20(_currencyAddress).safeTransferFrom(msg.sender, priceReceiver, _currentPrice);
-        uint256 _mintedTokenId = sessions[_sessionId].nftFactory.mintType(msg.sender, _slotId);
+        uint256 _mintedTokenId = sessions[_sessionId].factoryAddress.mintType(msg.sender, _slotId);
 	      require(_mintedTokenId > 0,	"failed to mint a token");
 
         /// emit events
