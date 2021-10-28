@@ -5,10 +5,8 @@ import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./RiverboatNft.sol";
-import "./RiverboatFactory.sol";
 
 
 /// @title RiverboatNft is a nft service platform
@@ -17,7 +15,6 @@ import "./RiverboatFactory.sol";
 /// @author Nejc Schneider
 contract Riverboat is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
-    using Counters for Counters.Counter;    /// TODO use counters for sessionId
     /// TODO dont forget to use safeMath where needed (incl. uint32)
     using SafeMath for uint256;
 
@@ -27,28 +24,24 @@ contract Riverboat is IERC721Receiver, Ownable {
     address public priceReceiver;      // this address receives the money from bought tokens
 
     struct Session{
-        address currencyAddress;     // currency address
-        uint256 startPrice;	         // nft price in the initial interval
-        uint256 priceIncrease;		   // how much nftPrice increase every interval
-        uint32 startTime;			       // session start timestamp
-        uint32 intervalDuration;		 // duration of single interval – in seconds
-        uint32 intervalsAmount;	     // total of intervals
-        uint32 slotsAmount;          // total of slots
-        RiverboatFactory factoryAddress; // factory used for minting nfts
+        address currencyAddress;            // currency address
+        address nftAddress;               // nft address used for sending
+        uint256 startPrice;	                // nft price in the initial interval
+        uint256 priceIncrease;		          // how much nftPrice increase every interval
+        uint32 startTime;			              // session start timestamp
+        uint32 intervalDuration;		       // duration of single interval – in seconds
+        uint32 intervalsAmount;	          // total of intervals
+        uint32 slotsAmount;               // total of slots
     }
 
     /// @dev session id => Session struct
     mapping(uint256 => Session) public sessions;
-    /// @dev this mapping is used for minting the unsold nfts after session is finished
-    /// sessionId => slotId => unsoldNftsCount
-    mapping(uint256 => mapping(uint256 => uint256)) public unsoldNftsCount;
     /// @dev this mapping is used for keeping track of sold nfts while session is active
-    /// sessionId => slotId => intervalId => buyersAddress
-    mapping(uint256 => mapping(uint256 => mapping(uint256 => address))) public nftMinters;
+    /// sessionId => intervalId => buyerAddress => bool
+    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public nftMinters;
 
     event Buy(
         uint256 indexed sessionId,
-        uint256 slotId,
         uint256 intervalNumber,
         uint256 price,
         uint256 nftId,
@@ -68,10 +61,11 @@ contract Riverboat is IERC721Receiver, Ownable {
 
     event WithdrawUnsoldNfts(
         uint256 indexed sessionId,
-        uint256 indexed withdrawnNftsAmount,
+        address indexed nftAddress,
         address receiverAddress
     );
 
+    /// NOTE only for testing - to be deleted
     event getTime(
         uint256 currentTime
     );
@@ -105,7 +99,7 @@ contract Riverboat is IERC721Receiver, Ownable {
 
     /// @dev start a new session, during which players are allowed to buy nfts
     /// @param _currencyAddress ERC20 token to be used during the session
-    /// @param _factoryAddress address of nft factory
+    /// @param _nftAddress address of nft
     /// @param _startPrice nfts price in the first interval
     /// @param _priceIncrease how much price increases each interval
     /// @param _startTime timestamp at which session becomes active
@@ -114,7 +108,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @param _slotsAmount amount of nft slots in a session
     function startSession(
         address _currencyAddress,
-        address _factoryAddress,
+        address _nftAddress,
         uint256 _startPrice,
         uint256 _priceIncrease,
         uint32 _startTime,
@@ -128,7 +122,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         if (sessionId > 0)
             require(isFinished(sessionId), "last session hasnt finished yet");
         require(_currencyAddress != address(0), "invalid currency address");
-        require(_factoryAddress != address(0), "invalid factory address");
+        require(_nftAddress != address(0), "invalid nft address");
         require(_startPrice > 0, "start price can't be 0");
         // NOTE following require statement may be omitted
         require(_priceIncrease > 0, "price increase can't be 0");
@@ -140,15 +134,14 @@ contract Riverboat is IERC721Receiver, Ownable {
         sessionId++;
         sessions[sessionId] = Session(
             _currencyAddress,
+            _nftAddress,
             _startPrice,
             _priceIncrease,
             _startTime,
             _intervalDuration,
             _intervalsAmount,
-            _slotsAmount,
-            RiverboatFactory(_factoryAddress)
+            _slotsAmount
         );
-        initializeUnsoldNftsCount(sessionId);
 
         emit StartSession(
             sessionId,
@@ -158,7 +151,7 @@ contract Riverboat is IERC721Receiver, Ownable {
             _intervalDuration,
             _intervalsAmount,
             _slotsAmount,
-            _factoryAddress
+            _nftAddress
         );
     }
 
@@ -166,30 +159,14 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @dev after session is finished owner can withdraw unminted nfts
     /// @param _sessionId session unique identifier
     /// @param _receiverAddress address which will receive the nfts
-    /// @return withdrawnNftsAmount amount of nfts that were withdrawn in a function call
     function withdrawUnsoldNfts(uint _sessionId, address _receiverAddress)
         external
         onlyOwner
-        returns (uint)
     {
         require(isFinished(_sessionId), "seesion needs to be finished");
-        uint256 withdrawnNftsAmount;    /// NOTE may use an array instead
+        IERC721(sessions[_sessionId].nftAddress).setApprovalForAll(_receiverAddress, true);
 
-        for(uint256 _slotId; _slotId < sessions[_sessionId].slotsAmount; _slotId++) {
-            while(unsoldNftsCount[_sessionId][_slotId] > 0) {
-                unsoldNftsCount[_sessionId][_slotId] = unsoldNftsCount[_sessionId][_slotId]-1; // TODO use safeMath
-                withdrawnNftsAmount++;
-
-                uint256 _mintedTokenId = sessions[_sessionId]
-                    .factoryAddress.mintType(_receiverAddress, _slotId);
-                require(_mintedTokenId > 0,	"failed to mint a token");
-            }
-        }
-
-        require(withdrawnNftsAmount > 0, "no unsold nfts to withdraw");
-
-        emit WithdrawUnsoldNfts(_sessionId, withdrawnNftsAmount, _receiverAddress);
-        return withdrawnNftsAmount;   /// TODO return array of withdrawn nft ids instead
+        emit WithdrawUnsoldNfts(_sessionId, sessions[_sessionId].nftAddress, _receiverAddress);
     }
 
     //--------------------------------------------------------------------
@@ -198,52 +175,51 @@ contract Riverboat is IERC721Receiver, Ownable {
 
     /// @notice buy nft at selected slot
     /// @param _sessionId session unique identifier
-    /// @param _slotId number of selected slot
-    /// @return _mintedTokenId id of newly minted nft
-    function buy(uint256 _sessionId, uint256 _slotId, uint8 _v, bytes32 _r, bytes32 _s)
+    /// @param _nftId id of nft
+    ///  @param _v part of signature of message
+    ///  @param _r part of signature of message
+    ///  @param _s part of signature of message
+    function buy(uint256 _sessionId, uint256 _nftId, uint8 _v, bytes32 _r, bytes32 _s)
         external
-        returns (uint)
     {
         //require stamements
         uint256 _currentInterval = getCurrentInterval(_sessionId);
         uint256 _currentPrice = getCurrentPrice(_sessionId, _currentInterval);
-        require(nftAtSlotAvailable(_sessionId, _currentInterval, _slotId),
+        require(nftAtSlotAvailable(_sessionId, _currentInterval, _nftId),
             "nft at slot not available");
+
         /// TODO check that buyer has sufficient balances
 
+        /// TODO remove this
         /// digital signature part
         bytes memory _prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 _messageNoPrefix = keccak256(abi.encodePacked(
             msg.sender,
-            _slotId,
-            _currentInterval,
-            unsoldNftsCount[_sessionId][_slotId]
+            _nftId,
+            sessions[_sessionId].nftAddress,    /// TODO add to session struct
+            _currentInterval
         ));
         bytes32 _message = keccak256(abi.encodePacked(_prefix, _messageNoPrefix));
         address _recover = ecrecover(_message, _v, _r, _s);
         require(_recover == owner(), "Verification failed");
 
         // update state
-        nftMinters[_sessionId][_slotId][_currentInterval] = msg.sender;
-        unsoldNftsCount[_sessionId][_slotId] = unsoldNftsCount[_sessionId][_slotId]-1;
+        nftMinters[_sessionId][_currentInterval][msg.sender] = true;
 
         /// make transactions
         address _currencyAddress = sessions[_sessionId].currencyAddress;
         IERC20(_currencyAddress).safeTransferFrom(msg.sender, priceReceiver, _currentPrice);
-        uint256 _mintedTokenId = sessions[_sessionId].factoryAddress.mintType(msg.sender, _slotId);
-	      require(_mintedTokenId > 0,	"failed to mint a token");
+
+        IERC721(sessions[_sessionId].nftAddress).safeTransferFrom(address(this), msg.sender, _nftId);
 
         /// emit events
         emit Buy(
           _sessionId,
-          _slotId,
           _currentInterval,
           _currentPrice,
-          _mintedTokenId,
+          _nftId,
           msg.sender
         );
-
-        return _mintedTokenId;
     }
 
     /// @dev encrypt token data
@@ -265,40 +241,25 @@ contract Riverboat is IERC721Receiver, Ownable {
     // internal functions
     //--------------------------------------------------------------------
 
-    /// @dev when the session starts, initialize the unsoldNftsCount mapping
-    /// @param _sessionId session unique identifier
-    function initializeUnsoldNftsCount(uint256 _sessionId) internal {
-        for(uint256 _slotId; _slotId < sessions[_sessionId].slotsAmount; _slotId++) {
-            unsoldNftsCount[_sessionId][_slotId] = sessions[_sessionId].intervalsAmount;
-        }
-    }
 
     /// @notice check that nft at slot is available for sell
     /// @param _sessionId session unique identifier
     /// @param _intervalNumber number of the interval
-    /// @param _slotId slot number
+    /// @param _nftId nft identifier
     /// @return true if nft at slot is unsold
-    function nftAtSlotAvailable(uint _sessionId, uint _intervalNumber, uint _slotId)
+    function nftAtSlotAvailable(uint _sessionId, uint _intervalNumber, uint _nftId)
         internal
         view
         returns (bool)
     {
-        require(_slotId < sessions[_sessionId].slotsAmount,
-            "slot number too high");
+        require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this), "contract now owner of nft id");
+
         require(_intervalNumber < sessions[_sessionId].intervalsAmount,
             "interval number too high");
 
         /// @dev single address may only buy one nft per interval
-        /// @param slotId to iterate all slots; compare to _slotId (requested slot)
-        for(uint256 slotId; slotId < sessions[_sessionId].slotsAmount; slotId++) {
-            if(nftMinters[_sessionId][slotId][_intervalNumber] == msg.sender)
-                return false;
-        }
-        if(nftMinters[_sessionId][_slotId][_intervalNumber] == address(0)){
-            return true;
-        }
+        return !nftMinters[_sessionId][_intervalNumber][msg.sender];
 
-        return false;
     }
 
     // CAUTION this function requires extensive testing
@@ -360,9 +321,5 @@ contract Riverboat is IERC721Receiver, Ownable {
     function returnTime() external returns(uint){
         emit getTime(1);
         return block.timestamp;
-    }
-
-    function getUnsoldNftsCount(uint256 sessionId, uint256 slotId) external view returns(uint){
-        return unsoldNftsCount[sessionId][slotId];
     }
 }
