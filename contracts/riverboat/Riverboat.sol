@@ -17,7 +17,7 @@ import "./RiverboatNft.sol";
 contract Riverboat is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
 
-    bool public tradeEnabled;       // enable/disable buy function
+    bool public tradeEnabled = true;   // enable/disable buy function
     uint256 public sessionId;          // current sessionId
     address public priceReceiver;      // this address receives the money from bought tokens
 
@@ -174,8 +174,11 @@ contract Riverboat is IERC721Receiver, Ownable {
         //require stamements
         uint256 _currentInterval = getCurrentInterval(_sessionId);
         uint256 _currentPrice = getCurrentPrice(_sessionId, _currentInterval);
-        require(nftAtSlotAvailable(_sessionId, _currentInterval, _nftId),
-            "nft at slot not available");
+        require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this),
+            "contract not owner of this nft");
+        require(!nftMinters[_sessionId][_intervalNumber][msg.sender],
+            "cant buy more nfts per interval");
+        require(tradeEnabled, "trade is disabled");
 
         /// @dev make sure msg.sender has obtained tier in LighthouseTier.sol
         /// LighthouseTier.sol is external but trusted contract maintained by Seascape
@@ -222,28 +225,6 @@ contract Riverboat is IERC721Receiver, Ownable {
     //--------------------------------------------------------------------
     // internal functions
     //--------------------------------------------------------------------
-
-
-    /// @notice check that nft at slot is available for sell
-    /// @param _sessionId session unique identifier
-    /// @param _intervalNumber number of the interval
-    /// @param _nftId nft identifier
-    /// @return true if nft at slot is unsold
-    function nftAtSlotAvailable(uint _sessionId, uint _intervalNumber, uint _nftId)
-        internal
-        view
-        returns (bool)
-    {
-        require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this),
-            "contract not owner of this nft");
-
-        require(_intervalNumber < sessions[_sessionId].intervalsAmount,
-            "interval number too high");
-
-        /// @dev single user may only buy one nft per interval
-        return !nftMinters[_sessionId][_intervalNumber][msg.sender];
-
-    }
 
     /// @dev calculate current interval number
     /// @param _sessionId session unique identifier
