@@ -55,7 +55,6 @@ contract Riverboat is IERC721Receiver, Ownable {
         uint32 intervalDuration,
         uint32 intervalsAmount,
         uint32 slotsAmount,
-        address currencyAddress,
         address nftAddress
     );
 
@@ -63,11 +62,6 @@ contract Riverboat is IERC721Receiver, Ownable {
         uint256 indexed sessionId,
         address indexed nftAddress,
         address receiverAddress
-    );
-
-    /// NOTE only for testing - to be deleted
-    event getTime(
-        uint256 currentTime
     );
 
     /// @dev initialize the contract
@@ -150,7 +144,6 @@ contract Riverboat is IERC721Receiver, Ownable {
             _intervalDuration,
             _intervalsAmount,
             _slotsAmount,
-            _currencyAddress,
             _nftAddress
         );
     }
@@ -302,12 +295,4 @@ contract Riverboat is IERC721Receiver, Ownable {
         return false;
     }
 
-    //--------------------------------------------------------------------
-    // temporary functions - only for testing
-    //--------------------------------------------------------------------
-
-    function returnTime() external returns(uint){
-        emit getTime(1);
-        return block.timestamp;
-    }
 }
