@@ -1,11 +1,13 @@
-pragma solidity 0.6.7;
+pragma solidity ^0.6.7;
 
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./LighthouseTierInterface.sol";
 import "./RiverboatNft.sol";
+
 
 
 /// @title RiverboatNft is a nft service platform
@@ -21,13 +23,14 @@ contract Riverboat is IERC721Receiver, Ownable {
 
     struct Session{
         address currencyAddress;            // currency address
-        address nftAddress;               // nft address used for sending
+        address nftAddress;                 // nft address used for sending
+        address lighthouseTierAddress;      // address of LighthouseTier external contract
         uint256 startPrice;	                // nft price in the initial interval
         uint256 priceIncrease;		          // how much nftPrice increase every interval
         uint32 startTime;			              // session start timestamp
-        uint32 intervalDuration;		       // duration of single interval – in seconds
-        uint32 intervalsAmount;	          // total of intervals
-        uint32 slotsAmount;               // total of slots
+        uint32 intervalDuration;		        // duration of single interval – in seconds
+        uint32 intervalsAmount;	            // total of intervals
+        uint32 slotsAmount;                 // total of slots
     }
 
     /// @dev session id => Session struct
@@ -94,6 +97,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @dev start a new session, during which players are allowed to buy nfts
     /// @param _currencyAddress ERC20 token to be used during the session
     /// @param _nftAddress address of nft
+    /// @param _lighthouseTierAddress tier contract address, if 0x0 tier is not requirement
     /// @param _startPrice nfts price in the first interval
     /// @param _priceIncrease how much price increases each interval
     /// @param _startTime timestamp at which session becomes active
@@ -103,6 +107,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     function startSession(
         address _currencyAddress,
         address _nftAddress,
+        address _lighthouseTierAddress,
         uint256 _startPrice,
         uint256 _priceIncrease,
         uint32 _startTime,
@@ -128,6 +133,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         sessions[sessionId] = Session(
             _currencyAddress,
             _nftAddress,
+            _lighthouseTierAddress,
             _startPrice,
             _priceIncrease,
             _startTime,
@@ -178,6 +184,14 @@ contract Riverboat is IERC721Receiver, Ownable {
         require(nftAtSlotAvailable(_sessionId, _currentInterval, _nftId),
             "nft at slot not available");
 
+        /// @dev make sure msg.sender has obtained tier in LighthouseTier.sol
+        /// LighthouseTier.sol is external but trusted contract maintained by Seascape
+        if(sessions[_sessionId].lighthouseTierAddress != address(0)){
+            LighthouseTierInterface tier = LighthouseTierInterface(sessions[_sessionId]
+                .lighthouseTierAddress);
+            require(tier.getTierLevel(msg.sender) > -1, "tier rank 0-4 is required");
+        }
+
         // update state
         nftMinters[_sessionId][_currentInterval][msg.sender] = true;
 
@@ -227,12 +241,13 @@ contract Riverboat is IERC721Receiver, Ownable {
         view
         returns (bool)
     {
-        require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this), "contract not owner of nft id");
+        require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this),
+            "contract not owner of this nft");
 
         require(_intervalNumber < sessions[_sessionId].intervalsAmount,
             "interval number too high");
 
-        /// @dev single address may only buy one nft per interval
+        /// @dev single user may only buy one nft per interval
         return !nftMinters[_sessionId][_intervalNumber][msg.sender];
 
     }
