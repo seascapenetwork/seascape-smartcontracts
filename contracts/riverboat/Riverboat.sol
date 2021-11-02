@@ -248,7 +248,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @dev calculate current interval number
     /// @param _sessionId session unique identifier
     /// @return current interval number
-    function getCurrentInterval(uint256 _sessionId) public view returns(uint) {
+    function getCurrentInterval(uint256 _sessionId) internal view returns(uint) {
         require(isActive(_sessionId), "session is not active");
         uint256 _currentInterval = (now - sessions[_sessionId]
             .startTime) / sessions[_sessionId].intervalDuration;
@@ -263,7 +263,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @param _currentInterval number of the current interval
     /// @return nft price for the current interval
     function getCurrentPrice(uint256 _sessionId, uint256 _currentInterval)
-        public
+        internal
         view
         returns (uint)
     {
