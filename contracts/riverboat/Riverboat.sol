@@ -176,7 +176,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         uint256 _currentPrice = getCurrentPrice(_sessionId, _currentInterval);
         require(IERC721(sessions[_sessionId].nftAddress).ownerOf(_nftId) == address(this),
             "contract not owner of this nft");
-        require(!nftMinters[_sessionId][_intervalNumber][msg.sender],
+        require(!nftMinters[_sessionId][_currentInterval][msg.sender],
             "cant buy more nfts per interval");
         require(tradeEnabled, "trade is disabled");
 
