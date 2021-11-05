@@ -434,6 +434,31 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         }
     }
 
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Params storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
+    }
+
     /// Set session as complete
     function complete(uint256 sessionId, uint32 challengeId, address staker)
         external
@@ -508,30 +533,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         return sessionChallenges[sessionId][challengeId].levelId;
     }
 
-    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
-        external
-        nonReentrant
-    {
-        require(staker == msg.sender, "only staker can call");
-
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        Params storage challenge = challenges[challengeId];
-
-        if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
-
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
-
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
-        }
-    }
-
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
     /// @param sessionChallenge is this challenge
@@ -560,45 +561,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
         // we avoid sub. underflow, for calulating session.claimedPerToken
         sessionChallenge.lastInterestUpdate = sessionCap;
-    }
-
-    function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
-        if (!isActive(startTime, endTime)) {
-            return endTime;
-        }
-        return block.timestamp;
-    }
-
-    function isActive(uint256 startTime, uint256 endTime) internal view returns(bool) {
-        if (startTime == 0) {
-            return false;
-        }
-        return (now >= startTime && now <= endTime);
-    }
-
-    function isCompleted(
-        SessionChallenge storage sessionChallenge,
-        PlayerChallenge storage playerChallenge,
-        uint256 currentTime
-    )
-        internal
-        view
-        returns(bool)
-    {
-        uint256 time = playerChallenge.stakedDuration;
-
-        if (playerChallenge.amount == sessionChallenge.stakeAmount) {
-            if (playerChallenge.stakedTime > 0) {
-                uint256 duration = (currentTime - playerChallenge.stakedTime);
-                time = time + duration;
-
-                if (playerChallenge.overStakeAmount > 0) {
-                    time = time + (duration * ((playerChallenge
-                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
-                }
-            }
-        }
-        return time >= sessionChallenge.stakePeriod;
     }
 
     function updateBalanceInterestPerToken(
@@ -683,5 +645,44 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             .amount * claimedPerToken) / scaler) - playerChallenge.claimedReward;
 
         return interest;
+    }
+
+    function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
+        if (!isActive(startTime, endTime)) {
+            return endTime;
+        }
+        return block.timestamp;
+    }
+
+    function isActive(uint256 startTime, uint256 endTime) internal view returns(bool) {
+        if (startTime == 0) {
+            return false;
+        }
+        return (now >= startTime && now <= endTime);
+    }
+
+    function isCompleted(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge,
+        uint256 currentTime
+    )
+        internal
+        view
+        returns(bool)
+    {
+        uint256 time = playerChallenge.stakedDuration;
+
+        if (playerChallenge.amount == sessionChallenge.stakeAmount) {
+            if (playerChallenge.stakedTime > 0) {
+                uint256 duration = (currentTime - playerChallenge.stakedTime);
+                time = time + duration;
+
+                if (playerChallenge.overStakeAmount > 0) {
+                    time = time + (duration * ((playerChallenge
+                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
+                }
+            }
+        }
+        return time >= sessionChallenge.stakePeriod;
     }
 }
