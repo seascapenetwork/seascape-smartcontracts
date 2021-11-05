@@ -7,7 +7,7 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 /// @title Vesting Contract for moonscape (MSCP) token.
 /// @author Nejc Schneider
 /// @notice Release set amount of tokens (per address) over for a specified period of time.
-contract VestingContract is Ownable {
+contract MscpVesting is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -56,7 +56,7 @@ contract VestingContract is Ownable {
     /// @notice clam the unlocked tokens
     function withdraw () external {
         require(hasAllocation(msg.sender), "nothing to withdraw");
-        require(now > startTime, "vesting hasnt started yet");
+        require(now >= startTime, "vesting hasnt started yet");
 
         Balance storage balance = balances[msg.sender];
         uint256 timePassed = now - startTime;
