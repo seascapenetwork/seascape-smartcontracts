@@ -1,5 +1,5 @@
-let Factory = artifacts.require("NftFactory");
-let Nft = artifacts.require("SeascapeNft");
+let Factory = artifacts.require("RiverboatFactory");
+let Nft = artifacts.require("RiverboatNft");
 
 let accounts;
 
@@ -15,14 +15,13 @@ let init = async function(networkId) {
     console.log(accounts);
 
     // contracts
-    let factory  = await Factory.at("0xF06CF016b6DAdED5f676EE6340fc7398CA2142b0");
-    let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    let factory  = await Factory.at("0x693B804c37318eD5972840D10CDAe8Fbea8145f7");
+    let nft     = await Nft.at("0x115Aa9E35564307365Ca3f215f67eB69886f2fD1");
 
     // global vars
-    let user = accounts[1]; // should use factory deployer!
-    let generation = 0;
-    let amountToMint = 12;
-    let quality = 1;    // fixed quality
+    let user = accounts[0];//"0x5434BDc9de2005278532F9041cBf3C939E48C4DC"; // should use factory deployer!
+    let type = 0;
+    let amountToMint = 20;
 
 
     // show current account
@@ -31,12 +30,11 @@ let init = async function(networkId) {
     // mint nfts
     console.log(`attemping to mint ${amountToMint} nfts...`);
     for(let i=1; i<=amountToMint; i++){
-        //let quality = Math.floor(Math.random() * (6 - 1))+1;
-        let minted = await factory.mintQuality(user, generation, quality);
-        console.log(`Nft ${i} with quality ${quality} was minted`);
+        let minted = await factory.mintType(user, type);
+        console.log(`Nft ${i} with type ${type} was minted`);
         // show progress
         if(i % 5 == 0){
-          let percentComplete = Math.round(i/amountToMint*10000) / 100
+          let percentComplete = Math.round(i/amountToMint*10000) / 100;
           console.log(`Minting ${percentComplete}% complete.`);
         }
     }
