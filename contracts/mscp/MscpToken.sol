@@ -51,7 +51,7 @@ contract MscpToken is Context, IERC20, Ownable {
      * Transfers ownership to another account. So, the token creator will not be counted as an owner.
      */
     constructor () public {
-        _mint(msg.sender, limitSupply);
+        _mint(msg.sender, limitSupply * SCALER);
     }
 
    function addBridge(address _bridge) external onlyOwner returns(bool) {
@@ -71,7 +71,6 @@ contract MscpToken is Context, IERC20, Ownable {
 
        emit RemoveBridge(_bridge);
    }
-
 
    /**
      * @dev Creates `amount` new tokens for `to`.
