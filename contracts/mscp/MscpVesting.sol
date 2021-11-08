@@ -32,7 +32,8 @@ contract MscpVesting is Ownable {
 
     mapping(address=>Balance) balances;
 
-    event Withdraw (address indexed Receiver, uint256 withdrawnAmount, uint256 remainingCoins);
+    event InvestorModified(address indexed investor, uint256 remainingCoins);
+    event Withdraw(address indexed receiver, uint256 withdrawnAmount, uint256 remainingCoins);
 
     constructor (address _currencyAddress, uint256 _startTime) public {
         require(_currencyAddress != address(0), "invalid currency address");
@@ -45,8 +46,9 @@ contract MscpVesting is Ownable {
     /// @notice add strategic investor address
     /// @param _investor address to be added
     function addStrategicInvestor (address _investor) external onlyOwner {
-      require(balances[_investor].remainingCoins == 0, "investor already has allocation");
+        require(balances[_investor].remainingCoins == 0, "investor already has allocation");
         balances[_investor].remainingCoins = TOTAL_STRATEGIC;
+        emit InvestorModified(_investor, balances[_investor].remainingCoins);
     }
 
     /// @notice add private investor address
@@ -54,6 +56,7 @@ contract MscpVesting is Ownable {
     function addPrivateInvestor (address _investor) external onlyOwner {
         require(balances[_investor].remainingCoins == 0, "investor already has allocation");
         balances[_investor].remainingCoins = TOTAL_PRIVATE;
+        emit InvestorModified(_investor, balances[_investor].remainingCoins);
     }
 
     /// @notice set investor remaining coins to 0
@@ -61,11 +64,12 @@ contract MscpVesting is Ownable {
     function disableInvestor (address _investor) external onlyOwner {
         require(balances[_investor].remainingCoins > 0, "investor already disabled");
         balances[_investor].remainingCoins = 0;
+        emit InvestorModified(_investor, balances[_investor].remainingCoins);
     }
 
     /// @notice clam the unlocked tokens
     function withdraw () external {
-        require(hasAllocation(msg.sender), "nothing to withdraw");
+        require(getAllocation(msg.sender) > 0, "nothing to withdraw");
         require(now >= startTime, "vesting hasnt started yet");
 
         Balance storage balance = balances[msg.sender];
@@ -88,6 +92,7 @@ contract MscpVesting is Ownable {
                 actualUnclaimed = actualUnclaimed + 1500000; // 1.5 mil is released on day one
             }
         }
+
         IERC20(currencyAddress).safeTransfer(msg.sender, actualUnclaimed);
         emit Withdraw(msg.sender, actualUnclaimed, balance.remainingCoins);
     }
@@ -95,7 +100,11 @@ contract MscpVesting is Ownable {
     /// @notice check if investor has any remaining coins
     /// @param _investor address to verify
     /// @return true if there are remaining coins at address
-    function hasAllocation(address _investor) public view returns(bool) {
+    /* function hasAllocation(address _investor) public view returns(bool) {
         return balances[_investor].remainingCoins > 0;
+    } */
+
+    function getAllocation(address _investor) public view returns(uint) {
+        return balances[_investor].remainingCoins;
     }
 }
