@@ -11,7 +11,7 @@ async function getAccount(id) {
 module.exports = async function(deployer, network) {
 
     if (network == "ganache") {
-      let startTime = Math.floor(Date.now()/1000) + 100;
+      let startTime = Math.floor(Date.now()/1000) + 5;
       await deployer.deploy(MscpToken).then(function(){
           console.log("Mscp token contract was deployed at address: "+MscpToken.address);
       });
