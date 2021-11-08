@@ -32,7 +32,7 @@ contract MscpVesting is Ownable {
 
     mapping(address=>Balance) balances;
 
-    event Withdraw (address indexed Receiver, uint256 withdrawnAmount);
+    event Withdraw (address indexed Receiver, uint256 withdrawnAmount, uint256 remainingCoins);
 
     constructor (address _currencyAddress, uint256 _startTime) public {
         require(_currencyAddress != address(0), "invalid currency address");
@@ -43,14 +43,24 @@ contract MscpVesting is Ownable {
     }
 
     /// @notice add strategic investor address
+    /// @param _investor address to be added
     function addStrategicInvestor (address _investor) external onlyOwner {
       require(balances[_investor].remainingCoins == 0, "investor already has allocation");
         balances[_investor].remainingCoins = TOTAL_STRATEGIC;
     }
 
+    /// @notice add private investor address
+    /// @param _investor address to be added
     function addPrivateInvestor (address _investor) external onlyOwner {
         require(balances[_investor].remainingCoins == 0, "investor already has allocation");
         balances[_investor].remainingCoins = TOTAL_PRIVATE;
+    }
+
+    /// @notice set investor remaining coins to 0
+    /// @param _investor address to disable
+    function disableInvestor (address _investor) external onlyOwner {
+        require(balances[_investor].remainingCoins > 0, "investor already disabled");
+        balances[_investor].remainingCoins = 0;
     }
 
     /// @notice clam the unlocked tokens
@@ -79,7 +89,7 @@ contract MscpVesting is Ownable {
             }
         }
         IERC20(currencyAddress).safeTransfer(msg.sender, actualUnclaimed);
-        emit Withdraw(msg.sender, actualUnclaimed);
+        emit Withdraw(msg.sender, actualUnclaimed, balance.remainingCoins);
     }
 
     /// @notice check if investor has any remaining coins
