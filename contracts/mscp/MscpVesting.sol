@@ -6,14 +6,14 @@ import "./../openzeppelin/contracts/math/SafeMath.sol";
 
 /// @title Vesting Contract for moonscape (MSCP) token.
 /// @author Nejc Schneider
-/// @notice Release set amount of tokens (per address) over for a specified period of time.
+/// @notice Unlock tokens for pre-approved addresses gradualy over time.
 contract MscpVesting is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     /// "session" data
-  	address public currencyAddress;
-  	uint public startTime;
+    IERC20 private immutable token;
+  	uint256 public startTime;
 
     uint256 private endtime_private;
     uint256 private endtime_strategic;
@@ -23,16 +23,12 @@ contract MscpVesting is Ownable {
     /// @dev total tokens to be released gradualy (without "day one" tokens)
     uint256 constant private TOTAL_PRIVATE = 8500000 * MULTIPLIER;
     uint256 constant private TOTAL_STRATEGIC = 8000000 * MULTIPLIER;
-
-    uint256 constant private DURATION_PRIVATE = 8;
-    uint256 constant private DURATION_STRATEGIC = 8;
-
+    /// @dev vesting duration in seconds
+    uint256 constant private DURATION_PRIVATE =  9;  //25920000;     /// 300 days
+    uint256 constant private DURATION_STRATEGIC = 6; //12960000;   /// 150 days
     /// @dev TPS = Tokens Per Second
-    /* uint256 constant private TPS_PRIVATE = MULTIPLIER * TOTAL_PRIVATE / 25920000;     /// 300 days
-    uint256 constant private TPS_STRATEGIC = MULTIPLIER * TOTAL_STRATEGIC / 12960000; /// 150 days */
-    /// only for testing
-    uint256 constant private TPS_PRIVATE = TOTAL_PRIVATE / DURATION_PRIVATE;     /// 300 days
-    uint256 constant private TPS_STRATEGIC = TOTAL_STRATEGIC / DURATION_STRATEGIC; /// 150 days
+    uint256 constant private TPS_PRIVATE = TOTAL_PRIVATE / DURATION_PRIVATE;
+    uint256 constant private TPS_STRATEGIC = TOTAL_STRATEGIC / DURATION_STRATEGIC;
 
     struct Balance {
         uint256 remainingCoins;
@@ -45,12 +41,11 @@ contract MscpVesting is Ownable {
     event InvestorModified(address indexed investor, uint256 remainingCoins);
     event Withdraw(address indexed receiver, uint256 withdrawnAmount, uint256 remainingCoins);
 
-    // TODO remove constructor, hardcoded variables
-    constructor (address _currencyAddress, uint256 _startTime) public {
-        require(_currencyAddress != address(0), "invalid currency address");
+    constructor (IERC20 _token, uint256 _startTime) public {
+        require(address(_token) != address(0), "invalid currency address");
         require(_startTime > now, "start time should be in future");
 
-        currencyAddress = _currencyAddress;
+        token = _token;
         startTime = _startTime;
 
         endtime_private = startTime + DURATION_PRIVATE;
@@ -90,21 +85,22 @@ contract MscpVesting is Ownable {
 
     /// @notice clam the unlocked tokens
     function withdraw () external {
-        require(getAllocation(msg.sender) > 0, "nothing to withdraw");
         require(now >= startTime, "vesting hasnt started yet");
+        require(getAllocation(msg.sender) > 0, "user has no allocation");
 
         Balance storage balance = balances[msg.sender];
-        uint256 timePassed = getTime();
+        uint256 timePassed = getDuration(balance.strategicInvestor);
         uint256 availableAmount = getAvailableTokens(balance
             .strategicInvestor, timePassed, balance.remainingCoins);
+        require(availableAmount > 0, "no available tokens to withdraw");
 
         balance.remainingCoins = balance.remainingCoins.sub(availableAmount);
         if(!balance.claimedBonus){  // @dev bonus should not be substracted from remaining coins
             balance.claimedBonus = true;
-            availableAmount = availableAmount + getBonus(balance.strategicInvestor);
+            availableAmount += getBonus(balance.strategicInvestor);
         }
 
-        IERC20(currencyAddress).safeTransfer(msg.sender, availableAmount);
+        token.safeTransfer(msg.sender, availableAmount);
 
         emit Withdraw(msg.sender, availableAmount, balance.remainingCoins);
     }
@@ -116,18 +112,25 @@ contract MscpVesting is Ownable {
     /// @notice get amount of tokens user has yet to withdraw
     /// @param _investor address to check
     /// @return amount of remaining coins
-    // NOTE may switch to internal
+    // NOTE remove this function, only for testing
     function getAllocation(address _investor) public view returns(uint) {
         return balances[_investor].remainingCoins;
     }
 
     /// @dev calculate how much time has passed since start.
     /// If vesting is finished, return length of the session
+    /// @param _strategicInvestor true if strategic investor
     /// @return duration of time in seconds
-    function getTime() internal view returns(uint) {
-        if(now < endtime_strategic)
-            return now.sub(startTime); //remove safeMath
-        return endtime_strategic.sub(startTime);
+    function getDuration(bool _strategicInvestor) internal view returns(uint) {
+        if(_strategicInvestor){
+            if(now < endtime_strategic)
+                return now-startTime;
+            return endtime_strategic-startTime;
+        } else {
+            if(now < endtime_private)
+            return now-startTime;
+            return endtime_private-startTime;
+        }
     }
 
     /// @dev calculate how many tokens are available for withdrawal
