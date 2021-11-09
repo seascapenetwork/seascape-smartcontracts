@@ -294,48 +294,6 @@ abstract contract ScapeNftComboChallenge is
 		    emit Stake(staker, sessionId, challengeId, nftId);
     }
 
-    /// @dev it returns amount for stake and nft id.
-    /// If user already staked, then return the previous staked token.
-    ///@dev SCC-10 TODO we need to pass staker to ECRECOVER and make nonce mapping for every user
-    function decodeStakeData(
-        uint8 nftAmount,
-        uint256[5] memory stakedNftId,
-        uint256[5] memory stakedWeight,
-        bytes memory data
-    )
-        internal
-        view
-        returns (uint256[5] memory, uint256[5] memory)
-        {
-        if (stakedNftId[0] > 0) {
-            return (stakedNftId, stakedWeight);
-        }
-
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        uint256[5] memory nftId;
-        uint256[5] memory weight;
-
-        /// Staking amount
-        (v, r, s, nftId, weight) = abi
-            .decode(data, (uint8, bytes32, bytes32, uint256[5], uint256[5]));
-        for(uint8 i = 0; i < nftAmount; i++) {
-            require(nftId[i] > 0, "scape nft null params");
-            require(weight[i] > 0, "weight is 0");
-        }
-
-        /// Verify the Scape Nft signature.
-      	/// @dev message is generated as nftId + amount + nonce
-      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, weight, nonce));
-      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-            _messageNoPrefix));
-      	address _recover = ecrecover(_message, v, r, s);
-      	require(_recover == owner(),  "scape nft+token.nftId, token.weight");
-
-        return (nftId, weight);
-    }
-
     /// @notice Unstake an nft and some token.
     function unstake(
         uint256 sessionId,
@@ -403,6 +361,31 @@ abstract contract ScapeNftComboChallenge is
         emit Claim(staker, sessionId, challengeId, claimedAmount);
     }
 
+
+    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
+        external
+        nonReentrant
+    {
+        require(staker == msg.sender, "only staker can call");
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+        Category storage challenge = challenges[challengeId];
+
+        if (playerChallenge.unpaidReward > 0) {
+          IERC20 _token = IERC20(challenge.earn);
+          uint256 contractBalance = _token.balanceOf(pool);
+          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+
+          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+
+          // playerChallenge.claimedTime = block.timestamp;
+          sessionChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.claimed += playerChallenge.unpaidReward;
+          playerChallenge.unpaidReward = 0;
+        }
+    }
+
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
         external
         override
@@ -448,30 +431,6 @@ abstract contract ScapeNftComboChallenge is
         returns(uint8)
     {
         return sessionChallenges[sessionId][challengeId].levelId;
-    }
-
-    function payDebt(uint256 sessionId,  uint32 challengeId, address staker)
-        external
-        nonReentrant
-    {
-        require(staker == msg.sender, "only staker can call");
-
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        Category storage challenge = challenges[challengeId];
-
-        if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-          require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
-
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
-
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
-        }
     }
 
 
@@ -534,6 +493,36 @@ abstract contract ScapeNftComboChallenge is
     		return true;
     }
 
+    /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
+    /// of the session to 1 token. It also updates the portion of it for the user.
+    /// @param sessionChallenge is this challenge
+    function updateInterestPerToken(SessionChallenge storage sessionChallenge)
+        internal
+        returns(bool)
+    {
+        uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
+        if (sessionChallenge.lastInterestUpdate >= sessionCap) {
+            return false;
+        }
+
+        // I calculate previous claimed rewards
+        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
+        sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
+        (sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
+
+        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
+        // I update the session.lastInterestUpdate to now
+        if (sessionChallenge.amount == 0) {
+            sessionChallenge.interestPerToken = 0;
+        } else {
+            sessionChallenge.interestPerToken = (sessionChallenge
+                .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
+        }
+
+        // we avoid sub. underflow, for calulating session.claimedPerToken
+        sessionChallenge.lastInterestUpdate = sessionCap;
+    }
+
     function calculateInterest(uint256 sessionId, uint32 challengeId, address staker)
         internal
         view
@@ -562,7 +551,7 @@ abstract contract ScapeNftComboChallenge is
             .lastInterestUpdate) * sessionChallenge.interestPerToken);
 
         uint256 claimableReward = 0;
-  		for (uint8 i = 0; i < challange.nftAmount; i++) {
+  		for (uint8 i = 0; i < challenge.nftAmount; i++) {
             claimableReward += claimedPerToken * playerChallenge.weight[i] / scaler; // 0
         }
 
@@ -571,37 +560,6 @@ abstract contract ScapeNftComboChallenge is
 
     	return interest;
     }
-
-
-    /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
-  	/// of the session to 1 token. It also updates the portion of it for the user.
-    /// @param sessionChallenge is this challenge
-  	function updateInterestPerToken(SessionChallenge storage sessionChallenge)
-        internal
-        returns(bool)
-    {
-		    uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
-        if (sessionChallenge.lastInterestUpdate >= sessionCap) {
-            return false;
-        }
-
-        // I calculate previous claimed rewards
-        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
-        sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
-  			(sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
-
-        // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
-        // I update the session.lastInterestUpdate to now
-    		if (sessionChallenge.amount == 0) {
-            sessionChallenge.interestPerToken = 0;
-    		} else {
-            sessionChallenge.interestPerToken = (sessionChallenge
-                .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
-    		}
-
-    		// we avoid sub. underflow, for calulating session.claimedPerToken
-    		sessionChallenge.lastInterestUpdate = sessionCap;
-  	}
 
     function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
         if (!isActive(startTime, endTime)) {
@@ -632,5 +590,47 @@ abstract contract ScapeNftComboChallenge is
         }
 
         return false;
+    }
+
+    /// @dev it returns amount for stake and nft id.
+    /// If user already staked, then return the previous staked token.
+    ///@dev SCC-10 TODO we need to pass staker to ECRECOVER and make nonce mapping for every user
+    function decodeStakeData(
+        uint8 nftAmount,
+        uint256[5] memory stakedNftId,
+        uint256[5] memory stakedWeight,
+        bytes memory data
+    )
+        internal
+        view
+        returns (uint256[5] memory, uint256[5] memory)
+        {
+        if (stakedNftId[0] > 0) {
+            return (stakedNftId, stakedWeight);
+        }
+
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256[5] memory nftId;
+        uint256[5] memory weight;
+
+        /// Staking amount
+        (v, r, s, nftId, weight) = abi
+            .decode(data, (uint8, bytes32, bytes32, uint256[5], uint256[5]));
+        for(uint8 i = 0; i < nftAmount; i++) {
+            require(nftId[i] > 0, "scape nft null params");
+            require(weight[i] > 0, "weight is 0");
+        }
+
+        /// Verify the Scape Nft signature.
+      	/// @dev message is generated as nftId + amount + nonce
+      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, weight, nonce));
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
+            _messageNoPrefix));
+      	address _recover = ecrecover(_message, v, r, s);
+      	require(_recover == owner(),  "scape nft+token.nftId, token.weight");
+
+        return (nftId, weight);
     }
 }

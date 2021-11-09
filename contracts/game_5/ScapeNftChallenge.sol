@@ -275,39 +275,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
 		emit Stake(staker, sessionId, challengeId, playerChallenge.nftId);
     }
 
-    /// @dev it returns amount for stake and nft id.
-    /// If user already staked, then return the previous staked token.
-    function decodeStakeData(uint256 stakedNftId, uint256 stakedWeight, bytes memory data)
-        internal
-        view
-        returns(uint256, uint256)
-    {
-        if (stakedNftId > 0) {
-            return (stakedNftId, stakedWeight);
-        }
-
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        uint256 nftId;
-        uint256 weight;
-
-        /// Staking amount
-        (v, r, s, nftId, weight) = abi.decode(data, (uint8, bytes32, bytes32, uint256, uint256));
-        require(nftId > 0, "scape nft null params");
-        require(weight > 0, "weight is 0");
-
-        /// Verify the Scape Nft signature.
-      	/// @dev message is generated as nftId + amount + nonce
-      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, weight, nonce));
-      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-            _messageNoPrefix));
-      	address _recover = ecrecover(_message, v, r, s);
-      	require(_recover == owner(),  "scape nft+token.nftId, token.weight");
-
-        return (nftId, weight);
-    }
-
     /// @notice Unstake an nft and some token.
     /// If Category is burning, then revert.
     /// If Category is not burning, then:
@@ -546,9 +513,6 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
         return false;
     }
 
-
-
-
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
         PlayerChallenge storage playerChallenge
@@ -601,6 +565,39 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
 
         //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);
     		return true;
+    }
+
+    /// @dev it returns amount for stake and nft id.
+    /// If user already staked, then return the previous staked token.
+    function decodeStakeData(uint256 stakedNftId, uint256 stakedWeight, bytes memory data)
+        internal
+        view
+        returns(uint256, uint256)
+    {
+        if (stakedNftId > 0) {
+            return (stakedNftId, stakedWeight);
+        }
+
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 nftId;
+        uint256 weight;
+
+        /// Staking amount
+        (v, r, s, nftId, weight) = abi.decode(data, (uint8, bytes32, bytes32, uint256, uint256));
+        require(nftId > 0, "scape nft null params");
+        require(weight > 0, "weight is 0");
+
+        /// Verify the Scape Nft signature.
+      	/// @dev message is generated as nftId + amount + nonce
+      	bytes32 _messageNoPrefix = keccak256(abi.encodePacked(nftId, weight, nonce));
+      	bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
+            _messageNoPrefix));
+      	address _recover = ecrecover(_message, v, r, s);
+      	require(_recover == owner(),  "scape nft+token.nftId, token.weight");
+
+        return (nftId, weight);
     }
 
     function calculateInterest(uint256 sessionId, uint32 challengeId, address staker)

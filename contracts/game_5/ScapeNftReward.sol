@@ -117,27 +117,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         }
     }
 
-    function getLevel(uint8 offset, bytes calldata data)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint8)
-    {
-        uint8[5] memory levelId;
-
-        uint256[5] memory imgId;
-        uint256[5] memory generation;
-        uint8[5] memory quality;
-        address[5] memory token;
-        uint256[5] memory amount;
-
-        (levelId, imgId, generation, quality, token, amount) = abi
-            .decode(data, (uint8[5], uint256[5], uint256[5], uint8[5], address[5], uint256[5]));
-
-        return levelId[offset];
-    }
-
     function reward(uint256 sessionId, uint8 rewardType, address owner)
         external
         override
@@ -163,6 +142,27 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
             params.imgId,
             params.amount
         );
+    }
+
+    function getLevel(uint8 offset, bytes calldata data)
+        external
+        override
+        view
+        onlyZombieFarm
+        returns(uint8)
+    {
+        uint8[5] memory levelId;
+
+        uint256[5] memory imgId;
+        uint256[5] memory generation;
+        uint8[5] memory quality;
+        address[5] memory token;
+        uint256[5] memory amount;
+
+        (levelId, imgId, generation, quality, token, amount) = abi
+            .decode(data, (uint8[5], uint256[5], uint256[5], uint8[5], address[5], uint256[5]));
+
+        return levelId[offset];
     }
 
     function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {
