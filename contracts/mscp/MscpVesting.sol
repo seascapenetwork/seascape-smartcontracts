@@ -45,6 +45,7 @@ contract MscpVesting is Ownable {
     event InvestorModified(address indexed investor, uint256 remainingCoins);
     event Withdraw(address indexed receiver, uint256 withdrawnAmount, uint256 remainingCoins);
 
+    // TODO remove constructor, hardcoded variables
     constructor (address _currencyAddress, uint256 _startTime) public {
         require(_currencyAddress != address(0), "invalid currency address");
         require(_startTime > now, "start time should be in future");
@@ -55,6 +56,10 @@ contract MscpVesting is Ownable {
         endtime_private = startTime + DURATION_PRIVATE;
         endtime_strategic = startTime + DURATION_STRATEGIC;
     }
+
+    //--------------------------------------------------------------------
+    //  external functions
+    //--------------------------------------------------------------------
 
     /// @notice add strategic investor address
     /// @param _investor address to be added
@@ -89,51 +94,71 @@ contract MscpVesting is Ownable {
         require(now >= startTime, "vesting hasnt started yet");
 
         Balance storage balance = balances[msg.sender];
-        uint256 actualUnclaimed;
-        uint256 timePassed;
-        if(balance.strategicInvestor == true){
-            //internal getTime (seperationj within function)
-            if(now < endtime_strategic)
-                timePassed = now.sub(startTime); //remove safeMath
-            else
-                timePassed = endtime_strategic.sub(startTime);
-            //internal calculateAmount (seperation within function)
-            uint256 unclaimedPotential = (timePassed * TPS_STRATEGIC);
-            actualUnclaimed = unclaimedPotential - (TOTAL_STRATEGIC - balance.remainingCoins);
-            balance.remainingCoins = balance.remainingCoins.sub(actualUnclaimed);
-            //internal addBonus (seperation within function)
-            if(!balance.claimedBonus) {
-                balance.claimedBonus = true;
-                actualUnclaimed = actualUnclaimed + 2000000 * MULTIPLIER; // 2 mil is released on day one
-            }
-        } else {
-            //internal getTime (seperationj within function)
-            if(now < endtime_private)
-                timePassed = now.sub(startTime); //remove safeMath
-            else
-                timePassed = endtime_private.sub(startTime);
-            uint256 unclaimedPotential = (timePassed * TPS_PRIVATE);
-            actualUnclaimed = unclaimedPotential - (TOTAL_PRIVATE - balance.remainingCoins);
-            balance.remainingCoins = balance.remainingCoins.sub(actualUnclaimed);
-            if(!balance.claimedBonus) {
-                balance.claimedBonus = true;
-                actualUnclaimed = actualUnclaimed + 1500000 * MULTIPLIER; // 1.5 mil is released on day one
-            }
-        }
-        IERC20(currencyAddress).safeTransfer(msg.sender, actualUnclaimed);
+        uint256 timePassed = getTime();
+        uint256 availableAmount = getAvailableTokens(balance
+            .strategicInvestor, timePassed, balance.remainingCoins);
 
-        emit Withdraw(msg.sender, actualUnclaimed, balance.remainingCoins);
+        balance.remainingCoins = balance.remainingCoins.sub(availableAmount);
+        if(!balance.claimedBonus){  // @dev bonus should not be substracted from remaining coins
+            balance.claimedBonus = true;
+            availableAmount = availableAmount + getBonus(balance.strategicInvestor);
+        }
+
+        IERC20(currencyAddress).safeTransfer(msg.sender, availableAmount);
+
+        emit Withdraw(msg.sender, availableAmount, balance.remainingCoins);
     }
 
-    /// @notice check if investor has any remaining coins
-    /// @param _investor address to verify
-    /// @return true if there are remaining coins at address
-    /* function hasAllocation(address _investor) public view returns(bool) {
-        return balances[_investor].remainingCoins > 0;
-    } */
+    //--------------------------------------------------------------------
+    //  internal functions
+    //--------------------------------------------------------------------
 
+    /// @notice get amount of tokens user has yet to withdraw
+    /// @param _investor address to check
+    /// @return amount of remaining coins
+    // NOTE may switch to internal
     function getAllocation(address _investor) public view returns(uint) {
         return balances[_investor].remainingCoins;
     }
 
+    /// @dev calculate how much time has passed since start.
+    /// If vesting is finished, return length of the session
+    /// @return duration of time in seconds
+    function getTime() internal view returns(uint) {
+        if(now < endtime_strategic)
+            return now.sub(startTime); //remove safeMath
+        return endtime_strategic.sub(startTime);
+    }
+
+    /// @dev calculate how many tokens are available for withdrawal
+    /// @param _strategicInvestor true if strategic investor
+    /// @param _timePassed amount of time since vesting started
+    /// @param _remainingCoins amount of unspent tokens
+    /// @return tokens amount
+    function getAvailableTokens(
+        bool _strategicInvestor,
+        uint256 _timePassed,
+        uint256 _remainingCoins
+    )
+        internal
+        view
+        returns(uint)
+    {
+        if(_strategicInvestor){
+            uint256 unclaimedPotential = (_timePassed * TPS_STRATEGIC);
+            return unclaimedPotential - (TOTAL_STRATEGIC - _remainingCoins);
+        } else {
+            uint256 unclaimedPotential = (_timePassed * TPS_PRIVATE);
+            return unclaimedPotential - (TOTAL_PRIVATE - _remainingCoins);
+        }
+    }
+
+    /// @dev calculate bonus based on investor type
+    /// @param _strategicInvestor true if strategic investor
+    /// @return bonus amount
+    function getBonus(bool _strategicInvestor) internal view returns(uint) {
+        if(_strategicInvestor)
+            return 2000000 * MULTIPLIER; // 2 mil is released on day one
+        return 1500000 * MULTIPLIER; // 1.5 mil is released on day one
+    }
 }
