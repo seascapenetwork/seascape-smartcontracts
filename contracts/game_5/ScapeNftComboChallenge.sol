@@ -484,9 +484,9 @@ abstract contract ScapeNftComboChallenge is
         playerChallenge.claimed     = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
+            _token.safeTransferFrom(pool, staker, contractBalance);
         } else {
-            IERC20(_token).safeTransferFrom(pool, staker, interest);
+            _token.safeTransferFrom(pool, staker, interest);
         }
 
     		//emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);

@@ -513,6 +513,23 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
         return false;
     }
 
+    function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
+        external
+        override
+        view
+        returns(bool)
+    {
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
+
+        if (playerChallenge.completed) {
+            return true;
+        }
+
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
+
+        return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+    }
+
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
         PlayerChallenge storage playerChallenge
@@ -543,7 +560,7 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
 
 		    uint256 contractBalance = _token.balanceOf(pool);
 
-		    if (contractBalance < interest) {
+		    if (interest > 0 && contractBalance < interest) {
 			      playerChallenge.unpaidReward = (interest - contractBalance)
                 + playerChallenge.unpaidReward;
 		     }
@@ -558,9 +575,9 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
     		playerChallenge.claimed = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
+            _token.safeTransferFrom(pool, staker, contractBalance);
         } else {
-            IERC20(_token).safeTransferFrom(pool, staker, interest);
+            _token.safeTransferFrom(pool, staker, interest);
         }
 
         //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);

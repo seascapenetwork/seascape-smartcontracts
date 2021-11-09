@@ -473,7 +473,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
 
-        playerChallenge.completed = true;
+        playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
     function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
@@ -562,6 +562,47 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         // we avoid sub. underflow, for calulating session.claimedPerToken
         sessionChallenge.lastInterestUpdate = sessionCap;
     }
+
+    function getSessionCap(uint256 startTime, uint256 endTime) internal view returns(uint256) {
+        if (!isActive(startTime, endTime)) {
+            return endTime;
+        }
+        return block.timestamp;
+    }
+
+    function isActive(uint256 startTime, uint256 endTime) internal view returns(bool) {
+        if (startTime == 0) {
+            return false;
+        }
+        return (now >= startTime && now <= endTime);
+    }
+
+    function isCompleted(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge,
+        uint256 currentTime
+    )
+        internal
+        view
+        returns(bool)
+    {
+        uint256 time = playerChallenge.stakedDuration;
+
+        if (playerChallenge.amount == sessionChallenge.stakeAmount) {
+            if (playerChallenge.stakedTime > 0) {
+                uint256 duration = (currentTime - playerChallenge.stakedTime);
+                time = time + duration;
+
+                if (playerChallenge.overStakeAmount > 0) {
+                    time = time + (duration * ((playerChallenge
+                        .overStakeAmount * sessionChallenge.multiplier) / multiply) / scaler);
+                }
+            }
+        }
+        return time >= sessionChallenge.stakePeriod;
+    }
+
+
 
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
