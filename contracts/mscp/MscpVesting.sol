@@ -14,7 +14,6 @@ contract MscpVesting is Ownable {
     /// "session" data
     IERC20 private immutable token;
   	uint256 public startTime;
-
     uint256 private endtime_private;
     uint256 private endtime_strategic;
 
@@ -26,9 +25,7 @@ contract MscpVesting is Ownable {
     /// @dev vesting duration in seconds
     uint256 constant private DURATION_PRIVATE =  9;  //25920000;     /// 300 days
     uint256 constant private DURATION_STRATEGIC = 6; //12960000;   /// 150 days
-    /// @dev TPS = Tokens Per Second
-    uint256 constant private TPS_PRIVATE = TOTAL_PRIVATE / DURATION_PRIVATE;
-    uint256 constant private TPS_STRATEGIC = TOTAL_STRATEGIC / DURATION_STRATEGIC;
+
 
     struct Balance {
         uint256 remainingCoins;
@@ -92,7 +89,6 @@ contract MscpVesting is Ownable {
         uint256 timePassed = getDuration(balance.strategicInvestor);
         uint256 availableAmount = getAvailableTokens(balance
             .strategicInvestor, timePassed, balance.remainingCoins);
-        require(availableAmount > 0, "no available tokens to withdraw");
 
         balance.remainingCoins = balance.remainingCoins.sub(availableAmount);
         if(!balance.claimedBonus){  // @dev bonus should not be substracted from remaining coins
@@ -128,7 +124,7 @@ contract MscpVesting is Ownable {
             return endtime_strategic-startTime;
         } else {
             if(now < endtime_private)
-            return now-startTime;
+                return now-startTime;
             return endtime_private-startTime;
         }
     }
@@ -148,10 +144,10 @@ contract MscpVesting is Ownable {
         returns(uint)
     {
         if(_strategicInvestor){
-            uint256 unclaimedPotential = (_timePassed * TPS_STRATEGIC);
+            uint256 unclaimedPotential = (_timePassed * TOTAL_STRATEGIC / DURATION_STRATEGIC);
             return unclaimedPotential - (TOTAL_STRATEGIC - _remainingCoins);
         } else {
-            uint256 unclaimedPotential = (_timePassed * TPS_PRIVATE);
+            uint256 unclaimedPotential = (_timePassed * TOTAL_PRIVATE / DURATION_PRIVATE);
             return unclaimedPotential - (TOTAL_PRIVATE - _remainingCoins);
         }
     }
