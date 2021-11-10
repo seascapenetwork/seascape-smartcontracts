@@ -14,8 +14,6 @@ contract MscpVesting is Ownable {
     /// "session" data
     IERC20 private immutable token;
   	uint256 public startTime;
-    uint256 private endtime_private;
-    uint256 private endtime_strategic;
 
     // constant variables
     uint256 constant private MULTIPLIER = 10**18;
@@ -25,7 +23,6 @@ contract MscpVesting is Ownable {
     /// @dev vesting duration in seconds
     uint256 constant private DURATION_PRIVATE =  9;  //25920000;     /// 300 days
     uint256 constant private DURATION_STRATEGIC = 6; //12960000;   /// 150 days
-
 
     struct Balance {
         uint256 remainingCoins;
@@ -44,9 +41,6 @@ contract MscpVesting is Ownable {
 
         token = _token;
         startTime = _startTime;
-
-        endtime_private = startTime + DURATION_PRIVATE;
-        endtime_strategic = startTime + DURATION_STRATEGIC;
     }
 
     //--------------------------------------------------------------------
@@ -121,13 +115,13 @@ contract MscpVesting is Ownable {
     /// @return duration of time in seconds
     function getDuration(bool _strategicInvestor) internal view returns(uint) {
         if(_strategicInvestor){
-            if(now < endtime_strategic)
-                return now-startTime;
-            return endtime_strategic-startTime;
+            if(now < startTime + DURATION_STRATEGIC)
+                return now - startTime;
+            return DURATION_STRATEGIC;
         } else {
-            if(now < endtime_private)
-                return now-startTime;
-            return endtime_private-startTime;
+            if(now < startTime + DURATION_PRIVATE)
+                return now - startTime;
+            return DURATION_PRIVATE;
         }
     }
 
