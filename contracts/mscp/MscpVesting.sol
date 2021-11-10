@@ -95,6 +95,8 @@ contract MscpVesting is Ownable {
             balance.claimedBonus = true;
             availableAmount += getBonus(balance.strategicInvestor);
         }
+        require(token.balanceOf(address(this)) >= availableAmount,
+            "insufficient contract balance");
 
         token.safeTransfer(msg.sender, availableAmount);
 
