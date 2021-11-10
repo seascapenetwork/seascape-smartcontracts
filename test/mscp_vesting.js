@@ -20,7 +20,6 @@ contract("MscpVesting", async accounts => {
   const rewardStrategic = 2000000;
   const rewardPrivate = 1500000;
 
-
   // imported contracts
   let mscpVesting = null;
   let mscpToken = null;
@@ -90,12 +89,12 @@ contract("MscpVesting", async accounts => {
     assert(true);
   });
 
-  it("4. attacked should not be able to withdraw with no allocation", async () => {
+  it("4. attacker should not be able to withdraw without allocation", async () => {
     try{
       await mscpVesting.withdraw({from: accounts[4]});
       assert.fail();
     }catch(e){
-      assert.equal(e.reason, "nothing to withdraw", "withdraw function should return an error");
+      assert.equal(e.reason, "user has no allocation", "withdraw function should return an error");
     }
   });
 
@@ -119,51 +118,53 @@ contract("MscpVesting", async accounts => {
     assert.equal(allocation, 0, "malicious investor should have 0 remaining coins");
   });
 
-  it("8. private and strategic investors should be able to withdraw again while malicious investor shouldnt", async () => {
-    await mscpVesting.withdraw({from: strategicInvestor});
-    let newStrategicBalance = parseInt(await mscpToken.balanceOf(strategicInvestor))/ether;
-    console.log("new strategic balance: " ,newStrategicBalance);
-    assert.isAbove(newStrategicBalance, strategicBalance, "invalid strategic investor balances");
-
+  it("8. private and strategic investors should be able to withdraw again", async () => {
     await mscpVesting.withdraw({from: privateInvestor});
     let newPrivateBalance = parseInt(await mscpToken.balanceOf(privateInvestor))/ether;
     console.log("new private balance: " ,newPrivateBalance);
     assert.isAbove(newPrivateBalance, privateBalance, "invalid private investor balances");
 
-    try{
-      await mscpVesting.withdraw({from: maliciousInvestor});
-      assert.fail();
-    }catch(e){
-      assert.equal(e.reason, "nothing to withdraw", "withdraw function should return an error");
-    }
+    await mscpVesting.withdraw({from: strategicInvestor});
+    let newStrategicBalance = parseInt(await mscpToken.balanceOf(strategicInvestor))/ether;
+    console.log("new strategic balance: " ,newStrategicBalance);
+    assert.isAbove(newStrategicBalance, strategicBalance, "invalid strategic investor balances");
   });
 
+  it("9. malicious investor should not be able to withdraw again", async () => {
+      try{
+        await mscpVesting.withdraw({from: maliciousInvestor});
+        assert.fail();
+      }catch(e){
+        assert.equal(e.reason, "user has no allocation", "withdraw function should return an error");
+      }
+    });
+
   it("wait until session is finished", async () => {
-    await sleep(6000);
+    await sleep(8000);
     let allocation = await mscpVesting.getAllocation(privateInvestor);
     assert(true);
   });
 
-  it("9. strategic investor should have proper balances after session is finished", async () => {
+  it("10. strategic investor should have proper balances after final withdraw", async () => {
     await mscpVesting.withdraw({from: strategicInvestor});
     strategicBalance = parseInt(await mscpToken.balanceOf(strategicInvestor))/ether;
     console.log("final strategic balance: " ,strategicBalance);
     assert.equal(strategicBalance, 10000000, "invalid strategic investor balances");
   });
 
-  it("10. private investor should have proper balances after session is finished", async () => {
+  it("11. private investor should have proper balances after final withdraw", async () => {
     await mscpVesting.withdraw({from: privateInvestor});
     let privateBalance = parseInt(await mscpToken.balanceOf(privateInvestor))/ether;
     console.log("final private balance: " ,privateBalance);
     assert.equal(privateBalance, 10000000, "invalid private investor balances");
   });
 
-  it("11. strategic investor should not be able to withdraw again", async () => {
+  it("12. strategic investor should not be able to withdraw again", async () => {
     try{
       await mscpVesting.withdraw({from: strategicInvestor});
       assert.fail();
     }catch(e){
-      assert.equal(e.reason, "nothing to withdraw", "withdraw function should return an error");
+      assert.equal(e.reason, "user has no allocation", "withdraw function should return an error");
     }
   });
 });
