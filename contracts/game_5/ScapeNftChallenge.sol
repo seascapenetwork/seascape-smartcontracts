@@ -364,6 +364,8 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
         _claim(sessionId, challengeId, staker);
         playerChallenge.claimedTime = block.timestamp;
 
+        // @todo if user staked token in less than stakPeriod seconds till
+        // end of the season. then this code below never will be called.
         if (isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
 	    	    IERC721 _nft = IERC721(scape);
 
