@@ -5,14 +5,14 @@ import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-/// @notice Stake a one token, and earn another token
+/// @notice Stake one LP token, and earn another token
 contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public stakeToken;
     address public earnToken;
     address public zombieFarm;
-    /// @dev The account that keeps all ERC20 rewards
+    /// @dev The account that keeps all ERC20 earns
     address public pool;
 
     uint256 public constant scaler = 10**18;
@@ -35,15 +35,15 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         uint256 startTime;     		  // session start in unixtimestamp
         uint256 endTime;
 
-		    uint256 claimed;       		  // amount of already claimed CWS
-		    uint256 amount;        		 // total amount of deposited tokens to the session by users
+		uint256 claimed;       		  // amount of already claimed CWS
+		uint256 amount;        		 // total amount of deposited tokens to the session by users
 
         uint256 rewardUnit;    		  // reward per second = totalReward/period
-		    uint256 interestPerToken; 	// total earned interest per token since the beginning
+		uint256 interestPerToken; 	// total earned interest per token since the beginning
 									// of the session
-		    uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
+		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
-		    uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
     }
 
     struct PlayerChallenge {
@@ -51,14 +51,13 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         uint256 stakedDuration;
 
         uint256 amount;        		// amount of deposited token
-        bool counted;             // whether its been counted in the session or not.
+        bool counted;               // whether its been counted in the session or not.
         uint256 overStakeAmount;
 
-        uint256 claimed;
-    		uint256 claimedTime;
-    		uint256 claimedReward;
+    	uint256 claimedTime;
+    	uint256 claimedReward;
 
-    		uint256 unpaidReward;     // Amount of token that contract should pay to user
+    	uint256 unpaidReward;     // Amount of token that contract should pay to user
 
         bool completed;           // Was the challenge in the season completed by the player or not.
     }
@@ -203,6 +202,14 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         session.prevChallengeId = prevChallengeId[offset];
     }
 
+    /**
+     * @dev
+     *
+     * Rules:
+     *  - User can't stake, if he completed the challenge.
+     *  - Season should be active with this Challenge.
+     *  - Challenge on previous level should be completed. But not staked.
+     */
     function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data)
         external
         override
@@ -218,17 +225,16 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!isCompleted(sessionChallenge, playerChallenge, now), "challange already completed");
+        require(!isChallengeCompleted(sessionChallenge, playerChallenge, now), "challange already completed");
 
         require(isActive(sessionChallenge.startTime, sessionChallenge.endTime),
             "Challenge should be active");
 
         // Previous Challenge should be completed
+        // @todo if user unstaked the token, then need to call isFullyCompleted.
         if (sessionChallenge.prevChallengeId > 0) {
-            PlayerChallenge storage playerPrevChallenge
-                = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
-            require(isCompleted(sessionId, playerPrevChallenge, staker),
-                "last challenge not completed");
+            PlayerChallenge storage playerPrevChallenge = playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
+            require(isChallengeCompleted(sessionId, playerPrevChallenge, staker), "last challenge not completed");
         }
 
         /// Staking amount
@@ -236,27 +242,30 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         (amount) = abi.decode(data, (uint256));
         require(amount > 0, "stake amount cant be 0");
 
-        require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
-            "time completed");
+        require(!isChallengeCompleted(sessionChallenge, playerChallenge, block.timestamp), "time completed");
         updateInterestPerToken(sessionChallenge);
 
         /// Transfer tokens to the Smartcontract
         /// TODO add stake holding option. The stake holding option earns a passive income
         /// by user provided tokens.
-    		IERC20 _token = IERC20(challenge.stake);
-    		require(_token.balanceOf(staker) >= amount, "not enough staking token");
+    	IERC20 _token = IERC20(challenge.stake);
+    	require(_token.balanceOf(staker) >= amount, "not enough staking token");
         uint256 preTotalAmount = _token.balanceOf(address(this));
-    		IERC20(_token).safeTransferFrom(staker, address(this), amount);
+    	IERC20(_token).transferFrom(staker, address(this), amount);
+        // deflitionary token support.
+        // if user sends a deflitionary token that burns some
+        // part of it during the transfer, then this smartcontract
+        // could get less token than user expected.
         uint256 actualAmount = _token.balanceOf(address(this)) - preTotalAmount;
         if (actualAmount != amount) {
             amount = actualAmount;
         }
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
-    		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
-    			   _claim(sessionId, challengeId, staker);
+    	if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
+     	    _claim(sessionId, challengeId, staker);
             playerChallenge.claimedTime = block.timestamp;
-    		}
+    	}
 
         uint256 total = amount + playerChallenge.amount + playerChallenge.overStakeAmount;
 
@@ -282,7 +291,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
     		updateBalanceInterestPerToken(sessionChallenge.claimedPerToken, playerChallenge);
         }
 
-		    emit Stake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
+		emit Stake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
     }
 
     function unstake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data)
@@ -310,6 +319,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         uint256 amount;
         (amount) = abi.decode(data, (uint256));
         require(amount <= totalStake, "can't unstake more than staked");
+        // Make sure that Session tracked enough token
         require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
             "stakeAmount should be >= amount");
 
@@ -326,18 +336,25 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         ///@dev reseting the timer if user unstaked any token
         playerChallenge.stakedDuration = 0;
 
-        if (!isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
+        /// @dev Different rules applied depending on 
+        /// challenge completed by unstaking time or not.
+        ///
+        /// if completed, then we transfer back to user all tokens.
+        /// if not completed, then we reset the staking time.
+        if (!isChallengeCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
             if (amount > playerChallenge.overStakeAmount) {
                 uint256 cut = amount - playerChallenge.overStakeAmount;
-                playerChallenge.amount = playerChallenge.amount - cut;
 
                 // player is removed from earning. so other users gets more.
-                if (playerChallenge.amount < sessionChallenge.stakeAmount) {
+                if (playerChallenge.amount == sessionChallenge.stakeAmount) {
                     sessionChallenge.amount = sessionChallenge
                         .amount - sessionChallenge.stakeAmount;
+                    playerChallenge.counted = false;
 
                     updateInterestPerToken(sessionChallenge);
                 }
+                playerChallenge.amount = playerChallenge.amount - cut;
+
                 playerChallenge.overStakeAmount = 0;
             } else {
                 playerChallenge.overStakeAmount = playerChallenge.overStakeAmount - amount;
@@ -400,15 +417,15 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         updateInterestPerToken(sessionChallenge);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
-		    if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
+		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
             _claim(sessionId, challengeId, staker);
             playerChallenge.claimedTime = block.timestamp;
-		    }
+	    }
 
-		    IERC20 _token = IERC20(challenge.stake);
+	    IERC20 _token = IERC20(challenge.stake);
 
         if (playerChallenge.amount >= sessionChallenge.stakeAmount &&
-            isCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
+            isChallengeCompleted(sessionChallenge, playerChallenge, block.timestamp)) {
 
             uint256 totalStake = playerChallenge.amount + playerChallenge.overStakeAmount;
 
@@ -434,7 +451,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         }
     }
 
-    /// Set session as complete
+    /// Set challenge as complete
     function complete(uint256 sessionId, uint32 challengeId, address staker)
         external
         override
@@ -442,8 +459,6 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
     {
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-
-        /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
 
         require(playerChallenge.amount >= sessionChallenge.stakeAmount, "didnt stake enough");
@@ -451,6 +466,11 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
+    /**
+     * @notice Whether the Challenge was completed for the user or not.
+     * It is completed, if staking amount of tokens were locked for a 
+     * certain period of time
+     */
     function isFullyCompleted(
         uint256 sessionId,
         uint32 challengeId,
@@ -469,7 +489,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
 
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
-        return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+        return isChallengeCompleted(sessionChallenge, playerChallenge, block.timestamp);
     }
 
     function getIdAndLevel(uint8 offset, bytes calldata data)
@@ -522,17 +542,17 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         Params storage challenge = challenges[challengeId];
 
         if (playerChallenge.unpaidReward > 0) {
-          IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
-    			require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
+            IERC20 _token = IERC20(challenge.earn);
+            uint256 contractBalance = _token.balanceOf(pool);
+    		require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
 
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+            IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
 
-          // playerChallenge.claimedTime = block.timestamp;
-          sessionChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.claimed += playerChallenge.unpaidReward;
-          playerChallenge.unpaidReward = 0;
-    		}
+            // playerChallenge.claimedTime = block.timestamp;
+            sessionChallenge.claimedReward += playerChallenge.unpaidReward;
+            playerChallenge.claimedReward += playerChallenge.unpaidReward;
+            playerChallenge.unpaidReward = 0;
+    	}
   	}
 
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
@@ -567,7 +587,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
 
     function getSessionCap(uint256 startTime, uint256 endTime) internal view returns (uint256) {
         if (!isActive(startTime, endTime)) {
-			       return endTime;
+			return endTime;
         }
         return block.timestamp;
     }
@@ -579,7 +599,7 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         return (now >= startTime && now <= endTime);
     }
 
-    function isCompleted(
+    function isChallengeCompleted(
         SessionChallenge storage sessionChallenge,
         PlayerChallenge storage playerChallenge,
         uint256 currentTime
@@ -602,8 +622,6 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         }
         return time >= sessionChallenge.stakePeriod;
     }
-
-
 
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
@@ -646,8 +664,8 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         } else {
             playerChallenge.claimedTime = block.timestamp;
         }
-        sessionChallenge.claimed = sessionChallenge.claimed + interest;
-        playerChallenge.claimed = playerChallenge.claimed + interest;
+        sessionChallenge.claimedReward = sessionChallenge.claimedReward + interest;
+        playerChallenge.claimedReward = playerChallenge.claimedReward + interest;
 
         if (interest > contractBalance) {
             IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
@@ -689,6 +707,6 @@ contract LpChallenge is ZombieFarmChallengeInterface, ReentrancyGuard {
         uint256 interest = ((playerChallenge
             .amount * claimedPerToken) / scaler) - playerChallenge.claimedReward;
 
-		    return interest;
+		return interest;
     }
 }
