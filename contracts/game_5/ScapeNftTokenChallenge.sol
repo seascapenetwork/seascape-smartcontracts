@@ -301,9 +301,14 @@ contract ScapeNftTokenChallenge is ZombieFarmChallengeInterface, Ownable, Reentr
             amount = actualAmount;
         }
 
+        // @todo check with game designers can user add nft
+        // @todo make sure that earning weight of the nft is update if any.
         if (nftId != playerChallenge.nftId && playerChallenge.amount == 0) {
             IERC721 _nft = IERC721(scape);
             _nft.safeTransferFrom(staker, address(this), nftId);
+            if (playerChallenge.nftId > 0) {
+                _nft.safeTransferFrom(address(this), staker, nftId);
+            }
             playerChallenge.nftId = nftId;
         }
 
