@@ -81,6 +81,12 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         address indexed rewardAdress
     );
 
+    event AddRewardToSession(
+        uint256 indexed sessionId,
+        uint8 indexed rewardType,
+        address indexed reward
+    );
+
     event AddSupportedChallenge(
         uint32 indexed challengeId,
         address indexed challengeAddress
@@ -342,6 +348,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         reward.AddLevelToSession(sessionId, levelId, data);
 
         sessionRewards[sessionId][levelId] = reward;
+
+        emit AddRewardToSession(sessionId, levelId, reward);
     }
 
     // Claim the reward for the lootbox
