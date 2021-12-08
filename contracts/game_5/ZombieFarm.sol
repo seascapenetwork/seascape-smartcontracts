@@ -171,6 +171,18 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit StartSession(lastSessionId, startTime, period, levelAmount, grandReward);
     }
 
+    function lastSession() external view returns(uint8, uint256, uint256, uint8, address) {
+        Session storage session = sessions[lastSessionId];
+
+        return (
+            lastSessionId,
+            session.startTime,
+            session.period,
+            session.levelAmount,
+            session.reward
+        );
+    }
+    
     //////////////////////////////////////////////////////////////////////////////////
     //
     // Challenges
@@ -282,18 +294,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         require(crowns.spendFrom(msg.sender, fee), "failed to spend fee");
 
         emit Repick(sessionId, challengeId, msg.sender, fee);
-    }
-
-    function lastSession() external view returns(uint8, uint256, uint256, uint8, address) {
-        Session storage session = sessions[lastSessionId];
-
-        return (
-            lastSessionId,
-            session.startTime,
-            session.period,
-            session.levelAmount,
-            session.reward
-        );
     }
 
     //////////////////////////////////////////////////////////////////////////////////
