@@ -10,11 +10,10 @@ import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  {
     using SafeERC20 for IERC20;
 
-    address public stakeToken;
-    address public earnToken;
     address public zombieFarm;
+
     /// @dev The account that keeps all ERC20 rewards
-    address public pool;
+    address public vault;
 
     uint256 public constant scaler = 10**18;
     uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
@@ -67,19 +66,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
     mapping(uint256 => mapping (address => PlayerChallenge)) public playerParams;
 
     modifier onlyZombieFarm () {
-	      require(msg.sender == zombieFarm, "only ZombieFarm can call");
-	      _;
+	    require(msg.sender == zombieFarm, "only ZombieFarm can call");
+	    _;
     }
-
-    event SaveReward(
-        uint256 indexed sessionId,
-        uint8 indexed rewardType,
-        address indexed token,
-        uint256 generation,
-        uint8 quality,
-        uint256 imgId,
-        uint256 amount
-    );
 
     event Stake(
         address indexed staker,
@@ -105,14 +94,14 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         uint256 sessionAmount
     );
 
-    constructor (address _zombieFarm, address _pool, address _stake, _earn) public {
+    constructor (address _zombieFarm, address _vault, address _stake, _earn) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
-        require(_pool != address(0), "invalid _pool address");
+        require(_vault != address(0), "invalid _vault address");
         require(_stake != address(0), "data.stake verification failed");
         require(_earn != address(0), "data.earn verification failed");
 
         zombieFarm = _zombieFarm;
-        pool = _pool;
+        vault = _vault;
         stake = _stake;
         earn = _earn;
     }
@@ -161,13 +150,12 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         (uint256 amount) = abi.decode(data, (uint256));
         require(amount > 0, "invalid amount: cant be 0");
 
-
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
 
         /// Player parameters
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
-        // require(!playerChallenge.completed, "challange already completed");
+        require(!playerChallenge.completed, "challange already completed");
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
             "time completed");
@@ -179,9 +167,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         /// by user provided tokens.
         IERC20 _token = IERC20(challenge.stake);
         require(_token.balanceOf(staker) >= amount, "not enough staking token");
-        uint256 preTotalAmount = _token.balanceOf(address(this));
-        IERC20(_token).safeTransferFrom(staker, address(this), amount);
-        uint256 actualAmount = _token.balanceOf(address(this)) - preTotalAmount;
+        uint256 preTotalAmount = _token.balanceOf(vault);
+        IERC20(_token).safeTransferFrom(staker, vault, amount);
+        uint256 actualAmount = _token.balanceOf(vault) - preTotalAmount;
         if (actualAmount != amount) {
             amount = actualAmount;
         }
@@ -284,8 +272,8 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             /// Transfer tokens to the Smartcontract
             /// TODO add stake holding option. The stake holding option earns a passive income
             /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= amount, "insufficient contract balances");
-            require(_token.transfer(staker, amount), "transfer to staker failed");
+            require(_token.balanceOf(vault) >= amount, "insufficient contract balances");
+            require(_token.transferFrom(vault, staker, amount), "transfer to staker failed");
 
             emit Unstake(staker, sessionId, challengeId, amount, sessionChallenge.amount);
 
@@ -301,10 +289,8 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             updateInterestPerToken(sessionChallenge);
 
             /// Transfer tokens to the Smartcontract
-            /// TODO add stake holding option. The stake holding option earns a passive income
-            /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake, "insufficient contract balances");
-            require(_token.transfer(staker, totalStake), "transfer to staker failed");
+            require(_token.balanceOfvault) >= totalStake, "insufficient contract balances");
+            require(_token.transferFrom(vault, staker, totalStake), "transfer to staker failed");
 
             emit Unstake(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
         }
@@ -333,10 +319,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         updateInterestPerToken(sessionChallenge);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
-    		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
+    	if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
             _claim(sessionId, challengeId, staker);
             playerChallenge.claimedTime = block.timestamp;
-    		}
+    	}
 
         IERC20 _token = IERC20(challenge.stake);
 
@@ -357,11 +343,8 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             updateInterestPerToken(sessionChallenge);
 
             /// Transfer tokens to the Smartcontract
-            /// TODO add stake holding option. The stake holding option earns a passive income
-            /// by user provided tokens.
-            require(_token.balanceOf(address(this)) >= totalStake,
-                "insufficient contract balances");
-            require(_token.transfer(staker, totalStake), "transfer to staker failed");
+            require(_token.balanceOf(vault) >= totalStake, "insufficient contract balances");
+            require(_token.transferFrom(vault, staker, totalStake), "transfer to staker failed");
 
             emit Claim(staker, sessionId, challengeId, totalStake, sessionChallenge.amount);
         }
@@ -380,10 +363,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
         if (playerChallenge.unpaidReward > 0) {
           IERC20 _token = IERC20(challenge.earn);
-          uint256 contractBalance = _token.balanceOf(pool);
+          uint256 contractBalance = _token.balanceOf(vault);
           require(contractBalance >= playerChallenge.unpaidReward, "insufficient contract balance");
 
-          IERC20(_token).safeTransferFrom(pool, staker, playerChallenge.unpaidReward);
+          IERC20(_token).safeTransferFrom(vault, staker, playerChallenge.unpaidReward);
 
           // playerChallenge.claimedTime = block.timestamp;
           sessionChallenge.claimed += playerChallenge.unpaidReward;
@@ -393,7 +376,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
     }
 
     /// Set session as complete
-    function complete(uint256 sessionId, uint32 challengeId, address staker)
+    function speedUp(uint256 sessionId, address staker)
         external
         override
         onlyZombieFarm
@@ -566,7 +549,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
         IERC20 _token = IERC20(challenge.earn);
 
-        uint256 contractBalance = _token.balanceOf(pool);
+        uint256 contractBalance = _token.balanceOf(vault);
 
         if (contractBalance < interest) {
             playerChallenge.unpaidReward = (interest - contractBalance) + playerChallenge
@@ -583,9 +566,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         playerChallenge.claimed = playerChallenge.claimed + interest;
 
         if (interest > contractBalance) {
-            IERC20(_token).safeTransferFrom(pool, staker, contractBalance);
+            IERC20(_token).safeTransferFrom(vault, staker, contractBalance);
         } else {
-            IERC20(_token).safeTransferFrom(pool, staker, interest);
+            IERC20(_token).safeTransferFrom(vault, staker, interest);
         }
 
         //emit Claimed(challenge.earn, staker, sessionId, challengeId, interest, block.timestamp);

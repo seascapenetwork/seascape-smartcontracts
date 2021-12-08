@@ -412,8 +412,7 @@ contract ZombieFarm is Ownable{
         require(_recover == _verifier,  "Verification failed");
 
         // Check that this challenge is in the slot.
-        // or wasn't on another slots of the level.
-        // so we don't check that challenge might be on another level        
+        // or wasn't on another slots on any level.
         address slotChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
         require(slotChallenge == challenge || slotChallenge == address(0), "invalid challenge address");
         if (slotChallenge == address(0)) {
