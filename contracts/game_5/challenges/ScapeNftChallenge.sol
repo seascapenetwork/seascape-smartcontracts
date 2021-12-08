@@ -50,14 +50,14 @@ abstract contract ScapeNftChallenge is ZombieFarmChallengeInterface, Ownable, Re
         uint256 startTime;     		// session start in unixtimestamp
         uint256 endTime;
 
-		    uint256 claimed;       		// amount of already claimed CWS
+		uint256 claimed;       		// amount of already claimed CWS
 
         uint256 rewardUnit;    		// reward per second = totalReward/period
-		    uint256 interestPerToken; 	// total earned interest per token since the beginning
+		uint256 interestPerToken; 	// total earned interest per token since the beginning
 									// of the session
-		    uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
+		uint256 claimedPerToken;    // total amount of tokens earned by a one staked token,
 									// since the beginning of the session
-		    uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
+		uint256 lastInterestUpdate; // last time when claimedPerToken and interestPerToken
     }
 
     struct PlayerChallenge {

@@ -182,7 +182,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             session.reward
         );
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////
     //
     // Challenges
@@ -236,15 +236,13 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         }
     }
 
-    function addSupportedChallenge(address _address, bytes calldata _data) external onlyOwner {
+    /// @notice Let's know the ZombieFarm contract about newly deployed Challenge Smartcontract.
+    /// @dev we partially trust the owner, so we are not checking is the contract a challenge contract or not.
+    function supportedChallenge(address _address) external onlyOwner {
         require(_address != address(0), "invalid _address");
 
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(_address);
-
         supportedChallengesAmount = supportedChallengesAmount + 1;
-        supportedChallenges[supportedChallengesAmount] = _address;
-
-        challenge.newChallenge(supportedChallengesAmount, _data);
+        supportedChallenges[_address] = true;
 
         emit AddSupportedChallenge(supportedChallengesAmount, _address);
     }

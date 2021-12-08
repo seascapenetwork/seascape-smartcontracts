@@ -18,10 +18,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
     uint256 public constant scaler = 10**18;
     uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
 
-    struct Params {
-        address stake;
-        address earn;
-    }
+    // This challenge specific parameters.
+    address public stake;
+    address public earn;
 
     struct SessionChallenge {
         uint8 levelId;
@@ -119,26 +118,16 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         uint256 sessionAmount
     );
 
-    constructor (address _zombieFarm, address _pool) public {
+    constructor (address _zombieFarm, address _pool, address _stake, _earn) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_pool != address(0), "invalid _pool address");
-
-        zombieFarm = _zombieFarm;
-        pool = _pool;
-    }
-
-    /// @notice indicates that a new challenge of this challenge category is supported by Zombie Farm
-    function newChallenge(uint32 id, bytes calldata data) external override onlyZombieFarm {
-        require(challenges[id].stake == address(0), "challenge already exists");
-
-        address _stake;
-        address _earn;
-
-        (_stake, _earn) = abi.decode(data, (address, address));
         require(_stake != address(0), "data.stake verification failed");
         require(_earn != address(0), "data.earn verification failed");
 
-        challenges[id] = Params(_stake, _earn);
+        zombieFarm = _zombieFarm;
+        pool = _pool;
+        stake = _stake;
+        earn = _earn;
     }
 
     /// @notice a new challenge of this challenge category was added to the Season.
