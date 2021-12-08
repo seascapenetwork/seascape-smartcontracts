@@ -20,7 +20,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     using Counters for Counters.Counter;
 
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game
-    uint8 public constant MAX_CHALLENGES = 10;          // Max possible challenges
 
     /// For collecting fee for Speed up and Re-pick
     CrownsToken crowns;
