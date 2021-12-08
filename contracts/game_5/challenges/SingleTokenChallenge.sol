@@ -1,6 +1,7 @@
 pragma solidity 0.6.7;
 
 import "./ZombieFarmChallengeInterface.sol";
+import "./ZombieFarmInterface.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -24,7 +25,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
     struct SessionChallenge {
         uint8 levelId;
-        uint32 prevChallengeId;    // This is the previous challenge id if level is
 
         uint256 totalReward;
         uint256 stakeAmount;        // Required amount to pass the level
@@ -62,10 +62,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         bool completed;             // Was the challenge in the season completed by the player or not.
     }
 
-    mapping(uint32 => Params) public challenges;
-    mapping(uint256 => mapping(uint32 => SessionChallenge)) public sessionChallenges;
-    // session id => challenge id => player address = PlayerChallenge
-    mapping(uint256 => mapping(uint32 => mapping (address => PlayerChallenge))) public playerParams;
+    mapping(uint256 => SessionChallenge)) public sessionChallenges;
+    // session id => player address = PlayerChallenge
+    mapping(uint256 => mapping (address => PlayerChallenge)) public playerParams;
 
     modifier onlyZombieFarm () {
 	      require(msg.sender == zombieFarm, "only ZombieFarm can call");
@@ -118,100 +117,57 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         earn = _earn;
     }
 
-    /// @notice a new challenge of this challenge category was added to the Season.
-    function saveChallenge(
+    /// @notice a new challenge of this challenge category was added to the session.
+    /// @dev We are not validating most of the parameters, since we trust to the Owner.
+    function addChallengeToSession(
         uint256 sessionId,
-        uint256 startTime,
-        uint256 period,
-        uint8 offset,
+        uint8 levelId,
         bytes calldata data
     )
         external
         override
         onlyZombieFarm
     {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakeAmount;
-        uint256[5] memory stakePeriod;
-        // multipliers could be 0.
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
+        require(sessionChallenges[sessionId].reward > 0, "already added to the session");
 
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
-            .decode(data, (
-            uint32[5],
-            uint8[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint32[5]
-            ));
-
-        SessionChallenge storage session = sessionChallenges[sessionId][id[offset]];
+        (uint256 reward, uint256 stakeAmount, uint256 stakePeriod, uint256 multiplier) 
+            = abi.decode(data, (uint256, uint256, uint256, uint256));
+        require(reward > 0 && stakeAmount > 0 && stakePeriod > 0, "zero_value");
 
         // Challenge.stake is not null, means that Challenge.earn is not null too.
-        require(challenges[id[offset]].stake != address(0),
-            "challenge does not exist");
-        require(reward[offset] > 0, "reward should be more than 0");
-        require(levelId[offset] > 0, "levelId should be more than 0");
-        require(sessionId > 0, "seesionId should be more than 0");
-        require(stakeAmount[offset] > 0, "stakeAmount should be above 0");
-        require(stakePeriod[offset] > 0, "stakePeriod should be above 0");
-        require(session.totalReward == 0, "challenge added to level before");
-        require(startTime > 0 && period > 0, "session duration can't be 0");
-        if (prevChallengeId[offset] > 0) {
-            require(challenges[prevChallengeId[offset]].stake != address(0),
-                "previous challenge incomplete");
-        }
+        SessionChallenge storage session = sessionChallenges[sessionId];
+        session.levelId             = levelId;
+        session.totalReward         = reward;
+        session.stakeAmount         = stakeAmount;
+        session.stakePeriod         = stakePeriod;
+        session.multiplier          = multiplier;
 
-        session.levelId = levelId[offset];
-        session.totalReward = reward[offset];
-        session.stakeAmount = stakeAmount[offset];
-        session.stakePeriod = stakePeriod[offset];
-        session.multiplier = multiplier[offset];
-        session.startTime = startTime;
-        session.endTime = startTime + period;
-        session.rewardUnit = reward[offset] / period;
-        session.lastInterestUpdate = startTime;
-        session.prevChallengeId = prevChallengeId[offset];
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
+        require(startTime > 0, "no session on zombie farm");
+
+        session.rewardUnit          = reward / period;
+        session.lastInterestUpdate  = startTime;
     }
 
-    function stake(uint256 sessionId, uint32 challengeId, address staker, bytes calldata data)
+    /// @dev The ZombieFarm calls this function when the session is active only.
+    function stake(uint256 sessionId, address staker, bytes calldata data)
         external
         override
         onlyZombieFarm
         nonReentrant
     {
-        /// General information regarding the Staking token and Earning token
-        Params storage challenge = challenges[challengeId];
+        /// Staking amount
+        (uint256 amount) = abi.decode(data, (uint256));
+        require(amount > 0, "invalid amount: cant be 0");
+
 
         /// Session Parameters
-        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
-        require(sessionChallenge.levelId > 0, "session does not exist");
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
 
         /// Player parameters
-        PlayerChallenge storage playerChallenge = playerParams[sessionId][challengeId][staker];
-        require(!playerChallenge.completed, "challange already completed");
-
-        require(isActive(sessionChallenge.startTime, sessionChallenge.endTime),
-            "Challenge should be active");
-
-        // Previous Challenge should be completed
-        if (sessionChallenge.prevChallengeId > 0) {
-            PlayerChallenge storage playerPrevChallenge = playerParams[sessionId][sessionChallenge
-                .prevChallengeId][staker];
-            require(playerPrevChallenge.completed ||
-                isCompleted(sessionChallenge, playerPrevChallenge, now),
-                "last challenge not completed");
-        }
-
-        /// Staking amount
-        uint256 amount;
-        (amount) = abi.decode(data, (uint256));
-        require(amount > 0, "invalid amount: cant be 0");
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        // require(!playerChallenge.completed, "challange already completed");
 
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
             "time completed");
@@ -453,7 +409,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         playerChallenge.stakedDuration += sessionChallenge.stakePeriod;
     }
 
-    function isFullyCompleted(uint256 sessionId, uint32 challengeId, address staker)
+    function isFullyCompleted(uint256 sessionId, address staker)
         external
         override
         view
@@ -467,6 +423,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId][challengeId];
 
         return isCompleted(sessionChallenge, playerChallenge, block.timestamp);
+    }
+
+    function getLevel(uint256 sessionId) external override view returns(uint8) {
+        return sessionChallenges[sessionId].levelId;
     }
 
 
