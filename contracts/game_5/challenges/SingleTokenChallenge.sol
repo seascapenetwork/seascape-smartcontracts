@@ -160,7 +160,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         require(!isCompleted(sessionChallenge, playerChallenge, block.timestamp),
             "time completed");
 
-        updateInterestPerToken(sessionChallenge);
+        updateInterestPerToken(sessionId, sessionChallenge);
 
         /// Transfer tokens to the Smartcontract
         /// TODO add stake holding option. The stake holding option earns a passive income
@@ -189,7 +189,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
             playerChallenge.counted = true;
 
             // Once the total stake amount has been increased, we update the earnings
-            updateInterestPerToken(sessionChallenge);
+            updateInterestPerToken(sessionId, sessionChallenge);
         }
 
         // Amount holds only max session.stakeAmount
@@ -234,7 +234,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
             "stake amount should be >= amount");
 
-        updateInterestPerToken(sessionChallenge);
+        updateInterestPerToken(sssionId, sessionChallenge);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
     		if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
@@ -256,7 +256,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
                 if (playerChallenge.amount < sessionChallenge.stakeAmount) {
                     sessionChallenge.amount = sessionChallenge
                         .amount - sessionChallenge.stakeAmount;
-                    updateInterestPerToken(sessionChallenge);
+                    updateInterestPerToken(sessionId, sessionChallenge);
                 }
                 playerChallenge.overStakeAmount = 0;
             } else {
@@ -286,7 +286,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
             sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
 
-            updateInterestPerToken(sessionChallenge);
+            updateInterestPerToken(sessionId, sessionChallenge);
 
             /// Transfer tokens to the Smartcontract
             require(_token.balanceOfvault) >= totalStake, "insufficient contract balances");
@@ -316,7 +316,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         require(sessionChallenge.stakeAmount >= sessionChallenge.amount,
             "stakeAmount should be >= amount");
 
-        updateInterestPerToken(sessionChallenge);
+        updateInterestPerToken(sessionId, sessionChallenge);
 
         // before updating player's challenge parameters, we auto-claim earned tokens till now.
     	if (playerChallenge.amount >= sessionChallenge.stakeAmount) {
@@ -340,7 +340,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
 
             sessionChallenge.amount = sessionChallenge.amount - sessionChallenge.stakeAmount;
 
-            updateInterestPerToken(sessionChallenge);
+            updateInterestPerToken(sessionId, sessionChallenge);
 
             /// Transfer tokens to the Smartcontract
             require(_token.balanceOf(vault) >= totalStake, "insufficient contract balances");
@@ -412,55 +412,17 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         return sessionChallenges[sessionId].levelId;
     }
 
-
-    function getIdAndLevel(uint8 offset, bytes calldata data)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint32, uint8)
-    {
-        uint32[5] memory id;
-        uint8[5] memory levelId;
-        uint256[5] memory reward;
-        uint256[5] memory stakeAmount;
-        uint256[5] memory stakePeriod;
-        uint256[5] memory multiplier;
-        uint32[5] memory prevChallengeId;
-
-        (id, levelId, reward, stakeAmount, stakePeriod, multiplier, prevChallengeId) = abi
-            .decode(data, (
-            uint32[5],
-            uint8[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint256[5],
-            uint32[5]
-            ));
-
-
-        return (id[offset], levelId[offset]);
-    }
-
-    function getLevel(uint256 sessionId, uint32 challengeId)
-        external
-        override
-        view
-        onlyZombieFarm
-        returns(uint8)
-    {
-        return sessionChallenges[sessionId][challengeId].levelId;
-    }
-
     /// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
     /// @param sessionChallenge is this challenge
-    function updateInterestPerToken(SessionChallenge storage sessionChallenge)
+    function updateInterestPerToken(uint256 sessionId, SessionChallenge storage sessionChallenge)
         internal
         returns(bool)
     {
-        uint256 sessionCap = getSessionCap(sessionChallenge.startTime, sessionChallenge.endTime);
+        ZombieFarmInterface zombie = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime, uint256 period, , , , ) = zombie.sessions(sessionId);
+
+        uint256 sessionCap = getSessionCap(startTime, startTime.add(period));
         if (sessionChallenge.lastInterestUpdate >= sessionCap) {
             return false;
         }
@@ -475,8 +437,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         if (sessionChallenge.amount == 0) {
             sessionChallenge.interestPerToken = 0;
         } else {
-            sessionChallenge.interestPerToken = (sessionChallenge
-                .rewardUnit * scaler) / sessionChallenge.amount; // 0.1
+            sessionChallenge.interestPerToken = (sessionChallenge.rewardUnit * scaler) / sessionChallenge.amount; // 0.1
         }
 
         // we avoid sub. underflow, for calulating session.claimedPerToken
@@ -521,8 +482,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         }
         return time >= sessionChallenge.stakePeriod;
     }
-
-
 
     function updateBalanceInterestPerToken(
         uint256 claimedPerToken,
