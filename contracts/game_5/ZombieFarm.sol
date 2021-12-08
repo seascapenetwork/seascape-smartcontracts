@@ -108,14 +108,18 @@ contract ZombieFarm is Ownable{
 
     event SpeedUp(
         uint256 indexed sessionId,
-        uint32 indexed challengeId,
+        uint8 levelId,
+        uint8 slotId,
+        address indexed challenge,
         address indexed staker,
         uint256 fee
     );
 
     event Repick(
         uint256 indexed sessionId,
-        uint32 indexed challengeId,
+        uint8 levelId,
+        uint8 slotId,
+        address indexed challenge,
         address indexed staker,
         uint256 fee
     );
@@ -251,51 +255,45 @@ contract ZombieFarm is Ownable{
         emit AddSupportedChallenge(supportedChallengesAmount, _address);
     }
 
-    function speedUp(uint256 sessionId, uint32 challengeId) external {
-        require(sessionId > 0 && challengeId > 0, "sessionId or challengeId is 0");
+    function speedUp(uint256 sessionId, uint8 slotId, uint32 challenge) external {
+        require(slotId >= 0 && slotId < 3, "invalid slot id");
         require(isActive(sessionId));
-        require(supportedChallenges[challengeId] != address(0), "unsupported challenge id");
+        require(sessionChallenges[sessionId], "unsupported challenge");
 
-        address challengeAddress = supportedChallenges[challengeId];
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
+        require(!zombieChallenge.isFullyCompleted(sessionId, msg.sender), "challenge already completed");
 
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
-        require(!challenge.isFullyCompleted(sessionId, challengeId, msg.sender),
-            "challenge already completed");
+        uint8 levelId = zombieChallenge.getLevel(sessionId, challengeId);
+        require(levelId > 0, "no link between session and challenge");
 
-        uint8 levelId = challenge.getLevel(sessionId, challengeId);
-        require(levelId > 0, "no challenge");
-
-        // require(isChallengeInLevel(sessionId, levelId, challengeId, msg.sender),
-            // "haven't staked");
+        require(playerChallenges[sessionId][levelId][msg.sender][slotId] == challenge, "invalid challenge address")
 
         uint256 fee = sessions[sessionId].speedUpFee;
 
         require(crowns.spendFrom(msg.sender, fee), "failed to spend fee");
 
-        challenge.complete(sessionId, challengeId, msg.sender);
+        challenge.complete(sessionId, msg.sender);
 
-        emit SpeedUp(sessionId, challengeId, msg.sender, fee);
+        emit SpeedUp(sessionId, levelId, slotId challenge, msg.sender, fee);
     }
 
-    function repick(uint256 sessionId, uint32 challengeId) external {
-        require(sessionId > 0 && challengeId > 0, "sessionId or challengeId is 0");
+    function repick(uint256 sessionId, uint8 slotId, address challenge) external {
+        require(slotId >= 0 && slotId < 3, "invalid slot id");
+        require(sessionId > 0, "sessionId or challengeId is 0");
         require(isActive(sessionId));
-        require(supportedChallenges[challengeId] != address(0), "unsupported challengeId");
+        require(sessionChallenges[sessionId][challenge], "!session.challenge");
 
-        address challengeAddress = supportedChallenges[challengeId];
-
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challengeAddress);
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
         uint8 levelId = challenge.getLevel(sessionId, challengeId);
         require(levelId > 0, "no challenge");
 
-        // require(!isChallengeInLevel(sessionId, levelId, challengeId, msg.sender),
-            // "haven't staked");
+        require(playerChallenges[sessionId][levelId][msg.sender][slotId] == address(0), "already staked");
 
         uint256 fee = sessions[sessionId].repickFee;
 
         require(crowns.spendFrom(msg.sender, fee), "failed to spend fee");
 
-        emit Repick(sessionId, challengeId, msg.sender, fee);
+        emit Repick(sessionId, levelId, slotId, challenge, msg.sender, fee);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
