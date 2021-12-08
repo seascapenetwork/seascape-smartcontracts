@@ -65,7 +65,7 @@ contract ZombieFarm is Ownable{
     // Challenges
     //
     uint32 public supportedChallengesAmount;
-    mapping(uint32 => address) public supportedChallenges;
+    mapping(address => bool) public supportedChallenges;
 
     //
     // events
@@ -219,7 +219,6 @@ contract ZombieFarm is Ownable{
 
     /// @notice Add possible challenge options to the level
     /// @param sessionId the session for which its added
-    /// @param challengesAmount amount that is added
     /// @param levelId on which level this challenge will be stored?
     /// @param data of all challenge parameters
     function addChallengeToSession(
@@ -234,10 +233,10 @@ contract ZombieFarm is Ownable{
         require(isStarting(sessionId), "session should be starting");
 
         require(levelId > 0 && levelId <= sessions[sessionId].levelAmount, "invalid level id");
-        require(supportedChallenges[challenge] != address(0), "unsupported challenge at id");
+        require(supportedChallenges[challenge], "unsupported challenge at id");
 
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challenge);
-        challenge.addChallengeToSession(sessionId, levelId, data);
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
+        zombieChallenge.addChallengeToSession(sessionId, levelId, data);
 
         sessionChallenges[sessionId][challenge] = true;
 
@@ -255,26 +254,26 @@ contract ZombieFarm is Ownable{
         emit AddSupportedChallenge(supportedChallengesAmount, _address);
     }
 
-    function speedUp(uint256 sessionId, uint8 slotId, uint32 challenge) external {
+    function speedUp(uint256 sessionId, uint8 slotId, address challenge) external {
         require(slotId >= 0 && slotId < 3, "invalid slot id");
         require(isActive(sessionId));
-        require(sessionChallenges[sessionId], "unsupported challenge");
+        require(sessionChallenges[sessionId][challenge], "unsupported challenge");
 
         ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
         require(!zombieChallenge.isFullyCompleted(sessionId, msg.sender), "challenge already completed");
 
-        uint8 levelId = zombieChallenge.getLevel(sessionId, challengeId);
+        uint8 levelId = zombieChallenge.getLevel(sessionId);
         require(levelId > 0, "no link between session and challenge");
 
-        require(playerChallenges[sessionId][levelId][msg.sender][slotId] == challenge, "invalid challenge address")
+        require(playerChallenges[sessionId][levelId][msg.sender][slotId] == challenge, "invalid challenge address");
 
         uint256 fee = sessions[sessionId].speedUpFee;
 
         require(crowns.spendFrom(msg.sender, fee), "failed to spend fee");
 
-        challenge.complete(sessionId, msg.sender);
+        zombieChallenge.speedUp(sessionId, msg.sender);
 
-        emit SpeedUp(sessionId, levelId, slotId challenge, msg.sender, fee);
+        emit SpeedUp(sessionId, levelId, slotId, challenge, msg.sender, fee);
     }
 
     function repick(uint256 sessionId, uint8 slotId, address challenge) external {
@@ -284,7 +283,7 @@ contract ZombieFarm is Ownable{
         require(sessionChallenges[sessionId][challenge], "!session.challenge");
 
         ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
-        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+        uint8 levelId = zombieChallenge.getLevel(sessionId);
         require(levelId > 0, "no challenge");
 
         require(playerChallenges[sessionId][levelId][msg.sender][slotId] == address(0), "already staked");
@@ -333,7 +332,7 @@ contract ZombieFarm is Ownable{
         external
         onlyOwner
     {
-        require(sessionRewards[sesionId][levelId] == address(0), "category reward set already");
+        require(sessionRewards[sessionId][levelId] == address(0), "category reward set already");
         require(isStarting(sessionId), "session should be starting");
         uint8 rewardAmount = sessions[sessionId].levelAmount;
         require(rewardAmount > 0, "no session");
@@ -341,8 +340,8 @@ contract ZombieFarm is Ownable{
 
         require(supportedRewards[reward], "unsupported reward or empty reward address");
 
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(reward);
-        reward.AddLevelToSession(sessionId, levelId, data);
+        ZombieFarmRewardInterface zombieReward = ZombieFarmRewardInterface(reward);
+        zombieReward.AddLevelToSession(sessionId, levelId, data);
 
         sessionRewards[sessionId][levelId] = reward;
 
@@ -363,8 +362,8 @@ contract ZombieFarm is Ownable{
 
         playerRewards[sessionId][msg.sender][levelId] = true;
 
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(reward);
-        reward.reward(sessionId, levelId, msg.sender);
+        ZombieFarmRewardInterface zombieReward = ZombieFarmRewardInterface(reward);
+        zombieReward.reward(sessionId, levelId, msg.sender);
     }
 
     function rewardGrand(uint256 sessionId) external {
@@ -409,28 +408,21 @@ contract ZombieFarm is Ownable{
         bytes32 _messageNoPrefix = keccak256(abi.encodePacked(sessionId, levelId, slotId, challenge, msg.sender));
         bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
         address _recover = ecrecover(_message, v, r, s);
-        require(_recover == _verifier,  "Verification failed");
+        require(_recover == verifier,  "Verification failed");
 
         // Check that this challenge is in the slot.
         // or wasn't on another slots on any level.
-        address slotChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
-        require(slotChallenge == challenge || slotChallenge == address(0), "invalid challenge address");
-        if (slotChallenge == address(0)) {
-            for (uint8 i = 1; i <= sessions[sessionId].levelAmount; i++) {
-                for (uint8 j = 0; j < 3; j++) {
-                    require(playerChallenges[sessionId][i][msg.sender][j] != challenge, "already used challenge");
-                }
-            }
-        }
+        // address slotChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
+        // require(slotChallenge == challenge || slotChallenge == address(0), "invalid challenge address");
         
         // previous challenge should be completed
-        if (levelId > 1) {
-            address prevChallenge = playerChallenges[sessionId][levelId - 1][slotId];
-            zombieChallenge = ZombieFarmChallengeInterface(prevChallenge);
+        // if (levelId > 1) {
+        //     address prevChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
+        //     zombieChallenge = ZombieFarmChallengeInterface(prevChallenge);
 
-            require(zombieChallenge.isFullyCompleted(sessionId, levelId, staker), "previous not completed");
-            zombieChallenge = ZombieFarmChallengeInterface(challenge);
-        }
+        //     require(zombieChallenge.isFullyCompleted(sessionId, msg.sender), "previous not completed");
+        //     zombieChallenge = ZombieFarmChallengeInterface(challenge);
+        // }
 
         zombieChallenge.stake(sessionId, msg.sender, data);
 
@@ -456,7 +448,7 @@ contract ZombieFarm is Ownable{
 
         require(playerChallenges[sessionId][levelId][msg.sender][slotId] == challenge, "invalid challenge address");
 
-        challenge.unstake(sessionId, msg.sender, data);
+        zombieChallenge.unstake(sessionId, msg.sender, data);
     }
 
     // Claims earned tokens till today.
@@ -469,14 +461,14 @@ contract ZombieFarm is Ownable{
         require(sessions[sessionId].startTime > 0, "session doesen't exist");
         require(sessionChallenges[sessionId][challenge], "!session challenge");
 
-        ZombieFarmChallengeInterface challenge = ZombieFarmChallengeInterface(challenge);
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
 
         // Level Id always will be valid as it was checked when Challenge added to Session
-        uint8 levelId = challenge.getLevel(sessionId, challengeId);
+        uint8 levelId = zombieChallenge.getLevel(sessionId);
 
         require(playerChallenges[sessionId][levelId][msg.sender][slotId] == challenge, "invalid challenge address");
 
-        challenge.claim(sessionId, challengeId, msg.sender);
+        zombieChallenge.claim(sessionId, msg.sender);
     }
 
     //////////////////////////////////////////////////////////////////////////////////

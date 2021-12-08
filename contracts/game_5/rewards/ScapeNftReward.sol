@@ -10,8 +10,6 @@ import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// 0 - grand reward
 /// non 0 - loot box for the level
 contract ScapeNftReward is ZombieFarmRewardInterface {
-    enum REWARD_TYPE { GRAND, LVL_1, LVL_2, LVL_3, LVL_4, LVL_5 }
-
     /// @notice an address of the factory smartcontract that has a permission to mint Scape NFTs.
     address public factory;
 
@@ -32,11 +30,11 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     }
 
     // What to give to the user, after completing the Grand reward.
-    mapping(uint256 => mapping(REWARD_TYPE => Params)) public sessionRewards;
+    mapping(uint256 => mapping(uint8 => Params)) public sessionRewards;
 
     event AddToSession(
         uint256 indexed sessionId,
-        REWARD_TYPE indexed rewardType,
+        uint8 indexed rewardType,
         address indexed token,
         uint256 generation,
         uint8   quality,
@@ -46,7 +44,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
 
     event RewardNft(
         uint256 indexed sessionId,
-        REWARD_TYPE rewardType,
+        uint8 rewardType,
         address indexed owner,
         uint256 indexed nftId,
         address token,
@@ -80,15 +78,15 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         override
         onlyZombieFarm
     {
-        require(sessionRewards[sessionId][REWARD_TYPE.GRAND].amount > 0, "already added");
+        require(sessionRewards[sessionId][0].amount > 0, "already added");
         require(isValidData(data), "scape reward:isvaliddata failed");
 
-        (uint256 imgId, uint256 generation, uint8 quality, address token, amount amount) 
+        (uint256 imgId, uint256 generation, uint8 quality, address token, uint256 amount) 
             = abi.decode(data, (uint256, uint256, uint8, address, uint256));
 
-        sessionRewards[sessionId][rewardType] = Params(imgId, generation, quality, token, amount);
+        sessionRewards[sessionId][0] = Params(imgId, generation, quality, token, amount);
 
-        emit AddToSession(sessionId, REWARD_TYPE.GRAND, token, generation, quality, imgId, amount);
+        emit AddToSession(sessionId, 0, token, generation, quality, imgId, amount);
     }
 
     /// @notice Adds the loot boxes for all seasons. It can't add grand reward for the season.
@@ -155,19 +153,6 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
             .decode(data, (uint8[5], uint256[5], uint256[5], uint8[5], address[5], uint256[5]));
 
         return levelId[offset];
-    }
-
-    function getData(uint8 offset, bytes calldata data) public view returns(uint256, uint8, address, uint256)  {
-        uint256[5]  memory imgId;
-        uint256[5]  memory generation;
-        uint8[5]    memory quality;
-        address[5]  memory token;
-        uint256[5]  memory amount;
-
-        (imgId, generation, quality, token, amount) = abi
-            .decode(data, (uint8[5], uint256[5], uint256[5], uint8[5], address[5], uint256[5]));
-
-        return (imgId[offset], generation[offset], quality[offset], token[offset], amount[offset]);
     }
 
     function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {

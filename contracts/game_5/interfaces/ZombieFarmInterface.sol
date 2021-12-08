@@ -1,21 +1,9 @@
 pragma solidity 0.6.7;
 
-//declare imports
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
-
-import "./interfaces/ZombieFarmRewardInterface.sol";
-import "./interfaces/ZombieFarmChallengeInterface.sol";
-
 /**
  * @notice The Main Smartcontract of the Zombie Farm, the fifth game of the Seascape Network.
  */
-interface ZombieFarmRewardInterface {
+interface ZombieFarmInterface {
     function MAX_LEVEL()        external view returns(uint8);
     function lastSessionId()    external view returns(uint256);
 
