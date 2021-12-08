@@ -9,10 +9,12 @@ import "./../openzeppelin/contracts/utils/Counters.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
-import "./ZombieFarmRewardInterface.sol";
-import "./ZombieFarmChallengeInterface.sol";
+import "./interfaces/ZombieFarmRewardInterface.sol";
+import "./interfaces/ZombieFarmChallengeInterface.sol";
 
-
+/**
+ * @notice The Main Smartcontract of the Zombie Farm, the fifth game of the Seascape Network.
+ */
 contract ZombieFarm is Ownable, IERC721Receiver{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
@@ -32,7 +34,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint256 startTime;
         uint256 period;
         uint8 levelAmount;
-        uint16 rewardId;
+        address reward;
         uint256 speedUpFee;
         uint256 repickFee;
     }
@@ -43,7 +45,7 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     mapping(uint256 => mapping(uint32 => bool)) public sessionChallenges;
     /// @notice There are level rewards for each season (loot boxes)
     /// mapping structure: session = levels[5]
-    mapping(uint256 => uint16[5]) public sessionRewards;
+    mapping(uint256 => mapping(uint8 => address)) public sessionRewards;
     /// @dev The list of challenges that user used.
     /// mapping structure: session -> player -> level id = array[3]
     mapping(uint256 => mapping(address => mapping(uint8 => uint32[3]))) public playerLevels;
@@ -56,9 +58,11 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     // Supported Rewards given to players after completing all levels or all challenges in the level
     //
     uint16 public supportedRewardsAmount;
-    mapping(uint16 => address) public supportedRewards;
-    mapping(address => uint16) public rewardAddresses;
+    mapping(address => bool) public supportedRewards;
 
+    //
+    // Challenges
+    //
     uint32 public supportedChallengesAmount;
     mapping(uint32 => address) public supportedChallenges;
 
@@ -69,8 +73,8 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         uint256 indexed sessionId,
         uint256 startTime,
         uint256 period,
-        uint8 levelAmount,
-        uint16 grandRewardId
+        uint8   levelAmount,
+        address reward
     );
 
     event AddSupportedReward(
@@ -108,10 +112,16 @@ contract ZombieFarm is Ownable, IERC721Receiver{
     //
     //////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @notice Start a new Season.
+     * @dev Need to call addChallenges after this one. So, make the startTime atleast five minutes ahead.
+     * @param grandReward is the address of the Smartcontract that is used for keeping the assets for users.
+     * This grand reward is given to the user upon completing all the network.
+     */
     function startSession(
         uint256 startTime,
         uint256 period,
-        uint16 grandRewardId,
+        address grandReward,
         bytes calldata rewardData,
         uint8 levelAmount,
         uint256 speedUpFee,
@@ -120,35 +130,45 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         external
         onlyOwner
     {
-        require(supportedRewards[grandRewardId] != address(0), "unsupported grandRewardId");
+        //
+        // Verifying the Grand reward
+        //
+        require(!supportedRewards[grandReward], "unsupported grandRewardId");
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(grandReward);
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(
-            supportedRewards[grandRewardId]);
         require(reward.isValidData(rewardData), "Invalid reward data");
 
+        //
+        // Verifying the Levels
+        //
         require(levelAmount > 0 && levelAmount <= MAX_LEVEL, "level amount should range 1-max");
         require(!isActive(lastSessionId), "last session still active");
 
+        //
+        // Verifying the Session data
+        // 
         require(startTime > now, "session should start in future");
         require(period > 0, "period should be above 0");
         require(speedUpFee > 0, "speed up fee should be above 0");
         require(repickFee > 0, "repick fee should be above 0");
 
-        lastSessionId = lastSessionId + 1;
+        //
+        // All verifications are completed.
+        //
+        lastSessionId           = lastSessionId + 1;
 
         Session storage session = sessions[lastSessionId];
+        session.startTime       = startTime;
+        session.period          = period;
+        session.levelAmount     = levelAmount;
+        session.reward          = grandReward;
+        session.speedUpFee      = speedUpFee;
+        session.repickFee       = repickFee;
 
-        session.startTime = startTime;
-        session.period = period;
-        session.levelAmount = levelAmount;
-        session.rewardId = grandRewardId;
-        session.speedUpFee = speedUpFee;
-        session.repickFee = repickFee;
+        reward.addGrandToSession(lastSessionId, rewardData);
 
-        reward.saveReward(lastSessionId, 0, rewardData);
-
-        emit StartSession(lastSessionId, startTime, period, levelAmount, grandRewardId);
+        emit StartSession(lastSessionId, startTime, period, levelAmount, grandReward);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -264,83 +284,85 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         emit Repick(sessionId, challengeId, msg.sender, fee);
     }
 
+    function lastSession() external view returns(uint8, uint256, uint256, uint8, address) {
+        Session storage session = sessions[lastSessionId];
+
+        return (
+            lastSessionId,
+            session.startTime,
+            session.period,
+            session.levelAmount,
+            session.reward
+        );
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     //
     // Rewards
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    /// @dev _address of the reward type.
-    /// @notice WARNING! Please be careful when adding the reward type.
-    /// It should be address of the deployed reward
-    function addSupportedReward(address _address) external onlyOwner {
+    /// @notice Lets know the ZombieFarm that there is a reward. 
+    /// WARNING! Please be careful when adding the reward contract.
+    /// It should be address of the deployed reward contract.
+    /// When starting a new session, to enable the grand reward or loot boxes,
+    /// You pass to the reward contract the parameters of session reward.
+    /// @dev _address of the reward contract.
+    function supportReward(address _address) external onlyOwner {
         require(_address != address(0), "invalid _address");
-        require(rewardAddresses[_address] == 0, "reward already added");
+        require(!supportedRewards[_address], "reward already added");
 
-        supportedRewardsAmount = supportedRewardsAmount + 1;
-        supportedRewards[supportedRewardsAmount] = _address;
-        rewardAddresses[_address] = supportedRewardsAmount;
+        supportedRewardsAmount      = supportedRewardsAmount + 1;
+        supportedRewards[_address]  = true;
 
         emit AddSupportedReward(supportedRewardsAmount, _address);
     }
 
-    /// @notice Add possible rewards for each level
+    /// @notice Add the lootbox parameters for the level
+    /// @dev IMPORTANT, it doesn't validate the input parameters. so call thin method with caution.
     /// @param sessionId the session for which its added
-    /// @param rewardAmount how many rewards of the same category is added
-    /// @param rewardId the id of the reward to determine the reward category
+    /// @param levelId could be between 1 and MAX_LEVEL
+    /// @param reward the contract address of the reward to determine the reward category
     /// @param data of all rewards
-    function addCategoryRewards(
+    function addLevelRewardToSession(
         uint8 sessionId,
-        uint8 rewardAmount,
-        uint16 rewardId,
+        uint8 levelId,
+        address reward,
         bytes calldata data
     )
         external
         onlyOwner
     {
+        require(sessionRewards[sesionId][levelId] == address(0), "category reward set already");
         require(isStarting(sessionId), "session should be starting");
-        require(rewardId > 0, "no reward added");
-        require(rewardAmount > 0 && rewardAmount <= 5, "rewardAmount should range 1-5");
-        require(supportedRewards[rewardId] != address(0), "unsupported rewardId");
+        uint8 rewardAmount = sessions[sessionId].levelAmount;
+        require(rewardAmount > 0, "no session");
+        require(levelId > 0 && levelId <= rewardAmount, "invalid level id");
 
-        uint8[MAX_LEVEL] memory levelId;
+        require(supportedRewards[reward], "unsupported reward or empty reward address");
 
-        for (uint8 i = 0; i < rewardAmount; i++) {
-            ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(
-                supportedRewards[rewardId]);
-            levelId[i] = reward.getLevel(i, data);
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(reward);
+        reward.AddLevelToSession(sessionId, levelId, data);
 
-            require(levelId[i] > 0, "levelId should be above 0");
-            require(levelId[i] <= sessions[sessionId].levelAmount,
-                "levelId should be < levelAmount");
-            require(countLevels(levelId[i], levelId) == 1, "same levels arguments");
-            require(sessionRewards[sessionId][levelId[i] - 1] == 0, "already set");
-        }
-
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
-        reward.saveRewards(sessionId, rewardAmount, data);
-
-        for (uint8 i = 0; i < rewardAmount; i++) {
-            sessionRewards[sessionId][levelId[i] - 1] = rewardId;
-        }
+        sessionRewards[sessionId][levelId] = reward;
     }
 
     // Claim the reward for the lootbox
     // Lootboxes are given when all three challenges are completed in the level.
     function rewardLootBox(uint256 sessionId, uint8 levelId) external {
         require(sessionId > 0, "sessionId should be above 0");
-        require(levelId > 0 && levelId <= MAX_LEVEL, "levelId should range 1-maxLevel");
+        require(levelId > 0 && levelId <= sessions[sessionId].levelAmount, "exceeds level or no session");
 
         require(!playerRewards[sessionId][msg.sender][levelId], "already rewarded");
         require(isLevelCompleted(sessionId, levelId, msg.sender), "level not completed");
 
-        uint16 rewardId = sessionRewards[sessionId][levelId - 1];
-        require(rewardId > 0, "no reward added");
-
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
-        reward.reward(sessionId, levelId, msg.sender);
+        address reward = sessionRewards[sessionId][levelId];
+        require(reward != address(0), "no reward added");
 
         playerRewards[sessionId][msg.sender][levelId] = true;
+
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(reward);
+        reward.reward(sessionId, levelId, msg.sender);
     }
 
     function rewardGrand(uint256 sessionId) external {
@@ -354,24 +376,10 @@ contract ZombieFarm is Ownable, IERC721Receiver{
             require(isLevelCompleted(sessionId, levelId, msg.sender), "level not completed");
         }
 
-        uint16 rewardId = sessions[sessionId].rewardId;
-
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(supportedRewards[rewardId]);
+        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(sessions[sessionId].reward);
         reward.reward(sessionId, 0, msg.sender);
 
         playerRewards[sessionId][msg.sender][0] = true;
-    }
-
-    function lastSession() external view returns(uint8, uint256, uint256, uint8, uint16) {
-        Session storage session = sessions[lastSessionId];
-
-        return (
-            lastSessionId,
-            session.startTime,
-            session.period,
-            session.levelAmount,
-            session.rewardId
-        );
     }
 
     //////////////////////////////////////////////////////////////////////////////////
