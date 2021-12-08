@@ -1,12 +1,9 @@
 pragma solidity 0.6.7;
 
 //declare imports
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
 import "./interfaces/ZombieFarmRewardInterface.sol";
@@ -14,8 +11,9 @@ import "./interfaces/ZombieFarmChallengeInterface.sol";
 
 /**
  * @notice The Main Smartcontract of the Zombie Farm, the fifth game of the Seascape Network.
+ * RULE! One challenge and one reward token per session.
  */
-contract ZombieFarm is Ownable, IERC721Receiver{
+contract ZombieFarm is Ownable{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
@@ -456,20 +454,6 @@ contract ZombieFarm is Ownable, IERC721Receiver{
         challenge.claim(sessionId, challengeId, msg.sender);
     }
 
-    /// @dev encrypt token data
-    /// @return encrypted data
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    )
-        external
-        override
-        returns (bytes4)
-    {
-        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
-    }
 
     function isLevelFull(uint256 sessionId, uint8 levelId, uint32 challengeId, address staker)
         public
