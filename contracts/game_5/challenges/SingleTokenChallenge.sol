@@ -82,18 +82,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard  
         uint256 amount
     );
 
-    event RewardNft(
-        uint256 indexed sessionId,
-        uint8 rewardType,
-        address indexed owner,
-        uint256 indexed nftId,
-        address token,
-        uint256 generation,
-        uint8 quality,
-        uint256 imgId,
-        uint256 amount
-    );
-
     event Stake(
         address indexed staker,
         uint256 indexed sessionId,
