@@ -26,6 +26,7 @@ contract ZombieFarm is Ownable{
     // Session global variables and structures
     //
     uint8 public lastSessionId;
+    address public verifier;
 
     struct Session {
         uint256 startTime;
@@ -66,6 +67,10 @@ contract ZombieFarm is Ownable{
     //
     // events
     //
+    event SetVerifier(
+        address indexed verifier
+    );
+
     event StartSession(
         uint256 indexed sessionId,
         uint256 startTime,
@@ -104,9 +109,14 @@ contract ZombieFarm is Ownable{
         uint256 fee
     );
 
-    constructor(address _crowns) public {
+    constructor(address _crowns, address _verifier) public {
         require(_crowns != address(0),"invalid _crowns address!");
         crowns = CrownsToken(_crowns);
+        verifier = _verifier;
+    }
+
+    function setVerifier(address _verifier) external onlyOwner {
+        verifier = _verifier;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
