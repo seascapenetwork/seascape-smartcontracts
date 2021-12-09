@@ -4,12 +4,14 @@ import "./../interfaces/ZombieFarmInterface.sol";
 import "./../interfaces/ZombieFarmRewardInterface.sol";
 import "./../../seascape_nft/NftFactory.sol";
 import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+
 
 /// @notice Reward one Scape Nft and some ERC20 token
 /// @dev possible reward types:
 /// 0 - grand reward
 /// non 0 - loot box for the level
-contract ScapeNftReward is ZombieFarmRewardInterface {
+contract ScapeNftReward is ZombieFarmRewardInterface, Ownable {
     /// @notice an address of the factory smartcontract that has a permission to mint Scape NFTs.
     address public factory;
 
@@ -76,9 +78,9 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
     function addGrandToSession(uint256 sessionId, bytes calldata data)
         external
         override
-        onlyZombieFarm
+        onlyOwner
     {
-        require(sessionRewards[sessionId][0].amount > 0, "already added");
+        require(sessionRewards[sessionId][0].amount == 0, "already added");
         require(isValidData(data), "scape reward:isvaliddata failed");
 
         (uint256 imgId, uint256 generation, uint8 quality, address token, uint256 amount) 
@@ -87,6 +89,20 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         sessionRewards[sessionId][0] = Params(imgId, generation, quality, token, amount);
 
         emit AddToSession(sessionId, 0, token, generation, quality, imgId, amount);
+    }
+
+    function decode(bytes calldata data)
+        external view returns(uint256, uint256, uint8, address, uint256)
+    {
+        (
+            uint256 i, 
+            uint256 j, 
+            uint8 x,
+            address y, 
+            uint256 z
+        ) = abi.decode(data, (uint256, uint256, uint8, address, uint256));
+
+        return (i, j, x, y, z);
     }
 
     /// @notice Adds the loot boxes for all seasons. It can't add grand reward for the season.
@@ -155,7 +171,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface {
         return levelId[offset];
     }
 
-    function isValidData(bytes memory data) public override view onlyZombieFarm returns (bool) {
+    function isValidData(bytes memory data) public override view returns (bool) {
         uint256 imgId;
         uint256 generation;
         uint8 quality;

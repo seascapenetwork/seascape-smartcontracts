@@ -13,7 +13,7 @@ import "./interfaces/ZombieFarmChallengeInterface.sol";
  * @notice The Main Smartcontract of the Zombie Farm, the fifth game of the Seascape Network.
  * RULE! One challenge and one reward token per session.
  */
-contract ZombieFarm is Ownable{
+contract ZombieFarm is Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
@@ -147,13 +147,12 @@ contract ZombieFarm is Ownable{
      * This grand reward is given to the user upon completing all the network.
      */
     function startSession(
-        uint256 startTime,
-        uint256 period,
-        address grandReward,
-        bytes calldata rewardData,
-        uint8 levelAmount,
-        uint256 speedUpFee,
-        uint256 repickFee
+        uint256         startTime,
+        uint256         period,
+        uint8           levelAmount,
+        uint256         speedUpFee,
+        uint256         repickFee,
+        address         grandReward
     )
         external
         onlyOwner
@@ -161,11 +160,11 @@ contract ZombieFarm is Ownable{
         //
         // Verifying the Grand reward
         //
-        require(!supportedRewards[grandReward], "unsupported grandRewardId");
+        require(supportedRewards[grandReward], "unsupported reward");
         ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(grandReward);
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
-        require(reward.isValidData(rewardData), "Invalid reward data");
+        // require(reward.isValidData(rewardData), "Invalid reward data");
 
         //
         // Verifying the Levels
@@ -194,7 +193,7 @@ contract ZombieFarm is Ownable{
         session.speedUpFee      = speedUpFee;
         session.repickFee       = repickFee;
 
-        reward.addGrandToSession(lastSessionId, rewardData);
+        // reward.addGrandToSession(lastSessionId, rewardData);
 
         emit StartSession(lastSessionId, startTime, period, levelAmount, grandReward);
     }
@@ -245,7 +244,7 @@ contract ZombieFarm is Ownable{
 
     /// @notice Let's know the ZombieFarm contract about newly deployed Challenge Smartcontract.
     /// @dev we partially trust the owner, so we are not checking is the contract a challenge contract or not.
-    function supportedChallenge(address _address) external onlyOwner {
+    function supportChallenge(address _address) external onlyOwner {
         require(_address != address(0), "invalid _address");
 
         supportedChallengesAmount = supportedChallengesAmount + 1;
