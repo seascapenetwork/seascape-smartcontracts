@@ -46,6 +46,6 @@ contract VaultHandler {
 
     function tokenBalanceOfVault(address token) internal returns(uint256) {
         IERC20 _token = IERC20(token);
-        return _token.balanceOf(token);
+        return _token.balanceOf(vault);
     }
 }
