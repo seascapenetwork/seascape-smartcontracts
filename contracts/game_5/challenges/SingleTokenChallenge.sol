@@ -110,7 +110,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
         require(startTime > 0, "no session on zombie farm");
 
-        StakeToken handler = StakeToken(stakeToken);
+        StakeToken handler = StakeToken(stakeHandler);
         handler.newPeriod(sessionId, stakeToken, rewardToken, startTime, startTime + period, reward);
     }
 
@@ -144,7 +144,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         if (!playerChallenge.addedToPool) {
             playerChallenge.addedToPool = true;
 
-            StakeToken handler = StakeToken(stakeToken);
+            StakeToken handler = StakeToken(stakeHandler);
             handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
         }
 
@@ -179,7 +179,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         (uint256 amount) = abi.decode(data, (uint256));
         require(amount <= playerChallenge.amount, "can't unstake more than staked");
 
-        StakeToken handler = StakeToken(stakeToken);
+        StakeToken handler = StakeToken(stakeHandler);
         handler.claim(sessionId, staker);
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
@@ -240,7 +240,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         require(sessionChallenge.levelId > 0, "session does not exist");
         require(playerChallenge.amount > 0, "stake amount zero");
 
-        StakeToken handler = StakeToken(stakeToken);
+        StakeToken handler = StakeToken(stakeHandler);
         uint claimed = handler.claim(sessionId, staker);
 
         emit Claim(staker, sessionId, sessionChallenge.levelId, claimed);
