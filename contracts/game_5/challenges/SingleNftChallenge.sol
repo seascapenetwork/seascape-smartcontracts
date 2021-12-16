@@ -14,7 +14,7 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// It receives  id, signature.
 /// If user's  is in the game, then deposit is unavailable.
 abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
+    using SafeMath for uint;
     address public stakeHandler;
     address public zombieFarm;
 
@@ -23,29 +23,29 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     address public rewardToken;
 
     /// @dev The account that keeps all ERC20 rewards
-    uint256 public nonce = 0;
+    uint public nonce = 0;
 
     struct SessionChallenge {
         bool burn;
         uint8 levelId;
 
-        uint256 stakePeriod;        // Duration after which challenge considered to be completed.
+        uint stakePeriod;        // Duration after which challenge considered to be completed.
     }
 
     struct PlayerChallenge {
-        uint256 stakedDuration;
-        uint256 stakedTime;
+        uint stakedDuration;
+        uint stakedTime;
         bool counted;               // True if the stake amount is added to total season amount
 
         bool completed;             // True if challenge in the season was completed by the player
         
 
-        uint256 nftId;              //  that user staked in.
+        uint nftId;              //  that user staked in.
     }
 
-    mapping(uint256 => SessionChallenge) public sessionChallenges;
+    mapping(uint => SessionChallenge) public sessionChallenges;
     // session id => player address = PlayerChallenge
-    mapping(uint256 => mapping (address => PlayerChallenge)) public playerParams;
+    mapping(uint => mapping (address => PlayerChallenge)) public playerParams;
 
     modifier onlyZombieFarm () {
         require(msg.sender == zombieFarm, "only ZombieFarm can call");
@@ -54,24 +54,24 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
 
     event Stake(
         address indexed staker,
-        uint256 indexed sessionId,
+        uint indexed sessionId,
         uint32 levelId,
-        uint256 nftId
+        uint nftId
     );
 
     event Unstake(
         address indexed staker,
-        uint256 indexed sessionId,
+        uint indexed sessionId,
         uint32 levelId,
-        uint256 nftId
+        uint nftId
     );
 
     event Claim(
         address indexed staker,
-        uint256 indexed sessionId,
+        uint indexed sessionId,
         uint32 levelId,
-        uint256 nftId,
-        uint256 amount
+        uint nftId,
+        uint amount
     );
 
     constructor (address _zombieFarm, address _nft, address _reward, address _handler) public {
@@ -87,7 +87,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
 
     /// @notice The challenges of this category were added to the Zombie Farm season
     function addChallengeToSession(
-        uint256 sessionId,
+        uint sessionId,
         uint8 levelId,
         bytes calldata data
     )
@@ -97,17 +97,22 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     {
         require(sessionChallenges[sessionId].levelId == 0, "already added to the session");
 
-        (uint256 reward, uint256 stakePeriod) 
-            = abi.decode(data, (uint256, uint256));
+        (uint reward, uint stakePeriod, uint8 burn) 
+            = abi.decode(data, (uint, uint, uint8));
         require(reward > 0 && stakePeriod > 0, "zero_value");
 
         // Challenge.stake is not null, means that earn is not null too.
         SessionChallenge storage session = sessionChallenges[sessionId];
         session.levelId             = levelId;
         session.stakePeriod         = stakePeriod;
+        if (burn == 1) {
+            session.burn = true;
+        } else {
+            session.burn = false;
+        }
 
         ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
-        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
+        (uint startTime,uint period,,,,) = zombie.sessions(sessionId);
         require(startTime > 0, "no session on zombie farm");
 
         StakeNft handler = StakeNft(stakeHandler);
@@ -117,17 +122,19 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     /// @notice Stake an  and some token.
     /// For the first time whe user deposits his :
     ///     It receives  id, signature and amount of staking.
-    function stake(uint256 sessionId, address staker, bytes calldata data)
+    function stake(uint sessionId, address staker, bytes calldata data)
         external
         override
         onlyZombieFarm
         nonReentrant
     {
         // It does verification that  id is valid
-        (uint256 nftId, uint256 weight) = decodeStakeData(data);
+        (uint nftId, uint weight) = decodeStakeData(data);
 
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        require(sessionChallenge.levelId > 0, "session does not exist");
+        
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
 
         // if full completed, then user withdrew everything completely.
@@ -150,7 +157,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     /// @notice Unstake nft. If the challenge is burning in this sesion
     /// then burn nft.
     /// @dev data variable is not used, but its here for following the ZombieFarm architecture.
-    function unstake(uint256 sessionId, address staker, bytes calldata data)
+    function unstake(uint sessionId, address staker, bytes calldata data)
         external
         override
         onlyZombieFarm
@@ -168,11 +175,11 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
 
-        if (!timeCompleted) {
-            require(!sessionChallenge.burn, "burning only after end");
+        require(timeCompleted, "can only unstake");
+        handler.unstake(sessionId, staker, playerChallenge.nftId, sessionChallenge.burn);
+
+        if (timeCompleted && !playerChallenge.completed) {
             playerChallenge.completed = true;
-        } else {
-            handler.unstake(sessionId, staker, playerChallenge.nftId, sessionChallenge.burn);
         }
 
         playerChallenge.nftId = 0;
@@ -184,7 +191,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     /// @notice CLAIMING:
     /// you can't call this function is time is completed.
     /// you can't call this function if nft is burning.
-    function claim(uint256 sessionId, address staker)
+    function claim(uint sessionId, address staker)
         external
         override
         onlyZombieFarm
@@ -205,7 +212,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
         emit Claim(staker, sessionId, sessionChallenge.levelId, playerChallenge.nftId, claimed);
     }
 
-    function getLevel(uint256 sessionId)
+    function getLevel(uint sessionId)
         external
         override
         view
@@ -215,7 +222,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
         return sessionChallenges[sessionId].levelId;
     }
 
-    function isFullyCompleted(uint256 sessionId, address staker)
+    function isFullyCompleted(uint sessionId, address staker)
         external
         override
         view
@@ -226,7 +233,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
         return playerChallenge.completed;
     }
 
-    function isTimeCompleted(uint256 sessionId, address staker) external view returns(bool) {
+    function isTimeCompleted(uint sessionId, address staker) external view returns(bool) {
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
@@ -237,7 +244,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     function isTimeCompleted(
         SessionChallenge storage sessionChallenge,
         PlayerChallenge storage playerChallenge,
-        uint256 currentTime
+        uint currentTime
     )
         internal
         view
@@ -251,8 +258,8 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
             return false;
         }
             
-        uint256 duration    = (currentTime - playerChallenge.stakedTime);
-        uint256 time        = playerChallenge.stakedDuration + duration;
+        uint duration    = (currentTime - playerChallenge.stakedTime);
+        uint time        = playerChallenge.stakedDuration + duration;
 
         return (time >= sessionChallenge.stakePeriod);
     }
@@ -262,11 +269,11 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     function decodeStakeData(bytes memory data)
         internal
         view
-        returns(uint256, uint256)
+        returns(uint, uint)
     {
         /// Staking amount
-        (uint8 v, bytes32 r, bytes32 s, uint256 nftId, uint256 weight) 
-            = abi.decode(data, (uint8, bytes32, bytes32, uint256, uint256));
+        (uint8 v, bytes32 r, bytes32 s, uint nftId, uint weight) 
+            = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
         require(nftId > 0, "nft  null params");
         require(weight > 0, "weight is 0");
 
@@ -282,7 +289,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     }
 
     /// Set session as complete
-    function speedUp(uint256 sessionId, address staker)
+    function speedUp(uint sessionId, address staker)
         external
         override
         onlyZombieFarm
