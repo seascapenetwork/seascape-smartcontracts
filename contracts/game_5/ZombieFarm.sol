@@ -193,8 +193,6 @@ contract ZombieFarm is Ownable {
         session.speedUpFee      = speedUpFee;
         session.repickFee       = repickFee;
 
-        // reward.addGrandToSession(lastSessionId, rewardData);
-
         emit StartSession(lastSessionId, startTime, period, levelAmount, grandReward);
     }
 
