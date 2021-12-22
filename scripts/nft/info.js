@@ -18,4 +18,8 @@ let init = async function() {
 
     let isAdmin = await factory.isAdmin(accounts[0]);
     console.log(`${accounts[0]} is admin of factory: ${isAdmin}`);
+
+    let generator = '0xCE168875054B12Bed85d015AB3A71983E6dAc86E';
+    await factory.addGenerator(generator, {gasPrice: 20000000000}).catch(console.error);
+    console.log(`${generator} got permission to mint nfts`);
 };
