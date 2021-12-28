@@ -36,8 +36,6 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
     )
         external
     {
-        require(rewardToken != address(0) && stakeToken != address(0), "STAKE_TOKEN: zero_address");
-
         newStakePeriod(key, startTime, endTime, rewardPool);
 
         // Challenge.stake is not null, means that earn is not null too.
@@ -51,6 +49,7 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
     /// @dev The ZombieFarm calls this function when the session is active only.
     function stake(uint256 key, address stakerAddr, uint256 amount)
         external
+        payable
         nonReentrant
     {
         require(amount > 0,     "STAKE_TOKEN: zero_value");
@@ -83,9 +82,8 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
     function _claim(uint key, address stakerAddr, uint interest) internal override returns(bool) {
         address rewardToken = periods[msg.sender][key].rewardToken;
         
-        IERC20 _token = IERC20(rewardToken);
-        uint contractBalance = _token.balanceOf(vault);
-        require(contractBalance > interest, "Insufficient balance of reward");
-        IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
+        transferFromVaultToUser(rewardToken, interest, stakerAddr);
+
+        return true;
     }
 }

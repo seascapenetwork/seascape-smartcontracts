@@ -73,8 +73,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
 
     constructor (address _zombieFarm, address _vault, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
-        require(_stake      != address(0), "data.stake verification failed");
-        require(_reward     != address(0), "data.earn verification failed");
 
         zombieFarm          = _zombieFarm;
         stakeToken          = _stake;
@@ -120,6 +118,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     /// This function is not callable if time progress reached to the max level.
     function stake(uint256 sessionId, address staker, bytes calldata data)
         external
+        payable
         override
         onlyZombieFarm
         nonReentrant
@@ -147,7 +146,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             playerChallenge.addedToPool = true;
 
             StakeToken handler = StakeToken(stakeHandler);
-            handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
+            handler.stake{value: sessionChallenge.stakeAmount}(sessionId, staker, sessionChallenge.stakeAmount);
         }
 
         if (total - sessionChallenge.stakeAmount > 0) { 

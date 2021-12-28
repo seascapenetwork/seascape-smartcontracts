@@ -393,7 +393,7 @@ contract ZombieFarm is Ownable {
     ///     update the stake period
     function stake(uint256 sessionId, uint8 slotId, address challenge, 
         uint8 v, bytes32 r, bytes32 s, bytes calldata data
-    ) external {
+    ) payable external {
         require(slotId >= 0 && slotId <3, "invalid slot id");
         require(isActive(sessionId), "session not active");
         require(sessionChallenges[sessionId][challenge], "!session challenge");
@@ -407,21 +407,7 @@ contract ZombieFarm is Ownable {
         address _recover = ecrecover(_message, v, r, s);
         require(_recover == verifier,  "Verification failed");
 
-        // Check that this challenge is in the slot.
-        // or wasn't on another slots on any level.
-        // address slotChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
-        // require(slotChallenge == challenge || slotChallenge == address(0), "invalid challenge address");
-        
-        // previous challenge should be completed
-        // if (levelId > 1) {
-        //     address prevChallenge = playerChallenges[sessionId][levelId][msg.sender][slotId];
-        //     zombieChallenge = ZombieFarmChallengeInterface(prevChallenge);
-
-        //     require(zombieChallenge.isFullyCompleted(sessionId, msg.sender), "previous not completed");
-        //     zombieChallenge = ZombieFarmChallengeInterface(challenge);
-        // }
-
-        zombieChallenge.stake(sessionId, msg.sender, data);
+        zombieChallenge.stake{value: msg.value}(sessionId, msg.sender, data);
 
         playerChallenges[sessionId][levelId][msg.sender][slotId] = challenge;
 

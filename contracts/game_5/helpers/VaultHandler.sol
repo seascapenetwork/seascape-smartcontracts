@@ -19,6 +19,10 @@ contract VaultHandler {
     }
 
     function transferFromUserToVault(address token, uint256 amount, address user) internal returns(uint256) {
+        if (token == address(0)) {
+            require(msg.value >= amount, "VAULT_HANDLER: not enough native token");
+            return msg.value;
+        }
         IERC20 _token = IERC20(token);
         require(_token.balanceOf(user) >= amount, "VAULT_HANDLER: user has not enough token");
         
@@ -32,6 +36,10 @@ contract VaultHandler {
     }
 
     function transferFromVaultToUser(address token, uint256 amount, address user) internal returns(uint256) {
+        if (token == address(0)) {
+            payable(user).transfer(amount);
+            return amount;
+        }
         IERC20 _token = IERC20(token);
         require(_token.balanceOf(user) >= amount, "VAULT_HANDLER: user has not enough token");
         
@@ -45,6 +53,9 @@ contract VaultHandler {
     }
 
     function tokenBalanceOfVault(address token) internal view returns(uint256) {
+        if (token == address(0)) {
+            return vault.balance;
+        }
         IERC20 _token = IERC20(token);
         return _token.balanceOf(vault);
     }

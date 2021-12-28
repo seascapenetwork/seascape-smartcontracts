@@ -124,6 +124,7 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     ///     It receives  id, signature and amount of staking.
     function stake(uint sessionId, address staker, bytes calldata data)
         external
+        payable
         override
         onlyZombieFarm
         nonReentrant

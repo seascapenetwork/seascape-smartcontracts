@@ -39,7 +39,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
     )
         external
     {
-        require(rewardToken != address(0) && stakeToken != address(0), "STAKE_TOKEN: zero_address");
+        require(stakeToken != address(0), "STAKE_TOKEN: zero_address");
 
         newStakePeriod(key, startTime, endTime, rewardPool);
 
@@ -105,9 +105,15 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
     function _claim(uint key, address stakerAddr, uint interest) internal override returns(bool) {
         address rewardToken = periods[msg.sender][key].rewardToken;
         
+        if (rewardToken == address(0)) {
+            payable(stakerAddr).transfer(interest);
+            return true;
+        }
         IERC20 _token = IERC20(rewardToken);
         uint contractBalance = _token.balanceOf(vault);
         require(contractBalance > interest, "Insufficient balance of reward");
         IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
+        
+        return true;
     }
 }
