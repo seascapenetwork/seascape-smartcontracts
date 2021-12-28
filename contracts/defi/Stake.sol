@@ -56,6 +56,7 @@ contract Stake {
 
         StakePeriod storage period       = stakePeriods[msg.sender][key];
         StakeUser storage staker   = stakeUsers[msg.sender][key][stakerAddr];
+ 
   		updateUserClaimable(period.countedClaimable, staker);
     }
 
@@ -172,20 +173,17 @@ contract Stake {
     {
         StakePeriod storage period           = stakePeriods[msg.sender][key];
         uint sessionCap                 = getPeriodTime(period.startTime, period.endTime);
-        if (period.rewardClaimableTime >= sessionCap) {
-            return false;
-        }
-
-        // I calculate previous claimed rewards
-        period.countedClaimable += ((sessionCap - period.rewardClaimableTime) * period.rewardClaimableUnit);
 
         // I record that interestUnit is 0.1 CWS (unit/amount) in session.interestUnit
         // I update the session.interestUpdate to now
         if (period.depositPool == 0) {
-            period.rewardClaimableUnit = 0;
+            period.rewardClaimableUnit = (period.unit * SCALER);
         } else {
             period.rewardClaimableUnit = (period.unit * SCALER) / period.depositPool; // 0.1
         }
+
+        // I calculate previous claimed rewards
+        period.countedClaimable = period.countedClaimable + ((sessionCap - period.rewardClaimableTime) * period.rewardClaimableUnit);
 
         // we avoid sub. underflow, for calulating countedClaimable
         period.rewardClaimableTime = sessionCap;
