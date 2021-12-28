@@ -210,7 +210,9 @@ contract Stake {
         StakePeriod storage period = stakePeriods[msg.sender][key];
         StakeUser storage staker = stakeUsers[msg.sender][key][stakerAddr];
 
-        require(staker.deposit > 0, "nothing to claim");
+        if (staker.deposit == 0) {
+            return 0;
+        }
 
         uint interest = claimable(msg.sender, key, stakerAddr);
         if (interest == 0) {
