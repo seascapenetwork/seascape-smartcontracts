@@ -15,7 +15,7 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @dev WARNING! WARNING! WARNING
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
-contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable  {
+contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable  {
     address public zombieFarm;
     address public stakeHandler;
 
