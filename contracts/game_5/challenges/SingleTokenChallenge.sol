@@ -268,7 +268,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         return sessionChallenges[sessionId].levelId;
     }
 
-    function isTimeCompleted(uint256 sessionId, address staker) external view returns(bool) {
+    function isTimeCompleted(uint256 sessionId, address staker) external override view returns(bool) {
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];

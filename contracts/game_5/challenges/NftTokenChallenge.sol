@@ -285,7 +285,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         return sessionChallenges[sessionId].levelId;
     }
 
-    function isTimeCompleted(uint sessionId, address staker) external view returns(bool) {
+    function isTimeCompleted(uint sessionId, address staker) external override view returns(bool) {
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];

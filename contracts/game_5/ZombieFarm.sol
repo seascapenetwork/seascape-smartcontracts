@@ -258,6 +258,7 @@ contract ZombieFarm is Ownable {
 
         ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
         require(!zombieChallenge.isFullyCompleted(sessionId, msg.sender), "challenge already completed");
+        require(!zombieChallenge.isTimeCompleted(sessionId, msg.sender), "time progresses");
 
         uint8 levelId = zombieChallenge.getLevel(sessionId);
         require(levelId > 0, "no link between session and challenge");
