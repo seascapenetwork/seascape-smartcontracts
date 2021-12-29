@@ -41,15 +41,11 @@ contract VaultHandler {
             return amount;
         }
         IERC20 _token = IERC20(token);
-        require(_token.balanceOf(user) >= amount, "VAULT_HANDLER: user has not enough token");
+        require(_token.balanceOf(vault) >= amount, "VAULT_HANDLER: vault has not enough token");
         
-        uint256 preTotalAmount = _token.balanceOf(user);
-
         _token.safeTransferFrom(vault, user, amount);
 
-        uint256 actualAmount = _token.balanceOf(user) - preTotalAmount;
-
-        return actualAmount;
+        return amount;
     }
 
     function tokenBalanceOfVault(address token) internal view returns(uint256) {
