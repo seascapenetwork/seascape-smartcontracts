@@ -94,6 +94,24 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         initReentrancyStatus();
     }
 
+    function getStakeAmount(bytes calldata data) external override view returns (uint256) {
+        /// Staking amount
+        (, , , , uint amount) 
+            = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
+        require(amount > 0, "amount is 0");
+
+        return amount;
+    }
+
+    function getUnstakeAmount(bytes calldata data) external override view returns (uint256) {
+        /// Staking amount
+        (, , , , uint amount) 
+            = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
+        require(amount > 0, "amount is 0");
+
+        return amount;
+    }
+
     /// @notice a new challenge of this challenge category was added to the session.
     /// @dev We are not validating most of the parameters, since we trust to the Owner.
     function addChallengeToSession(
@@ -134,7 +152,6 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     /// This function is not callable if time progress reached to the max level.
     function stake(uint sessionId, address staker, bytes calldata data)
         external
-        payable
         override
         onlyZombieFarm
         nonReentrant
@@ -151,14 +168,8 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
 
         uint amount;
         uint nftId;
-        if (playerChallenge.nftId > 0) {
-            (amount) = abi.decode(data, (uint256));
-        } else {
-            /// Staking amount
-            (nftId, amount) = decodeStakeData(sessionId, data);
-            require(nftId > 0, "empty nft id");
-        }
-        require(amount > 0, "zero");
+        /// Staking amount
+       (nftId, amount) = decodeStakeData(sessionId, data);
 
         uint total = amount + playerChallenge.amount;
         require(total >= sessionChallenge.stakeAmount, "invalid stake amount");
@@ -183,7 +194,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
             playerChallenge.addedToPool = true;
 
             StakeToken handler = StakeToken(stakeHandler);
-            handler.stake{value: sessionChallenge.stakeAmount}(sessionId, staker, sessionChallenge.stakeAmount);
+            handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
         }
 
         if (total - sessionChallenge.stakeAmount > 0) { 

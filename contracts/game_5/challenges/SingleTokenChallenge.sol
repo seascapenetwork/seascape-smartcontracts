@@ -114,11 +114,26 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         handler.newPeriod(sessionId, stakeToken, rewardToken, startTime, startTime + period, reward);
     }
 
+    function getStakeAmount(bytes calldata data) external override view returns (uint256) {
+        /// Staking amount
+        (uint256 amount) = abi.decode(data, (uint256));
+        require(amount > 0, "zero");
+
+        return amount;
+    }
+
+    function getUnstakeAmount(bytes calldata data) external override view returns (uint256) {
+        /// Staking amount
+        (uint256 amount) = abi.decode(data, (uint256));
+        require(amount > 0, "zero");
+
+        return amount;
+    }
+
     /// @dev The ZombieFarm calls this function when the session is active only.
     /// This function is not callable if time progress reached to the max level.
     function stake(uint256 sessionId, address staker, bytes calldata data)
         external
-        payable
         override
         onlyZombieFarm
         nonReentrant
@@ -146,7 +161,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             playerChallenge.addedToPool = true;
 
             StakeToken handler = StakeToken(stakeHandler);
-            handler.stake{value: sessionChallenge.stakeAmount}(sessionId, staker, sessionChallenge.stakeAmount);
+            handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
         }
 
         if (total - sessionChallenge.stakeAmount > 0) { 

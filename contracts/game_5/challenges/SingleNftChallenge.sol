@@ -85,6 +85,14 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
         initReentrancyStatus();
     }
 
+    function getStakeAmount(bytes calldata data) external override view returns (uint256) {
+        return 0;
+    }
+
+    function getUnstakeAmount(bytes calldata data) external override view returns (uint256) {
+        return 0;
+    }
+
     /// @notice The challenges of this category were added to the Zombie Farm season
     function addChallengeToSession(
         uint sessionId,
@@ -124,7 +132,6 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     ///     It receives  id, signature and amount of staking.
     function stake(uint sessionId, address staker, bytes calldata data)
         external
-        payable
         override
         onlyZombieFarm
         nonReentrant

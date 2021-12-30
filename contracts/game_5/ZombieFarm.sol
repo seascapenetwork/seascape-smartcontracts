@@ -55,6 +55,8 @@ contract ZombieFarm is Ownable {
     /// The reward types are, 0 = grand reward, non zero = level rewards
     mapping(uint256 => mapping(address => mapping(uint8 => bool))) public playerRewards;
 
+    mapping(uint256 => mapping(uint8 => mapping(address => uint256[3]))) public nativeAssets;
+
     //
     // Supported Rewards given to players after completing all levels or all challenges in the level
     //
@@ -387,14 +389,28 @@ contract ZombieFarm is Ownable {
     //
     //////////////////////////////////////////////////////////////////////////////////
 
+    function stakeNative(uint256 sessionId, uint8 slotId, address challenge, uint8 v, bytes32 r, bytes32 s, bytes calldata data) 
+        external payable 
+    {
+        require(msg.value > 0, "no attached native token");
+        stake(sessionId, slotId, challenge, v, r, s, data);
+
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
+        uint8 levelId = zombieChallenge.getLevel(sessionId);
+
+        uint256 amount = zombieChallenge.getStakeAmount(data);
+        require(msg.value == amount, "no desired amount included");
+        nativeAssets[sessionId][levelId][msg.sender][slotId] += msg.value;
+    } 
+
     /// For example for single token challenge
     ///     user deposits some token amount.
     ///     the deposit checks whether it passes the min
     ///     the deposit checks whether it not passes the max
     ///     update the stake period
     function stake(uint256 sessionId, uint8 slotId, address challenge, 
-        uint8 v, bytes32 r, bytes32 s, bytes calldata data
-    ) payable external {
+        uint8 v, bytes32 r, bytes32 s, bytes memory data
+    ) public {
         require(slotId >= 0 && slotId <3, "invalid slot id");
         require(isActive(sessionId), "session not active");
         require(sessionChallenges[sessionId][challenge], "!session challenge");
@@ -408,18 +424,34 @@ contract ZombieFarm is Ownable {
         address _recover = ecrecover(_message, v, r, s);
         require(_recover == verifier,  "Verification failed");
 
-        zombieChallenge.stake{value: msg.value}(sessionId, msg.sender, data);
+        zombieChallenge.stake(sessionId, msg.sender, data);
 
         playerChallenges[sessionId][levelId][msg.sender][slotId] = challenge;
 
         emit PlayerChallenge(sessionId, levelId, slotId, challenge, msg.sender);
     }
 
+    function unstakeNative(uint256 sessionId, uint8 slotId, address challenge, bytes calldata data) external {
+        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
+
+        // Level Id always will be valid as it was checked when Challenge added to Session
+        uint8 levelId = zombieChallenge.getLevel(sessionId);
+        require(levelId > 0, "no challenge");
+
+        uint256 amount = zombieChallenge.getUnstakeAmount(data);
+        require(nativeAssets[sessionId][levelId][msg.sender][slotId] >= amount, "not enough native token of user");
+
+        nativeAssets[sessionId][levelId][msg.sender][slotId] -= amount;
+        msg.sender.transfer(amount);
+
+        unstake(sessionId, slotId, challenge, data);
+    }
+
     /// Withdraws crypto assets, by whole or partially.
     /// If withdraws before time period end, then withdrawing resets the time progress.
     /// If withdraws after time period end, then withdrawing claims reward
     /// and sets the time to be completed.
-    function unstake(uint256 sessionId, uint8 slotId, address challenge, bytes calldata data) external {
+    function unstake(uint256 sessionId, uint8 slotId, address challenge, bytes memory data) public {
         require(sessionId >0, "sessionId or challengeId is 0");
         require(sessions[sessionId].startTime > 0, "session doesen't exist");
         require(sessionChallenges[sessionId][challenge], "!session challenge");

@@ -49,7 +49,6 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
     /// @dev The ZombieFarm calls this function when the session is active only.
     function stake(uint256 key, address stakerAddr, uint256 amount)
         external
-        payable
         nonReentrant
     {
         require(amount > 0,     "STAKE_TOKEN: zero_value");
