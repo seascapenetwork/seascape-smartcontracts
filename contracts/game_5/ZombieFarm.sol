@@ -389,20 +389,6 @@ contract ZombieFarm is Ownable {
     //
     //////////////////////////////////////////////////////////////////////////////////
 
-    function stakeNative(uint256 sessionId, uint8 slotId, address challenge, uint8 v, bytes32 r, bytes32 s, bytes calldata data) 
-        external payable 
-    {
-        require(msg.value > 0, "no attached native token");
-        stake(sessionId, slotId, challenge, v, r, s, data);
-
-        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
-        uint8 levelId = zombieChallenge.getLevel(sessionId);
-
-        uint256 amount = zombieChallenge.getStakeAmount(data);
-        require(msg.value == amount, "no desired amount included");
-        nativeAssets[sessionId][levelId][msg.sender][slotId] += msg.value;
-    } 
-
     /// For example for single token challenge
     ///     user deposits some token amount.
     ///     the deposit checks whether it passes the min
@@ -431,21 +417,6 @@ contract ZombieFarm is Ownable {
         emit PlayerChallenge(sessionId, levelId, slotId, challenge, msg.sender);
     }
 
-    function unstakeNative(uint256 sessionId, uint8 slotId, address challenge, bytes calldata data) external {
-        ZombieFarmChallengeInterface zombieChallenge = ZombieFarmChallengeInterface(challenge);
-
-        // Level Id always will be valid as it was checked when Challenge added to Session
-        uint8 levelId = zombieChallenge.getLevel(sessionId);
-        require(levelId > 0, "no challenge");
-
-        uint256 amount = zombieChallenge.getUnstakeAmount(data);
-        require(nativeAssets[sessionId][levelId][msg.sender][slotId] >= amount, "not enough native token of user");
-
-        nativeAssets[sessionId][levelId][msg.sender][slotId] -= amount;
-        msg.sender.transfer(amount);
-
-        unstake(sessionId, slotId, challenge, data);
-    }
 
     /// Withdraws crypto assets, by whole or partially.
     /// If withdraws before time period end, then withdrawing resets the time progress.
