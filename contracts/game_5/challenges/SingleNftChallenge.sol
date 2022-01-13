@@ -154,7 +154,9 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
         nonce++;
 
         playerChallenge.nftId   = nftId;
-        playerChallenge.stakedTime = block.timestamp;
+        if (playerChallenge.stakedTime == 0) {
+            playerChallenge.stakedTime = block.timestamp;
+        }
 
         StakeNft handler = StakeNft(stakeHandler);
         handler.stake(sessionId, staker, nftId, weight);

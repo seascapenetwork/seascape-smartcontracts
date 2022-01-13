@@ -178,7 +178,9 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
         playerChallenge.amount = total;
-        playerChallenge.stakedTime = block.timestamp;
+        if (playerChallenge.stakedTime == 0) {
+            playerChallenge.stakedTime = block.timestamp;
+        }
 
         if (playerChallenge.nftId == 0) {
             playerChallenge.nftId = nftId;  

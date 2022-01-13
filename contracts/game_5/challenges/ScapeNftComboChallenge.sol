@@ -286,7 +286,10 @@ pragma solidity 0.6.7;
 
 //         // before updating player's challenge parameters, we auto-claim earned tokens till now.
 //         playerChallenge.claimedTime = block.timestamp;
-//         playerChallenge.stakedTime = block.timestamp;
+//
+//         if (playerChallenge.stakedTime == 0) {
+//              playerChallenge.stakedTime = block.timestamp;
+//         }
 
 //    		  updateBalanceInterestPerToken(challenge
 //             .nftAmount, sessionChallenge.claimedPerToken, playerChallenge);

@@ -168,7 +168,9 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
         }
 
-        playerChallenge.stakedTime = block.timestamp;
+        if (playerChallenge.stakedTime == 0) {
+            playerChallenge.stakedTime = block.timestamp;
+        }
 
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
@@ -206,6 +208,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         // this challenge as completed.
         if (!timeCompleted) {
             playerChallenge.amount = playerChallenge.amount - amount;
+            // Reset time.
             playerChallenge.stakedDuration = 0;
             playerChallenge.stakedTime = block.timestamp;
 
