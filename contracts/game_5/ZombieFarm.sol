@@ -173,6 +173,7 @@ contract ZombieFarm is Ownable {
         //
         require(levelAmount > 0 && levelAmount <= MAX_LEVEL, "level amount should range 1-max");
         require(!isActive(lastSessionId), "last session still active");
+        require(!isStarting(lastSessionId), "last session will start");
 
         //
         // Verifying the Session data
