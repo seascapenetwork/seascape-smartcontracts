@@ -83,7 +83,7 @@ contract Stake {
         period.rewardPool           = rewardPool;
         period.startTime            = startTime;
         period.endTime              = endTime;
-        period.unit                 = rewardPool / (endTime - startTime);
+        period.unit                 = rewardPool * SCALER / (endTime - startTime);
         period.rewardClaimableTime  = startTime;
 
         emit NewStakePeriod(msg.sender, key, startTime, endTime);
@@ -178,9 +178,9 @@ contract Stake {
         // I record that interestUnit is 0.1 CWS (unit/amount) in session.interestUnit
         // I update the session.interestUpdate to now
         if (period.depositPool == 0) {
-            period.rewardClaimableUnit = (period.unit * SCALER);
+            period.rewardClaimableUnit = period.unit;
         } else {
-            period.rewardClaimableUnit = (period.unit * SCALER) / period.depositPool;
+            period.rewardClaimableUnit = period.unit / period.depositPool;
              // 0.1
         }
 
