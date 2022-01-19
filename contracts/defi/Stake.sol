@@ -54,8 +54,8 @@ contract Stake {
         _;
         updatePeriodClaimable(key);
 
-        StakePeriod storage period       = stakePeriods[msg.sender][key];
-        StakeUser storage staker   = stakeUsers[msg.sender][key][stakerAddr];
+        StakePeriod storage period  = stakePeriods[msg.sender][key];
+        StakeUser storage staker    = stakeUsers[msg.sender][key][stakerAddr];
  
   		updateUserClaimable(period.countedClaimable, staker);
     }
@@ -72,13 +72,14 @@ contract Stake {
         uint key,               // a unique identifier. could be a session id.
         uint startTime,
         uint endTime,
-        uint rewardPool
+        uint rewardPool         // if usdc, then decimals is 9 for reward pool.
+                                // if cws, then decimals is 18 for reward pool.
     )
         internal 
         validStakePeriodParams(key, startTime, endTime, rewardPool)
     {
         // Challenge.stake is not null, means that earn is not null too.
-        StakePeriod storage period       = stakePeriods[msg.sender][key];
+        StakePeriod storage period  = stakePeriods[msg.sender][key];
         period.rewardPool           = rewardPool;
         period.startTime            = startTime;
         period.endTime              = endTime;
@@ -108,9 +109,9 @@ contract Stake {
 
         _reward(key, stakerAddr);
 
-        period.depositPool += amount;
-        staker.time = block.timestamp;
-        staker.deposit += amount;
+        period.depositPool  += amount;
+        staker.deposit      += amount;
+        staker.time         = block.timestamp;
 
         //
         // Here another smartcontract needs to transfer tokens to the vault.
@@ -171,7 +172,7 @@ contract Stake {
         internal
         returns(bool)
     {
-        StakePeriod storage period           = stakePeriods[msg.sender][key];
+        StakePeriod storage period      = stakePeriods[msg.sender][key];
         uint sessionCap                 = getPeriodTime(period.startTime, period.endTime);
 
         // I record that interestUnit is 0.1 CWS (unit/amount) in session.interestUnit
@@ -179,7 +180,8 @@ contract Stake {
         if (period.depositPool == 0) {
             period.rewardClaimableUnit = (period.unit * SCALER);
         } else {
-            period.rewardClaimableUnit = (period.unit * SCALER) / period.depositPool; // 0.1
+            period.rewardClaimableUnit = (period.unit * SCALER) / period.depositPool;
+             // 0.1
         }
 
         // I calculate previous claimed rewards

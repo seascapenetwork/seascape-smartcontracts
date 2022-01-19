@@ -6,6 +6,8 @@ import "./../interfaces/ZombieFarmInterface.sol";
 import "./../../openzeppelin/contracts/access/Ownable.sol";
 import "./../../openzeppelin/contracts/math/SafeMath.sol";
 import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @notice Stake a single nft , and earn ERC20 token
 ///
@@ -14,6 +16,8 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// It receives  id, signature.
 /// If user's  is in the game, then deposit is unavailable.
 abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     using SafeMath for uint;
     address public stakeHandler;
     address public zombieFarm;
@@ -77,6 +81,10 @@ abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, Reentra
     constructor (address _zombieFarm, address _nft, address _reward, address _handler) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft != address(0), "invalid _scape address");
+
+        if (_reward != address(0)) {
+            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+        }
 
         zombieFarm = _zombieFarm;
         nft = _nft;

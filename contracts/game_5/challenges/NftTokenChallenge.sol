@@ -2,6 +2,8 @@ pragma solidity 0.6.7;
 
 import "./../../defi/StakeToken.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../../openzeppelin/contracts/access/Ownable.sol";
@@ -16,6 +18,8 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
 contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable  {
+    using SafeERC20 for IERC20;
+
     address public zombieFarm;
     address public stakeHandler;
 
@@ -84,6 +88,13 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft      != address(0), "data.stake verification failed");
+
+        if (_reward != address(0)) {
+            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+        }
+        if (_stake != address(0)) {
+            require(IERC20(_stake).decimals() == 18, "DECIMAL_WEI");
+        }
 
         zombieFarm          = _zombieFarm;
         stakeToken          = _stake;

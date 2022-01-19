@@ -5,12 +5,16 @@ import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../helpers/VaultHandler.sol";
 import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @notice Stake one token, and earn another token.
 /// @dev WARNING! WARNING! WARNING
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
 contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler  {
+    using SafeERC20 for IERC20;
+
     address public zombieFarm;
     address public stakeHandler;
 
@@ -73,6 +77,13 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
 
     constructor (address _zombieFarm, address _vault, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
+
+        if (_stake != address(0)) {
+            require(IERC20(_stake).decimals() == 18, "DECIMAL_WEI");
+        }
+        if (_reward != address(0)) {
+            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+        }
 
         zombieFarm          = _zombieFarm;
         stakeToken          = _stake;

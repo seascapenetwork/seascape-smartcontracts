@@ -39,6 +39,9 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
     )
         external
     {
+        if (rewardToken != address(0)) {
+            require(IERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
+        }
         require(stakeToken != address(0), "STAKE_TOKEN: zero_address");
 
         newStakePeriod(key, startTime, endTime, rewardPool);

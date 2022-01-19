@@ -36,6 +36,12 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
     )
         external
     {
+        if (stakeToken != address(0)) {
+            require(IERC20(stakeToken).decimals() == 18, "DECIMAL_WEI");
+        }
+        if (rewardToken != address(0)) {
+            require(IERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
+        }
         newStakePeriod(key, startTime, endTime, rewardPool);
 
         // Challenge.stake is not null, means that earn is not null too.
