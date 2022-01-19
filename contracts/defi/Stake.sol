@@ -266,6 +266,9 @@ contract Stake {
 
     function getPeriodTime(uint startTime, uint endTime) internal view returns(uint) {
         if (!isActive(startTime, endTime)) {
+            if (block.timestamp < startTime) {
+                return startTime;
+            }
             return endTime;
         }
 
