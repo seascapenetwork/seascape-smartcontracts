@@ -43,7 +43,7 @@ contract Stake {
     }
 
     modifier validStakePeriodParams(uint key, uint startTime, uint endTime, uint rewardPool) {
-        require(startTime >= block.timestamp,                   "STAKE_TOKEN: invalid_start")
+        require(startTime >= block.timestamp,                   "STAKE_TOKEN: invalid_start");
         require(startTime < endTime,                            "STAKE_TOKEN: invalid_time");
         require(rewardPool > 0,                                 "STAKE_TOKEN: zero_value");
         require(stakePeriods[msg.sender][key].startTime == 0,   "STAKE_TOKEN: period_exists");

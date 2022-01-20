@@ -15,7 +15,7 @@ import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 /// First time whe user deposits his :
 /// It receives  id, signature.
 /// If user's  is in the game, then deposit is unavailable.
-abstract contract NftChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
+contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     using SafeMath for uint;
