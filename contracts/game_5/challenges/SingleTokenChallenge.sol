@@ -16,7 +16,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     using SafeERC20 for IERC20;
 
     address public zombieFarm;
-    address public stakeHandler;
+    address payable public stakeHandler;
 
     uint256 public constant scaler = 10**18;
     uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
@@ -75,7 +75,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         uint256 amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _vault, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
 
         if (_stake != address(0)) {

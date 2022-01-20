@@ -4,6 +4,7 @@ import "./Stake.sol";
 import "./../game_5/helpers/VaultHandler.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -13,7 +14,7 @@ import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// Per smartcontract, per session.
 /// Every smartcontract's staking is isolated from another smartcont stakings.
 /// For staking of smartcontract, smartcontract can initialize as many periods, as he wants.
-contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
+contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
     using SafeERC20 for IERC20;
 
     struct Period {
@@ -91,7 +92,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
         if (burn) {
             nft.safeTransferFrom(address(this), stakerAddr, id);
         } else {
-            nft.safeTransferFrom(address(this), address(0), id);
+            nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, id);
         }
 
         withdraw(key, stakerAddr, weights[msg.sender][key][id]);
@@ -118,5 +119,24 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake {
         IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
         
         return true;
+    }
+    
+    receive() external payable {
+        // React to receiving ether
+    }
+
+    /// @dev encrypt token data
+    /// @return encrypted data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    )
+        external
+        override
+        returns (bytes4)
+    {
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 }

@@ -2,6 +2,7 @@ pragma solidity 0.6.7;
 
 import "./../../defi/StakeToken.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
@@ -17,11 +18,11 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @dev WARNING! WARNING! WARNING
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
-contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable  {
+contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable, IERC721Receiver  {
     using SafeERC20 for IERC20;
 
     address public zombieFarm;
-    address public stakeHandler;
+    address payable public stakeHandler;
 
     uint public constant scaler = 10**18;
     uint public constant multiply = 10000; // The multiplier placement supports 0.00001
@@ -85,7 +86,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         uint amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft      != address(0), "data.stake verification failed");
 
@@ -257,7 +258,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         if (sessionChallenge.burn) {
             _nft.safeTransferFrom(address(this), staker, playerChallenge.nftId);
         } else {
-            _nft.safeTransferFrom(address(this), address(0), playerChallenge.nftId);
+            _nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, playerChallenge.nftId);
         }
 
         emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount, playerChallenge.nftId);
@@ -382,5 +383,20 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
       	require(_recover == owner(),  "nft +token.nftId, token.amount");
 
         return (nftId, amount);
+    }
+
+    /// @dev encrypt token data
+    /// @return encrypted data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    )
+        external
+        override
+        returns (bytes4)
+    {
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 }
