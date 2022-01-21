@@ -132,10 +132,17 @@ contract ScapeNftReward is ZombieFarmRewardInterface, Ownable {
 
         NftFactory nftFactory = NftFactory(factory);
         IERC20 token = IERC20(params.token);
+        uint256 id = 0;
 
-        uint256 id = nftFactory.mintQuality(owner, params.generation, params.quality);
-        require(token.transferFrom(pool, owner, params.amount),
+        //Can choose reward, quality = 0 no nft.
+        if (params.quality > 0) {
+            id = nftFactory.mintQuality(owner, params.generation, params.quality);
+        }
+
+        if (params.amount > 0) {
+            require(token.transferFrom(pool, owner, params.amount),
             "transferFrom pool failed");
+        }
 
         emit RewardNft(
             sessionId,
@@ -181,14 +188,11 @@ contract ScapeNftReward is ZombieFarmRewardInterface, Ownable {
         (imgId, generation, quality, token, amount) = abi
             .decode(data, (uint256, uint256, uint8, address, uint256));
 
-        if (quality < 1 || quality > 5) {
-            return false;
-        }
-        if (imgId == 0 || amount == 0) {
+        if (quality < 0 || quality > 5) {
             return false;
         }
 
-        if (token == address(0)) {
+        if (imgId == 0 && (amount == 0 || token == address(0))) {
             return false;
         }
 
