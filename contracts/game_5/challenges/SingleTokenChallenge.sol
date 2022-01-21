@@ -19,7 +19,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     address payable public stakeHandler;
 
     uint256 public constant scaler = 10**18;
-    uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public constant multiply = 10000000; // The multiplier placement supports 0.00000001
 
     address public stakeToken;
     address public rewardToken;

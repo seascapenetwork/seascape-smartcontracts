@@ -25,7 +25,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     address payable public stakeHandler;
 
     uint public constant scaler = 10**18;
-    uint public constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint public constant multiply = 10000000; // The multiplier placement supports 0.00000001
 
     address public nft;             
     address public stakeToken;
