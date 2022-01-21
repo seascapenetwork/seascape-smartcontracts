@@ -334,20 +334,41 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         if (playerChallenge.amount < sessionChallenge.stakeAmount) {
             return false;
         }
-            
-        uint duration    = (currentTime - playerChallenge.stakedTime);
-        uint time        = playerChallenge.stakedDuration + duration;
+           
+        uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-        if (time >= sessionChallenge.stakePeriod) {
-            return true;
-        }
+        return (currentTime >= endTime);
+    }
+
+    function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        uint256 overStake = 0;
+        uint256 endTime   = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
 
         if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-            uint overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
-
-            time += (duration * (overStake * sessionChallenge.multiplier) / multiply) / scaler;
+              overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
         }
-        return time >= sessionChallenge.stakePeriod;
+
+        uint256 overStakeSpeed = sessionChallenge.stakePeriod * overStake * sessionChallenge.multiplier / multiply / scaler;
+
+       if (overStakeSpeed < (playerChallenge.stakedTime + sessionChallenge.stakePeriod)) {
+
+            endTime = endTime - overStakeSpeed;
+        }
+        return endTime;
     }
 
     function isFullyCompleted(uint sessionId, address staker)

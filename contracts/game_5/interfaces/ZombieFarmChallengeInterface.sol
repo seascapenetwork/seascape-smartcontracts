@@ -14,6 +14,7 @@ interface ZombieFarmChallengeInterface {
 
     function getStakeAmount(bytes calldata data) external view returns (uint256);
     function getUnstakeAmount(bytes calldata data) external view returns (uint256);
+    function getCompletedTime(uint256 sessionId, address staker) external view returns (uint256);
 
     function stake(uint256 sessionId, address staker, bytes calldata data) external;
     function unstake(uint256 sessionId, address staker, bytes calldata data) external;

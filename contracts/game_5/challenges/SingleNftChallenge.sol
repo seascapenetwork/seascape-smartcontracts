@@ -276,10 +276,28 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
             return false;
         }
             
-        uint duration    = (currentTime - playerChallenge.stakedTime);
-        uint time        = playerChallenge.stakedDuration + duration;
+         uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-        return (time >= sessionChallenge.stakePeriod);
+        return (currentTime >= endTime);
+    }
+
+     function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        uint256 endTime = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
+        return endTime;
     }
 
     /// @dev it returns amount for stake and  id.

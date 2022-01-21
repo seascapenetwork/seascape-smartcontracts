@@ -329,12 +329,44 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             return true;
         }
 
-        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-            uint256 overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
+        uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-            time += (duration * (overStake * sessionChallenge.multiplier) / multiply) / scaler;
+        return (currentTime >= endTime);
+    }
+
+     function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        if(playerChallenge.stakedTime == 0) {
+            return 0;
         }
-        return time >= sessionChallenge.stakePeriod;
+
+        uint256 overStake = 0;
+        uint256 endTime   = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
+
+        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
+              overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
+        }
+
+        uint256 overStakeSpeed = sessionChallenge.stakePeriod * overStake * sessionChallenge.multiplier / multiply / scaler;
+
+        if (overStakeSpeed < (playerChallenge.stakedTime + sessionChallenge.stakePeriod)) {
+
+            endTime = endTime - overStakeSpeed;
+        }
+        return endTime;
     }
 
     function isFullyCompleted(uint256 sessionId, address staker)
