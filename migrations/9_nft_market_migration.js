@@ -42,4 +42,12 @@ module.exports = function(deployer, network) {
               console.log("Market contract was deployed at address: "+NftMarket.address);
           });
         }
+        else if (network == "moonbeam") {
+            var feesReciever = "0x42360F7A29196813CfC48c1724ee8D498e64a3AE";
+
+            deployer.deploy(NftMarket, feesReciever, tipsFeeRate)
+             .then(function(){
+                console.log("Market contract was deployed at address: "+NftMarket.address);
+            });
+          }
 };
