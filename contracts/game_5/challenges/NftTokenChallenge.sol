@@ -2,6 +2,7 @@ pragma solidity 0.6.7;
 
 import "./../../defi/StakeToken.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
@@ -17,14 +18,14 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @dev WARNING! WARNING! WARNING
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
-contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable  {
+contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable, IERC721Receiver  {
     using SafeERC20 for IERC20;
 
     address public zombieFarm;
-    address public stakeHandler;
+    address payable public stakeHandler;
 
     uint public constant scaler = 10**18;
-    uint public constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint public constant multiply = 10000000; // The multiplier placement supports 0.00000001
 
     address public nft;             
     address public stakeToken;
@@ -85,7 +86,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         uint amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft      != address(0), "data.stake verification failed");
 
@@ -188,17 +189,19 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
 
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
-        playerChallenge.amount = total;
-        if (playerChallenge.stakedTime == 0) {
+        if (!playerChallenge.addedToPool) {
+            playerChallenge.addedToPool = true;
+
+            StakeToken handler = StakeToken(stakeHandler);
+            handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
+
+            if (total - sessionChallenge.stakeAmount > 0) { 
+                transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
+            }
+
             playerChallenge.stakedTime = block.timestamp;
-        }
-
-        if (playerChallenge.nftId == 0) {
-            playerChallenge.nftId = nftId;  
-
-            IERC721 _nft = IERC721(nft);
-            require(_nft.ownerOf(nftId) == staker, "not owned by user");
-            _nft.safeTransferFrom(staker, address(this), nftId);  
+        }else {
+            transferFromUserToVault(stakeToken, amount, staker);
         }
 
         // I add amount of deposits to session.amount
@@ -257,7 +260,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         if (sessionChallenge.burn) {
             _nft.safeTransferFrom(address(this), staker, playerChallenge.nftId);
         } else {
-            _nft.safeTransferFrom(address(this), address(0), playerChallenge.nftId);
+            _nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, playerChallenge.nftId);
         }
 
         emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount, playerChallenge.nftId);
@@ -333,20 +336,41 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         if (playerChallenge.amount < sessionChallenge.stakeAmount) {
             return false;
         }
-            
-        uint duration    = (currentTime - playerChallenge.stakedTime);
-        uint time        = playerChallenge.stakedDuration + duration;
+           
+        uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-        if (time >= sessionChallenge.stakePeriod) {
-            return true;
-        }
+        return (currentTime >= endTime);
+    }
+
+    function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        uint256 overStake = 0;
+        uint256 endTime   = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
 
         if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-            uint overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
-
-            time += (duration * (overStake * sessionChallenge.multiplier) / multiply) / scaler;
+              overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
         }
-        return time >= sessionChallenge.stakePeriod;
+
+        uint256 overStakeSpeed = sessionChallenge.stakePeriod * overStake * sessionChallenge.multiplier / multiply / scaler;
+
+       if (overStakeSpeed < (playerChallenge.stakedTime + sessionChallenge.stakePeriod)) {
+
+            endTime = endTime - overStakeSpeed;
+        }
+        return endTime;
     }
 
     function isFullyCompleted(uint sessionId, address staker)
@@ -382,5 +406,20 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
       	require(_recover == owner(),  "nft +token.nftId, token.amount");
 
         return (nftId, amount);
+    }
+
+    /// @dev encrypt token data
+    /// @return encrypted data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    )
+        external
+        override
+        returns (bytes4)
+    {
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 }

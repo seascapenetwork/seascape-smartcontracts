@@ -19,7 +19,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
     using SafeERC20 for IERC20;
 
     using SafeMath for uint;
-    address public stakeHandler;
+    address payable public stakeHandler;
     address public zombieFarm;
 
     // The seascape  address
@@ -78,7 +78,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         uint amount
     );
 
-    constructor (address _zombieFarm, address _nft, address _reward, address _handler) public {
+    constructor (address _zombieFarm, address _nft, address _reward, address payable _handler) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft != address(0), "invalid _scape address");
 
@@ -276,10 +276,28 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
             return false;
         }
             
-        uint duration    = (currentTime - playerChallenge.stakedTime);
-        uint time        = playerChallenge.stakedDuration + duration;
+         uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-        return (time >= sessionChallenge.stakePeriod);
+        return (currentTime >= endTime);
+    }
+
+     function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        uint256 endTime = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
+        return endTime;
     }
 
     /// @dev it returns amount for stake and  id.

@@ -16,10 +16,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     using SafeERC20 for IERC20;
 
     address public zombieFarm;
-    address public stakeHandler;
+    address payable public stakeHandler;
 
     uint256 public constant scaler = 10**18;
-    uint256 public constant multiply = 10000; // The multiplier placement supports 0.00001
+    uint256 public constant multiply = 10000000; // The multiplier placement supports 0.00000001
 
     address public stakeToken;
     address public rewardToken;
@@ -75,7 +75,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         uint256 amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _stake, address _reward, address _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _vault, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
 
         if (_stake != address(0)) {
@@ -173,14 +173,14 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
 
             StakeToken handler = StakeToken(stakeHandler);
             handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
-        }
 
-        if (total - sessionChallenge.stakeAmount > 0) { 
-            transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
-        }
+            if ( total - sessionChallenge.stakeAmount > 0 ) {
+                transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
+            }
 
-        if (playerChallenge.stakedTime == 0) {
             playerChallenge.stakedTime = block.timestamp;
+        }else {
+            transferFromUserToVault(stakeToken, amount, staker);
         }
 
         // Amount holds only max session.stakeAmount
@@ -329,12 +329,44 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             return true;
         }
 
-        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-            uint256 overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
+        uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
-            time += (duration * (overStake * sessionChallenge.multiplier) / multiply) / scaler;
+        return (currentTime >= endTime);
+    }
+
+     function getCompletedTime(uint256 sessionId, address staker) external override view returns(uint256) {
+        /// Session Parameters
+        SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
+        PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
+        return getCompletedTime(sessionChallenge, playerChallenge);
+    }
+
+     function getCompletedTime(
+        SessionChallenge storage sessionChallenge,
+        PlayerChallenge storage playerChallenge
+    )
+        internal
+        view
+        returns(uint256)
+    {
+        if(playerChallenge.stakedTime == 0) {
+            return 0;
         }
-        return time >= sessionChallenge.stakePeriod;
+
+        uint256 overStake = 0;
+        uint256 endTime   = playerChallenge.stakedTime + sessionChallenge.stakePeriod;
+
+        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
+              overStake = playerChallenge.amount - sessionChallenge.stakeAmount;
+        }
+
+        uint256 overStakeSpeed = sessionChallenge.stakePeriod * overStake * sessionChallenge.multiplier / multiply / scaler;
+
+        if (overStakeSpeed < (playerChallenge.stakedTime + sessionChallenge.stakePeriod)) {
+
+            endTime = endTime - overStakeSpeed;
+        }
+        return endTime;
     }
 
     function isFullyCompleted(uint256 sessionId, address staker)

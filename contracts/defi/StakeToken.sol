@@ -90,5 +90,9 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
         transferFromVaultToUser(rewardToken, interest, stakerAddr);
 
         return true;
+    }  
+      
+    receive() external payable {
+        // React to receiving ether
     }
 }
