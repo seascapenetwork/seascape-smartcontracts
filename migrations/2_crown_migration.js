@@ -7,5 +7,3 @@ module.exports = function(deployer, network) {
 	    console.log("Crowns deployed on "+Crowns.address);
     });
 }
-				 
-				 

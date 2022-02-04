@@ -15,36 +15,25 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nftMarket = await NftMarket.at("0xae54f8927ADAdB65EC79f7130B1a46FEd35E8bFd");
-    // let nft     = await Nft.at("0x607cBd90BE76e9602548Fbe63931AbE9E8af8aA7");
-    // let crowns  = await Crowns.at("0x6fc9651f45B262AE6338a701D563Ab118B1eC0Ce");
+    let nftMarket = await NftMarket.at("0xae54f8927ADAdB65EC79f7130B1a46FEd35E8bFd").catch(console.error);
+    // let nft     = await Nft.at("0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a");
+    // let crowns  = await Crowns.at("0x168840Df293413A930d3D40baB6e1Cd8F406719D");
 
     let user = accounts[0];
     console.log(`Using ${user}`);
 
     // enable sales (onlyOwner) -only needs to run once
-    // let salesStarted = await nftMarket.enableSales(true, {from: user}).catch(console.log);
-    // console.log(`salesEnabled was set`);
-
-    // 
-    let lighthouseNftAddress = "0x2D81C6e616d1C2925Ed01f41D298BFD52f2f7ea0";
+    // let salesStarted = await nftMarket.enableSales(true, {from: accounts[1]});
+    // console.log(`Enable sales is set to ${salesStarted.receipt.status}`);
 
     // add nft address -only needs to run once per nft
-    let nftAddressAdded = await nftMarket.addSupportedNft(lighthouseNftAddress, {from: user, gasPrice: 30000000000}).catch(console.error)
+    let nftAddressAdded = await nftMarket.addSupportedNft("0x62C0f58c730741366B85CdA4609F20910B59D21B", {from: user, gasPrice: 20000000000})
       .catch(console.error);
     console.log("nft address added");
 
     // add currency address -only needs to run once per currency
-    // let currencyAddressAdded = await nftMarket.addSupportedCurrency(crowns.address, {from: user})
+    // let currencyAddressAdded = await nftMarket.addSupportCurrency(crowns.address, {from: user})
       // .catch(console.error);
-    // console.log("crowns address added");
+    // console.log("currency address added");
 
-    // await nftMarket.addSupportedCurrency("0x0000000000000000000000000000000000000000", {from: user})
-      // .catch(console.error);
-    // console.log("native address added");
-
-    // await nftMarket.addSupportedCurrency("0xbD90A6125a84E5C512129D622a75CDDE176aDE5E", {from: user})
-    // .catch(console.error);
-  // console.log("rib address added");
-    
 }.bind(this);

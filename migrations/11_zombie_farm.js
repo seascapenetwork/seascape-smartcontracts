@@ -4,6 +4,7 @@ var SingleTokenChallenge = artifacts.require("./SingleTokenChallenge.sol");
 var LpChallenge = artifacts.require("./LpChallenge.sol");
 var Factory = artifacts.require("./NftFactory.sol");
 var Crowns = artifacts.require("./CrownsToken.sol");
+var Lp = artifacts.require("./LpToken.sol");
 
 async function getAccount(id) {
     let accounts = await web3.eth.getAccounts();
@@ -12,17 +13,24 @@ async function getAccount(id) {
 
 module.exports = async function(deployer, network) {
     if (network == "development" || network == "ganache") {
-        let pool = await getAccount(0);
+        // let pool = await getAccount(0);
 
-        await deployer.deploy(ZombieFarm, Crowns.address);
-        await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
-        await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool);
-        await deployer.deploy(LpChallenge, ZombieFarm.address, pool);
+        // console.log(`Pools: ${pool}`);
 
-        console.log("ZombieFarm contract was deployed at address: " + ZombieFarm.address);
-		console.log("ScapeNftReward contract was deployed at address: " + ScapeNftReward.address);
-		console.log("SingleTokenChallenge contract was deployed at address: " + SingleTokenChallenge.address);
-		console.log("LpChallenge contract was deployed at address: " + LpChallenge.address);
+        // await deployer.deploy(ZombieFarm, Crowns.address, pool);
+        // await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
+        
+        // // constructor arguments
+        // let crowns          = await Crowns.deployed();
+        // let lp              = await Lp.deployed();
+        // let earnToken       = crowns.address;
+        // let stakeToken      = lp.address;
+
+        // await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool, stakeToken, earnToken);
+
+        // console.log(`ZombieFarm             deployed at ${ZombieFarm.address}`);
+		// console.log(`ScapeNftReward         deployed at ${ScapeNftReward.address}`);
+		// console.log(`SingleTokenChallenge   deployed at ${SingleTokenChallenge.address}`);
     } else if (network == "rinkeby") {
         let pool = await getAccount(0);
 
