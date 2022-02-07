@@ -85,6 +85,8 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
 
         require(nft.ownerOf(id) == address(this), "not owned");
         require(owners[msg.sender][key][id] == stakerAddr);
+        
+        uint stakedAmount = weights[msg.sender][key][id];
 
         delete owners[msg.sender][key][id];
         delete weights[msg.sender][key][id];
@@ -95,7 +97,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
             nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, id);
         }
 
-        withdraw(key, stakerAddr, weights[msg.sender][key][id]);
+        withdraw(key, stakerAddr, stakedAmount);
     }
 
     function claim(uint key, address stakerAddr)
