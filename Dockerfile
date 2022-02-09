@@ -12,7 +12,6 @@ WORKDIR /home/node/app
 
 COPY ./package.json /home/node/app/package.json
 RUN npm install -g truffle
-RUN npm install -g @graphprotocol/graph-cli
 RUN npm install
 
 ENTRYPOINT []
