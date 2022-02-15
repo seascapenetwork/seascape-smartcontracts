@@ -29,6 +29,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         uint256 stakeAmount;        // Required amount to pass the level
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
         uint256 multiplier;         // Increase the progress
+        uint256 totalAmount;        // Challenge has total deposit
     }
 
     struct PlayerChallenge {
@@ -116,6 +117,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         session.stakeAmount         = stakeAmount;
         session.stakePeriod         = stakePeriod;
         session.multiplier          = multiplier;
+        session.totalAmount         = 0;
 
         ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
         (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
@@ -186,6 +188,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
         playerChallenge.amount = total;
+        sessionChallenge.totalAmount   += amount;
 
 		emit Stake(staker, sessionId, sessionChallenge.levelId, amount);
     }
@@ -236,6 +239,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
                     transferFromUserToVault(stakeToken, keepAmount, staker);
                 }
             }
+            sessionChallenge.totalAmount   -= amount;
 
             emit Unstake(staker, sessionId, sessionChallenge.levelId, amount);
         } else {
@@ -249,6 +253,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
                 uint keepAmount = playerChallenge.amount - sessionChallenge.stakeAmount;
                 transferFromVaultToUser(stakeToken, keepAmount, staker);
             }
+            sessionChallenge.totalAmount   -= playerChallenge.amount;
 
             emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
         }
