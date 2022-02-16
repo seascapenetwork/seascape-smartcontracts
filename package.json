@@ -17,7 +17,6 @@
     "truffle-plugin-verify": "^0.5.15"
   },
   "dependencies": {
-    "@graphprotocol/graph-ts": "^0.20.1",
     "@truffle/hdwallet-provider": "^1.5.1",
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
