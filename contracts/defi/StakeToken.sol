@@ -5,6 +5,7 @@ import "./../game_5/helpers/VaultHandler.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
 
 /// @dev The core functionality of the DeFi.
 /// This is Stake erc20/native, and earn another erc20/native currency.
@@ -12,12 +13,13 @@ import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// Per smartcontract, per session.
 /// Every smartcontract's staking is isolated from another smartcont stakings.
 /// For staking of smartcontract, smartcontract can initialize as many periods, as he wants.
-contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
+contract StakeToken is ReentrancyGuard, VaultHandler, Stake, Ownable {
     using SafeERC20 for IERC20;
 
     struct Period {
         address stakeToken;
         address rewardToken;
+        uint rewarded;
     }
     mapping(address => mapping(uint256 => Period)) public periods;
 
@@ -84,14 +86,26 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
         return reward(key, stakerAddr);
     }
 
+    function emergencyWithdraw(address _game, uint256 key, address _to) external onlyOwner {
+        address rewardToken = periods[_game][key].rewardToken;
+        
+        uint amount = stakePeriods[_game][key].rewardPool - periods[_game][key].rewarded;
+
+        transferFromVaultToUser(rewardToken, amount, _to);
+
+        periods[_game][key].rewarded += amount;
+    }
+
     function _claim(uint key, address stakerAddr, uint interest) internal override returns(bool) {
         address rewardToken = periods[msg.sender][key].rewardToken;
         
         transferFromVaultToUser(rewardToken, interest, stakerAddr);
 
+        periods[msg.sender][key].rewarded += interest;
+
         return true;
     }  
-      
+
     receive() external payable {
         // React to receiving ether
     }

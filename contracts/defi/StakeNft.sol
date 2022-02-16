@@ -20,6 +20,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
     struct Period {
         address stakeToken;         // the nft address
         address rewardToken;
+        uint rewarded;
     }
     mapping(address => mapping(uint => Period)) public periods;
     mapping(address => mapping(uint => mapping(uint => uint))) public weights;
@@ -106,9 +107,21 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         return reward(key, stakerAddr);
     }
 
+    function emergencyWithdraw(address _game, uint256 key, address _to) external onlyOwner {
+        address rewardToken = periods[_game][key].rewardToken;
+        
+        uint amount = stakePeriods[_game][key].rewardPool - periods[_game][key].rewarded;
+
+        transferFromVaultToUser(rewardToken, amount, _to);
+
+        periods[_game][key].rewarded += amount;
+    }
+
     function _claim(uint key, address stakerAddr, uint interest) internal override returns(bool) {
         address rewardToken = periods[msg.sender][key].rewardToken;
-        
+
+        periods[msg.sender][key].rewarded += interest;
+
         if (rewardToken == address(0)) {
             payable(stakerAddr).transfer(interest);
             return true;
@@ -118,6 +131,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         require(contractBalance > interest, "Insufficient balance of reward");
         IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
         
+
         return true;
     }
     
