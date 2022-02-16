@@ -215,48 +215,20 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         handler.claim(sessionId, staker);
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
+        require(timeCompleted, "Withdraw after completion");
 
-        // Unstaking before time progress resets the time progress.
-        //
-        // Unstaking after time progress withdraws all tokens and marks 
-        // this challenge as completed.
-        if (!timeCompleted) {
-            playerChallenge.amount = playerChallenge.amount - amount;
-            // Reset time.
-            playerChallenge.stakedDuration = 0;
-            playerChallenge.stakedTime = block.timestamp;
-
-            if (playerChallenge.amount < sessionChallenge.stakeAmount) {
-                handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
-                playerChallenge.addedToPool = false;
+        // Withdrawing all tokens.
+        playerChallenge.completed = true;
             
-                // Stake Handler is a separated smartcontract
-                // that deals with staking and earning only.
-                // However, we need to still keep untouched
-                // tokens in our vault for completing time.
-                if (playerChallenge.amount > 0) {
-                    uint keepAmount = sessionChallenge.stakeAmount - playerChallenge.amount;
-                    transferFromUserToVault(stakeToken, keepAmount, staker);
-                }
-            }
-            sessionChallenge.totalAmount   -= amount;
+        handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
+        playerChallenge.addedToPool = false;
 
-            emit Unstake(staker, sessionId, sessionChallenge.levelId, amount);
-        } else {
-            // Withdrawing all tokens.
-            playerChallenge.completed = true;
-            
-            handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
-            playerChallenge.addedToPool = false;
-
-            if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-                uint keepAmount = playerChallenge.amount - sessionChallenge.stakeAmount;
-                transferFromVaultToUser(stakeToken, keepAmount, staker);
-            }
-            sessionChallenge.totalAmount   -= playerChallenge.amount;
-
-            emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
+        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
+            uint keepAmount = playerChallenge.amount - sessionChallenge.stakeAmount;
+            transferFromVaultToUser(stakeToken, keepAmount, staker);
         }
+
+        emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
     }
 
     /**

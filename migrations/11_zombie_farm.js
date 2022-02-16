@@ -13,24 +13,24 @@ async function getAccount(id) {
 
 module.exports = async function(deployer, network) {
     if (network == "development" || network == "ganache") {
-        let pool = await getAccount(0);
+        // let pool = await getAccount(0);
 
-        console.log(`Pools: ${pool}`);
+        // console.log(`Pools: ${pool}`);
 
-        await deployer.deploy(ZombieFarm, Crowns.address, pool);
-        await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
+        // await deployer.deploy(ZombieFarm, Crowns.address, pool);
+        // await deployer.deploy(ScapeNftReward, Factory.address, ZombieFarm.address, pool);
         
-        // constructor arguments
-        let crowns          = await Crowns.deployed();
-        let lp              = await Lp.deployed();
-        let earnToken       = crowns.address;
-        let stakeToken      = lp.address;
+        // // constructor arguments
+        // let crowns          = await Crowns.deployed();
+        // let lp              = await Lp.deployed();
+        // let earnToken       = crowns.address;
+        // let stakeToken      = lp.address;
 
-        await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool, stakeToken, earnToken);
+        // await deployer.deploy(SingleTokenChallenge, ZombieFarm.address, pool, stakeToken, earnToken);
 
-        console.log(`ZombieFarm             deployed at ${ZombieFarm.address}`);
-		console.log(`ScapeNftReward         deployed at ${ScapeNftReward.address}`);
-		console.log(`SingleTokenChallenge   deployed at ${SingleTokenChallenge.address}`);
+        // console.log(`ZombieFarm             deployed at ${ZombieFarm.address}`);
+		// console.log(`ScapeNftReward         deployed at ${ScapeNftReward.address}`);
+		// console.log(`SingleTokenChallenge   deployed at ${SingleTokenChallenge.address}`);
     } else if (network == "rinkeby") {
         let pool = await getAccount(0);
 
