@@ -27,7 +27,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
 
     event NewPeriod(address indexed namespace, uint key, address indexed stakeToken, address indexed rewardToken, uint startTime, uint endTime);
 
-    constructor (address _vault) VaultHandler(_vault) public {}
+    constructor () public {}
 
     /// @notice a new staking period in the namespace of this method caller.
     function newPeriod(

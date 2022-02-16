@@ -75,7 +75,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         uint256 amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _stake, address _reward, address payable _stakeHandler) public {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
 
         if (_stake != address(0)) {
