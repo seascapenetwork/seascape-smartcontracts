@@ -257,11 +257,11 @@ contract NftSwap is NftMarketCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
         }
         // send fee and _bounty to contract
         if (_bounty > 0 && address(crowns) == _bountyAddress)
-            IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee + _bounty);
+            crowns.transferFrom(msg.sender, address(this), fee + _bounty);
         else {
             if (_bounty > 0)
                 IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), _bounty);
-            IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee);
+            crowns.transferFrom(msg.sender, address(this), fee);
         }
 
         /// update states
