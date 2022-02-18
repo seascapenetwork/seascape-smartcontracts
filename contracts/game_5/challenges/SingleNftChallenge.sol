@@ -193,12 +193,18 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
 
-        require(timeCompleted, "can only unstake");
-        handler.unstake(sessionId, staker, playerChallenge.nftId, sessionChallenge.burn);
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
 
-        if (timeCompleted && !playerChallenge.completed) {
-            playerChallenge.completed = true;
+        if (block.timestamp < (startTime + period)) {
+            require(timeCompleted, "NftChallenge Withdraw after completion");
+            
+            if (!playerChallenge.completed) {
+                playerChallenge.completed = true;
+            }
         }
+
+        handler.unstake(sessionId, staker, playerChallenge.nftId, sessionChallenge.burn);
 
         playerChallenge.nftId = 0;
         playerChallenge.stakedTime = block.timestamp;

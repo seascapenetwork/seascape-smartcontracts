@@ -25,7 +25,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     address payable public stakeHandler;
 
     uint public constant scaler = 10**18;
-    uint public constant multiply = 10000000; // The multiplier placement supports 0.00000001
+    uint public constant multiply = 1000000000; // The multiplier placement supports 0.00000001
 
     address public nft;             
     address public stakeToken;
@@ -237,18 +237,22 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
         require(playerChallenge.amount > 0, "stake amount zero");
 
-        bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
-        require(!playerChallenge.completed && timeCompleted, "not completed yet");
-
         StakeToken handler = StakeToken(stakeHandler);
+        handler.claim(sessionId, staker);
 
-        // Unstaking before time progress resets the time progress.
-        //
-        // Unstaking after time progress withdraws all tokens and marks 
-        // this challenge as completed.
-        // Withdrawing all tokens.
-        playerChallenge.completed = true;
-            
+        bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
+
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
+
+        if (block.timestamp < (startTime + period)) {
+            require(timeCompleted, "NftTokenChallenge Withdraw after completion");
+
+            if (!playerChallenge.completed) {
+                playerChallenge.completed = true;
+            }
+        }
+
         handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
         playerChallenge.addedToPool = false;
 
@@ -267,8 +271,8 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount, playerChallenge.nftId);
 
         sessionChallenge.totalAmount   -=  playerChallenge.amount;
-        playerChallenge.completed = true;
-        playerChallenge.nftId = 0;
+        playerChallenge.amount = 0;
+        playerChallenge.nftId  = 0;
     }
 
     /**

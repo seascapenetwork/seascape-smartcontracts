@@ -19,7 +19,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     address payable public stakeHandler;
 
     uint256 public constant scaler = 10**18;
-    uint256 public constant multiply = 10000000; // The multiplier placement supports 0.00000001
+    uint256 public constant multiply = 1000000000; // The multiplier placement supports 0.00000001
 
     address public stakeToken;
     address public rewardToken;
@@ -42,6 +42,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     }
 
     mapping(uint256 => SessionChallenge) public sessionChallenges;
+
     // session id => player address = PlayerChallenge
     mapping(uint256 => mapping (address => PlayerChallenge)) public playerParams;
 
@@ -208,18 +209,27 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         require(playerChallenge.amount > 0, "stake amount zero");
 
         /// Staking amount
-        (uint256 amount) = abi.decode(data, (uint256));
-        require(amount <= playerChallenge.amount, "can't unstake more than staked");
+        // (uint256 amount) = abi.decode(data, (uint256));
+        // require(amount <= playerChallenge.amount, "can't unstake more than staked");
 
         StakeToken handler = StakeToken(stakeHandler);
         handler.claim(sessionId, staker);
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
-        require(timeCompleted, "Withdraw after completion");
 
-        // Withdrawing all tokens.
-        playerChallenge.completed = true;
-            
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
+
+        // require(amount <= playerChallenge.amount, "unstake amout must equal stake!");
+        if (block.timestamp < (startTime + period)) {
+        
+            require(timeCompleted, "TokenChallenge Withdraw after completion");
+
+            if (!playerChallenge.completed) {
+                playerChallenge.completed = true;
+            }
+        }
+
         handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
         playerChallenge.addedToPool = false;
 
@@ -228,6 +238,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
             transferFromVaultToUser(stakeToken, keepAmount, staker);
         }
 
+        playerChallenge.amount = 0;
         emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
     }
 
