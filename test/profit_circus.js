@@ -125,8 +125,6 @@ contract("Game 1: Lp Mining", async accounts => {
 
         await profitCircus.deposit(sessionId, depositAmount, {from: from});
 
-        let session = await profitCircus.sessions.call(sessionId);
-
         let balance = await profitCircus.stakedBalanceOf.call(sessionId, from);
 
         assert.equal(balance, depositAmount, "Player Balance in Lp Mining expected to be deposit amount");

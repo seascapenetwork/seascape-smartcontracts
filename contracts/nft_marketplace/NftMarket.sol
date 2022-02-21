@@ -8,11 +8,10 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./../seascape_nft/SeascapeNft.sol";
 
 /// @title Nft Market is a trading platform on seascape network allowing to buy and sell Nfts
 /// @author Nejc Schneider
-contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
+contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -102,15 +101,13 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @notice add supported currency token
     /// @param _currencyAddress ERC20 contract address
     function addSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
-        require(supportedCurrency[_currencyAddress] == false, "currency already supported");
+        require(!supportedCurrency[_currencyAddress], "currency already supported");
         supportedCurrency[_currencyAddress] = true;
     }
 
     /// @notice disable supported currency token
     /// @param _currencyAddress ERC20 contract address
     function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(_currencyAddress != address(0x0), "invalid address");
         require(supportedCurrency[_currencyAddress], "currency already removed");
         supportedCurrency[_currencyAddress] = false;
     }
@@ -118,12 +115,16 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     /// @notice change fee receiver address
     /// @param _walletAddress address of the new fee receiver
     function setFeeReceiver(address payable _walletAddress) external onlyOwner {
+        require(_walletAddress != address(0x0), "invalid address");
         feeReceiver = _walletAddress;
     }
 
     /// @notice change fee rate
-    /// @param _rate amount value. Actual rate in percent = _rate * 10
-    function setFeeRate(uint256 _rate) external onlyOwner { feeRate = _rate; }
+    /// @param _rate amount value. Actual rate in percent = _rate / 10
+    function setFeeRate(uint256 _rate) external onlyOwner {
+        require(_rate <= 100, "Rate should be bellow 100 (10%)");
+        feeRate = _rate;
+    }
 
     /// @notice returns sales amount
     /// @return total amount of sales objects
@@ -139,11 +140,13 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
     function cancelSell(uint _tokenId, address _nftAddress) public nonReentrant {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         require(obj.status == 0, "status: sold or canceled");
-        require(obj.seller == msg.sender || msg.sender == owner(), "seller is not owner");
+        require(obj.seller == msg.sender, "seller not nft owner");
         require(salesEnabled, "sales are closed");
+        
         obj.status = 2;
         IERC721 nft = IERC721(obj.nft);
         nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
+
         emit SaleCanceled(_tokenId, obj.tokenId);
     }
 
@@ -161,22 +164,11 @@ contract NftMarket is IERC721Receiver,  ReentrancyGuard, Ownable {
         require(_nftAddress != address(0x0), "invalid nft address");
         require(_tokenId != 0, "invalid nft token");
         require(salesEnabled, "sales are closed");
-        require(supportedNft[_nftAddress] == true, "nft address unsupported");
-        require(supportedCurrency[_currency] == true, "currency not supported");
+        require(supportedNft[_nftAddress], "nft address unsupported");
+        require(supportedCurrency[_currency], "currency not supported");
         IERC721(_nftAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         salesAmount++;
-        SalesObject memory obj;
-
-        obj.id = salesAmount;
-        obj.tokenId = _tokenId;
-        obj.nft = _nftAddress;
-        obj.currency = _currency;
-        obj.seller = msg.sender;
-        obj.buyer = address(0x0);
-        obj.startTime = now;
-        obj.price = _price;
-        obj.status = 0;
 
         salesObjects[_nftAddress][_tokenId] = SalesObject(
             salesAmount,

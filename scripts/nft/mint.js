@@ -23,7 +23,7 @@ let max = 5;
 let grantPermission = async function(factory, address) {
     let res = await factory.addGenerator(address);
     console.log(res);
-    console.log(`Account ${address} granted a GENERATOR permission in Nft Factory`);
+    console.log(`Account ${address} was granted a GENERATOR role in Nft Factory`);
     return res;
 }.bind(this);
 

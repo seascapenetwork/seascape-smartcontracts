@@ -1,6 +1,3 @@
 [submodule "contracts/crowns"]
 	path = contracts/crowns
 	url = https://github.com/blocklords/crowns.git
-[submodule "graphs/nft-brawl-leaderboard"]
-	path = graphs/nft-brawl-leaderboard
-	url = https://github.com/blocklords/nft-brawl-leaderboard.git

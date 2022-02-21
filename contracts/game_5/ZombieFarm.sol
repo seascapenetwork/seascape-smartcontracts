@@ -4,7 +4,7 @@ pragma solidity 0.6.7;
 import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/math/SafeMath.sol";
 import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
+import "./../interfaces/CrownsInterface.sol";
 
 import "./interfaces/ZombieFarmRewardInterface.sol";
 import "./interfaces/ZombieFarmChallengeInterface.sol";
@@ -20,7 +20,7 @@ contract ZombieFarm is Ownable {
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game
 
     /// For collecting fee for Speed up and Re-pick
-    CrownsToken crowns;
+    CrownsInterface crowns;
 
     //
     // Session global variables and structures
@@ -128,7 +128,7 @@ contract ZombieFarm is Ownable {
 
     constructor(address _crowns, address _verifier) public {
         require(_crowns != address(0),"invalid _crowns address!");
-        crowns = CrownsToken(_crowns);
+        crowns = CrownsInterface(_crowns);
         verifier = _verifier;
     }
 

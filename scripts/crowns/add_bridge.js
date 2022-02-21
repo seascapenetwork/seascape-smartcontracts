@@ -16,19 +16,34 @@ let init = async function() {
     const networkId = await web3.eth.net.getId();
     //let amount = web3.utils.toWei("100000", "ether");
 
-    let crowns = await Crowns.at("0x6A2aBB18d0Bd0eF8573ECAD404fAa6f715cA0BC7");
-    let bridge    = "0xe4Fd0BC0601d1f4E042e93D28C6A429B26dF1457";
+    let crowns = await Crowns.at("0x6fc9651f45B262AE6338a701D563Ab118B1eC0Ce");
+    let bridge    = "0x48A6fd66512D45006FC0426576c264D03Dfda304";
     console.log("Crowns address: "+crowns.address);
 
+    console.log("Attemping to add bridge...");
+    let bridgeAdded = await crowns.addBridge(bridge).catch(console.error);
+    console.log("Bridge added");
 
-    // console.log("Attemping to add bridge...");
-    // let bridgeAdded = await crowns.addBridge(bridge).catch(console.error);
-    // console.log("bridge added.");
+    // console.log("Attempting to remove bridge...");
+    // await crowns.removeBridge(bridge).catch(console.error);
+    // console.log("Bridge removed");
+
     //
     // console.log("Attemping to mint crowns...");
-    // let mintAmount = 1000;
+    // let mintAmount = web3.utils.toWei("1000", "ether");
     // let crownsMinted = await crowns.mint(accounts[0], mintAmount).catch(console.error);
     // console.log("crowns minted.");
+    return;
+
+    console.log("Approve to burn...");
+    let approve = await crowns.approve(accounts[0], mintAmount).catch(console.error);
+    console.log("crowns approved to be burnt");
+
+    console.log("Burning tokens...");
+    let crownsBurnt = await crowns.burnFrom(accounts[0], mintAmount).catch(console.error);
+    console.log("crowns burnt");
+
+    return;
 
     // console.log("Attemping to send crowns...");
     // let sendAmount = web3.utils.toWei("590", "ether");

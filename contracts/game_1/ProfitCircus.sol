@@ -486,6 +486,11 @@ contract ProfitCircus is Ownable {
 			}
 		}
 	}
+
+	// Accept native tokens.
+	receive() external payable {
+        // React to receiving ether
+    }
 }
 
 

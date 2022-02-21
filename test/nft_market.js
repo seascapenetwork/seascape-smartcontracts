@@ -53,8 +53,8 @@ contract("Nft Market", async accounts => {
     it("should initialize the contract", async () => {
 
       // add nftAddress and currencyAddress
-      let nftAddressAdded = await nftMarket.addSupportNft(nft.address, {from: gameOwner});
-      let currencyAddressAdded = await nftMarket.addSupportCurrency(crowns.address, {from: gameOwner});
+      let nftAddressAdded = await nftMarket.addSupportedNft(nft.address, {from: gameOwner});
+      let currencyAddressAdded = await nftMarket.addSupportedCurrency(crowns.address, {from: gameOwner});
 
       //enable sales
       let salesStarted = await nftMarket.enableSales(true);
