@@ -25,7 +25,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     address payable public stakeHandler;
 
     uint public constant scaler = 10**18;
-    uint public constant multiply = 10000000; // The multiplier placement supports 0.00000001
+    uint public constant multiply = 1000000000; // The multiplier placement supports 0.00000001
 
     address public nft;             
     address public stakeToken;
@@ -37,6 +37,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         uint stakeAmount;        // Required amount to pass the level
         uint stakePeriod;        // Duration after which challenge considered to be completed.
         uint multiplier;         // Increase the progress
+        uint totalAmount;        // Challenge has total deposit
     }
 
     struct PlayerChallenge {
@@ -148,6 +149,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         session.stakeAmount         = uints[1];
         session.stakePeriod         = uints[2];
         session.multiplier          = uints[3];
+        session.totalAmount         = 0;
         if (burn == 1) {
             session.burn = true;
         }
@@ -189,6 +191,16 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
 
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
+        if (playerChallenge.nftId == 0) {
+            playerChallenge.nftId = nftId;  
+
+            IERC721 _nft = IERC721(nft);
+            require(_nft.ownerOf(nftId) == staker, "not owned by user");
+            _nft.safeTransferFrom(staker, address(this), nftId);  
+        }
+
+        // I add amount of deposits to session.amount
+        // we add to total stakes, if user deposited >= stakeAmount.
         if (!playerChallenge.addedToPool) {
             playerChallenge.addedToPool = true;
 
@@ -204,19 +216,8 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
             transferFromUserToVault(stakeToken, amount, staker);
         }
 
-        // I add amount of deposits to session.amount
-        // we add to total stakes, if user deposited >= stakeAmount.
-        if (!playerChallenge.addedToPool) {
-            playerChallenge.addedToPool = true;
-
-            StakeToken handler = StakeToken(stakeHandler);
-            handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
-        }
-
-        if (total - sessionChallenge.stakeAmount > 0) { 
-            transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
-        }
-
+        playerChallenge.amount = total;
+        sessionChallenge.totalAmount   += amount;
 
 		emit Stake(staker, sessionId, sessionChallenge.levelId, amount, nftId);
     }
@@ -236,18 +237,22 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
         require(playerChallenge.amount > 0, "stake amount zero");
 
-        bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
-        require(!playerChallenge.completed && timeCompleted, "not completed yet");
-
         StakeToken handler = StakeToken(stakeHandler);
+        handler.claim(sessionId, staker);
 
-        // Unstaking before time progress resets the time progress.
-        //
-        // Unstaking after time progress withdraws all tokens and marks 
-        // this challenge as completed.
-        // Withdrawing all tokens.
-        playerChallenge.completed = true;
-            
+        bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
+
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
+
+        if (block.timestamp < (startTime + period)) {
+            require(timeCompleted, "NftTokenChallenge Withdraw after completion");
+
+            if (!playerChallenge.completed) {
+                playerChallenge.completed = true;
+            }
+        }
+
         handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
         playerChallenge.addedToPool = false;
 
@@ -265,8 +270,9 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
 
         emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount, playerChallenge.nftId);
 
-        playerChallenge.completed = true;
-        playerChallenge.nftId = 0;
+        sessionChallenge.totalAmount   -=  playerChallenge.amount;
+        playerChallenge.amount = 0;
+        playerChallenge.nftId  = 0;
     }
 
     /**

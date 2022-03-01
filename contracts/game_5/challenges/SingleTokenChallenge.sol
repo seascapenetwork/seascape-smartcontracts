@@ -19,7 +19,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     address payable public stakeHandler;
 
     uint256 public constant scaler = 10**18;
-    uint256 public constant multiply = 10000000; // The multiplier placement supports 0.00000001
+    uint256 public constant multiply = 1000000000; // The multiplier placement supports 0.00000001
 
     address public stakeToken;
     address public rewardToken;
@@ -29,6 +29,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         uint256 stakeAmount;        // Required amount to pass the level
         uint256 stakePeriod;        // Duration after which challenge considered to be completed.
         uint256 multiplier;         // Increase the progress
+        uint256 totalAmount;        // Challenge has total deposit
     }
 
     struct PlayerChallenge {
@@ -41,6 +42,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     }
 
     mapping(uint256 => SessionChallenge) public sessionChallenges;
+
     // session id => player address = PlayerChallenge
     mapping(uint256 => mapping (address => PlayerChallenge)) public playerParams;
 
@@ -116,6 +118,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         session.stakeAmount         = stakeAmount;
         session.stakePeriod         = stakePeriod;
         session.multiplier          = multiplier;
+        session.totalAmount         = 0;
 
         ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
         (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
@@ -186,6 +189,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
         playerChallenge.amount = total;
+        sessionChallenge.totalAmount   += amount;
 
 		emit Stake(staker, sessionId, sessionChallenge.levelId, amount);
     }
@@ -205,53 +209,37 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         require(playerChallenge.amount > 0, "stake amount zero");
 
         /// Staking amount
-        (uint256 amount) = abi.decode(data, (uint256));
-        require(amount <= playerChallenge.amount, "can't unstake more than staked");
+        // (uint256 amount) = abi.decode(data, (uint256));
+        // require(amount <= playerChallenge.amount, "can't unstake more than staked");
 
         StakeToken handler = StakeToken(stakeHandler);
         handler.claim(sessionId, staker);
 
         bool timeCompleted = isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp);
 
-        // Unstaking before time progress resets the time progress.
-        //
-        // Unstaking after time progress withdraws all tokens and marks 
-        // this challenge as completed.
-        if (!timeCompleted) {
-            playerChallenge.amount = playerChallenge.amount - amount;
-            // Reset time.
-            playerChallenge.stakedDuration = 0;
-            playerChallenge.stakedTime = block.timestamp;
+        ZombieFarmInterface zombie  = ZombieFarmInterface(zombieFarm);
+        (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
 
-            if (playerChallenge.amount < sessionChallenge.stakeAmount) {
-                handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
-                playerChallenge.addedToPool = false;
-            
-                // Stake Handler is a separated smartcontract
-                // that deals with staking and earning only.
-                // However, we need to still keep untouched
-                // tokens in our vault for completing time.
-                if (playerChallenge.amount > 0) {
-                    uint keepAmount = sessionChallenge.stakeAmount - playerChallenge.amount;
-                    transferFromUserToVault(stakeToken, keepAmount, staker);
-                }
+        // require(amount <= playerChallenge.amount, "unstake amout must equal stake!");
+        if (block.timestamp < (startTime + period)) {
+        
+            require(timeCompleted, "TokenChallenge Withdraw after completion");
+
+            if (!playerChallenge.completed) {
+                playerChallenge.completed = true;
             }
-
-            emit Unstake(staker, sessionId, sessionChallenge.levelId, amount);
-        } else {
-            // Withdrawing all tokens.
-            playerChallenge.completed = true;
-            
-            handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
-            playerChallenge.addedToPool = false;
-
-            if (playerChallenge.amount > sessionChallenge.stakeAmount) {
-                uint keepAmount = playerChallenge.amount - sessionChallenge.stakeAmount;
-                transferFromVaultToUser(stakeToken, keepAmount, staker);
-            }
-
-            emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
         }
+
+        handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
+        playerChallenge.addedToPool = false;
+
+        if (playerChallenge.amount > sessionChallenge.stakeAmount) {
+            uint keepAmount = playerChallenge.amount - sessionChallenge.stakeAmount;
+            transferFromVaultToUser(stakeToken, keepAmount, staker);
+        }
+
+        playerChallenge.amount = 0;
+        emit Unstake(staker, sessionId, sessionChallenge.levelId, playerChallenge.amount);
     }
 
     /**

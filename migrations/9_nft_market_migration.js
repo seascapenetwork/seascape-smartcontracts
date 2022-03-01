@@ -19,6 +19,7 @@ module.exports = function(deployer, network) {
         });
       }
       else if (network == "rinkeby" || network == "moonbase") {
+
         var feesReciever = "0x5bDed8f6BdAE766C361EDaE25c5DC966BCaF8f43";
 
         deployer.deploy(NftMarket, feesReciever, tipsFeeRate)

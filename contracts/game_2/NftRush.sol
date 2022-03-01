@@ -14,7 +14,7 @@ import "./NftRushGameSession.sol";
 /// @title Nft Rush a game on seascape platform allowing to earn Nft by spending crowns
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
 /// @author Medet Ahmetson
-contract NftRush is Ownable, GameSession, Crowns, Leaderboard {
+contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;

@@ -208,15 +208,15 @@ contract("Game 1: Lp Mining", async accounts => {
 
     //--------------------------------------------------
 
-    // Claiming Seascape Nft.
-    // First, we need to link Smartcontracts between each other.
-    it("should link nft, factory and lp mining contracts", async() => {
-        nft = await Nft.deployed();
-        factory = await Factory.deployed();
+    // // Claiming Seascape Nft.
+    // // First, we need to link Smartcontracts between each other.
+    // it("should link nft, factory and lp mining contracts", async() => {
+    //     nft = await Nft.deployed();
+    //     factory = await Factory.deployed();
 
-        await nft.setFactory(factory.address);
-        await factory.addStaticUser(profitCircus.address);
-    });
+    //     await nft.setFactory(factory.address);
+    //     await factory.addStaticUser(profitCircus.address);
+    // });
 
     // // Claiming Seascape Nft.
     // // First, we need to link Smartcontracts between each other.
