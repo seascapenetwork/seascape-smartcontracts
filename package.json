@@ -14,7 +14,7 @@
   "license": "GPLv3",
   "devDependencies": {
     "solium": "1.1.3",
-    "truffle-plugin-verify": "^0.5.15"
+    "truffle-plugin-verify": "^0.5.24"
   },
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.5.1",
