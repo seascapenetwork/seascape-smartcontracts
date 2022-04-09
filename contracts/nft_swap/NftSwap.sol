@@ -19,14 +19,13 @@ import "./SwapSigner.sol";
 contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    SwapSigner private swapSigner;
 
+    SwapSigner private swapSigner;
 
     uint256 public lastOfferId;             /// @dev keep count of offers (aka offerIds)
     bool public tradeEnabled = true;        /// @dev enable/disable create and accept offer
     uint256 public fee;                     /// @dev fee for creating an offer
 
-    /// @notice individual offer related data
     struct OfferObject{
         uint256 offerId;                   // offer ID
         uint8 offeredTokensAmount;         // total offered tokens
@@ -39,13 +38,11 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         mapping(uint256 => RequestedToken) requestedTokens;   // requested tokensdata
     }
 
-    /// @notice individual offered token related data
     struct OfferedToken{
         uint256 tokenId;                    // offered token id
         address tokenAddress;               // offered token address
     }
 
-    /// @notice individual requested token related data
     struct RequestedToken{
         address tokenAddress;              // requested token address
         bytes tokenParams;                 // requested token Params
@@ -119,7 +116,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice enable additional nft series
     /// @param _nftAddress ERC721 contract address
-    // @param _nftParamsAddress contract address
+    // @param _nftParamsAddress SwapParams contract address
     function enableSupportedNftAddress(
         address _nftAddress,
         address _nftParamsAddress
@@ -166,8 +163,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     function getLastOfferId() external view returns(uint) { return lastOfferId; }
 
     /// @dev returns all properties of offer object at _offerId element
-    /// @param _offerId unique offer ID
-    /// @return OfferObject at given index
+    /// @return elements of OfferObject at given index
     function getOffer(uint _offerId)
         external
         view
@@ -192,7 +188,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     /// fee and an optional bounty to the contract
     /// @param _offeredTokens array of five OfferedToken structs
     /// @param _requestedTokens array of five RequestedToken structs
-    /// @param _bounty additional cws to offer to buyer
+    /// @param _bounty additional coins to offer to buyer
     /// @return lastOfferId total amount of offers
     function createOffer(
         uint8 _offeredTokensAmount,
