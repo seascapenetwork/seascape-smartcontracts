@@ -283,10 +283,10 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         offerObjects[lastOfferId].offerId = lastOfferId;
         offerObjects[lastOfferId].offeredTokensAmount = _offeredTokensAmount;
         offerObjects[lastOfferId].requestedTokensAmount = _requestedTokensAmount;
-        for(uint256 i = 0; i < _offeredTokensAmount; i++){
+        for(uint256 i = 0; i < _offeredTokensAmount; ++i){
             offerObjects[lastOfferId].offeredTokens[i] = _offeredTokens[i];
         }
-        for(uint256 i = 0; i < _requestedTokensAmount; i++){
+        for(uint256 i = 0; i < _requestedTokensAmount; ++i){
             offerObjects[lastOfferId].requestedTokens[i] = _requestedTokens[i];
         }
         offerObjects[lastOfferId].bounty = _bounty;
@@ -329,7 +329,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         require(msg.sender != obj.seller, "cant buy self-made offer");
 
         /// @dev verify requested tokens
-        for(uint256 i = 0; i < obj.requestedTokensAmount; i++){
+        for(uint256 i = 0; i < obj.requestedTokensAmount; ++i){
             require(_requestedTokenAddresses[i] == obj.requestedTokens[i].tokenAddress,
                 "wrong requested token address");
             IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
