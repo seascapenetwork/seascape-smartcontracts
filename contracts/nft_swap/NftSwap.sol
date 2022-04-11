@@ -393,7 +393,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @notice offered tokens, fee, and an optional bounty is returned to seller
     /// @param _offerId offer unique ID
-    function cancelOffer(uint _offerId) public {
+    function cancelOffer(uint _offerId) public nonReentrant {
         OfferObject storage obj = offerObjects[_offerId];
         require(obj.seller == msg.sender, "sender is not creator of offer");
 
