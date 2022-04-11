@@ -330,7 +330,6 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// @dev verify requested tokens
         for(uint256 i = 0; i < obj.requestedTokensAmount; i++){
-            require(_requestedTokenIds[i] > 0, "nft id must be greater than 0");
             require(_requestedTokenAddresses[i] == obj.requestedTokens[i].tokenAddress,
                 "wrong requested token address");
             IERC721 nft = IERC721(obj.requestedTokens[i].tokenAddress);
