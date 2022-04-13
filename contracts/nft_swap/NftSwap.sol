@@ -5,12 +5,11 @@ import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./Crowns.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
 import "./NftParamsInterface.sol";
 import "./SwapSigner.sol";
+import "./Crowns.sol";
 
 /// @title Nft Swap is a part of Seascape marketplace platform.
 /// It allows users to obtain desired nfts in exchange for their offered nfts,
@@ -18,8 +17,7 @@ import "./SwapSigner.sol";
 /// @author Nejc Schneider
 contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
-
+    
     SwapSigner private swapSigner;
 
     uint256 public lastOfferId;             /// @dev keep count of offers (aka offerIds)
@@ -219,7 +217,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
                 if (_bountyAddress == address(0x0)) {
                     require (msg.value >= _bounty, "insufficient transfer amount");
-                    uint256 returnBack = msg.value.sub(_bounty);
+                    uint256 returnBack = msg.value - _bounty;
                     if (returnBack > 0)
                         msg.sender.transfer(returnBack);
                 } else {
