@@ -17,7 +17,7 @@ import "./Crowns.sol";
 /// @author Nejc Schneider
 contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
-    
+
     SwapSigner private swapSigner;
 
     uint256 public lastOfferId;             /// @dev keep count of offers (aka offerIds)
@@ -231,7 +231,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         }
         /// input token verification
         // verify offered nft oddresses and ids
-        for (uint index = 0; index < _offeredTokensAmount; index++) {
+        for (uint index = 0; index < _offeredTokensAmount; ++index) {
             // the following checks should only apply if slot at index is filled.
             require(supportedNftAddresses[_offeredTokens[index].tokenAddress] != address(0),
                 "offered nft address unsupported");
@@ -240,7 +240,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 "sender not owner of nft");
         }
         // verify requested nft oddresses
-        for (uint _index = 0; _index < _requestedTokensAmount; _index++) {
+        for (uint _index = 0; _index < _requestedTokensAmount; ++_index) {
             address nftParamsAddress = supportedNftAddresses[_requestedTokens[_index].tokenAddress];
             require(nftParamsAddress != address(0),
                 "requested nft address unsupported");
@@ -254,7 +254,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// make transactions
         // send offered nfts to smart contract
-        for (uint index = 0; index < _offeredTokensAmount; index++) {
+        for (uint index = 0; index < _offeredTokensAmount; ++index) {
             // send nfts to contract
             IERC721(_offeredTokens[index].tokenAddress)
                 .safeTransferFrom(msg.sender, address(this), _offeredTokens[index].tokenId);
@@ -348,12 +348,12 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// make transactions
         // send requestedTokens from buyer to seller
-        for (uint index = 0; index < obj.requestedTokensAmount; index++) {
+        for (uint index = 0; index < obj.requestedTokensAmount; ++index) {
             IERC721(_requestedTokenAddresses[index])
                 .safeTransferFrom(msg.sender, obj.seller, _requestedTokenIds[index]);
         }
         // send offeredTokens from SC to buyer
-        for (uint index = 0; index < obj.offeredTokensAmount; index++) {
+        for (uint index = 0; index < obj.offeredTokensAmount; ++index) {
             IERC721(obj.offeredTokens[index].tokenAddress)
                 .safeTransferFrom(address(this), msg.sender, obj.offeredTokens[index].tokenId);
         }
@@ -395,7 +395,7 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
         /// make transactions
         // send the offeredTokens from SC to seller
-        for (uint index=0; index < obj.offeredTokensAmount; index++) {
+        for (uint index=0; index < obj.offeredTokensAmount; ++index) {
             IERC721(obj.offeredTokens[index].tokenAddress)
                 .safeTransferFrom(address(this), obj.seller, obj.offeredTokens[index].tokenId);
         }
