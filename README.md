@@ -1,18 +1,34 @@
-# The Seascape Network smartcontracts
-This page contains the source code of Crowns, Scape NFT, Seascape DeFi game smartcontracts, and Scape store.
+# Seascape Ecosystem smartcontracts.
+***Seascape Network**: https://seascape.network/*
 
-For more in-depth explanation, please visit https://docs.seascape.network/
+*Seascape Lightpaper: https://game.seascape.network/static/uploads/Seascape_lightpaper.pdf*
 
+*Detailed documentations: https://docs.seascape.network/*
 
-The contract addresses in all deployed blockchain networks could be found at https://docs.seascape.network/smartcontracts/addresses
+*Already deployed smartcontract addresses: https://docs.seascape.network/smartcontracts/addresses*
+
+This repository contains the smartcontracts of 
+* [Seascape Minigames](https://app.seascape.network/)
+* [NFT Marketplace](https://scape.store) 
+* Crowns token. Ticker CWS, and pCWS on BNB Smart Chain.
+* Scape NFT
+* GameFi generic smartcontracts that you can use in your great games.
+
+The Financal tools of Seascape Ecosystem is done by [Seastar Interactive](https://github.com/Seastarinteractive). The Seastarinteractive is responsible for smartcontracts of:
+* [Moonscape - a free to play game on Moonbeam Network](https://moonscapegame.com)
+* [Lighthouse IDO platform](https://seascape.house/)
+* [Riverboats - a hidden gem of Seascape Network]
+* [SeaDex - Dex on Moonbeam and Moonriver](https://seascape.finance/)
+
+The game that is supported by Seascape Network, https://blocklords.com/ developed by Meta Kings studio. The public source codes are kept on
+https://github.com/blocklords3d/
+
+The abandoned codes and delayed codes from Seascape Network are kept on
+https://github.com/seascape-archive/
 
 # Audit
-The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org/).
-
-The details of all contract audits can be seen at [Certik Security Leaderboard - Seascape](https://certik.org/projects/seascape)
-
-## This repository depends on the following **submodules**:
- * crowns - an ERC-20 token of Seascape Network. https://seascape.network
+The Crowns, Seascape NFT and Profit Circus were audited by [Certik](https://certik.org). View [Seascape on Certik](https://certik.org/projects/seascape).
+The other projects are audited by PekShield and Halborn.
 
 # Running up on your machine
 *It uses truffle framework.*
