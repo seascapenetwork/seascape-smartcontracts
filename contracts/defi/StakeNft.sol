@@ -76,7 +76,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         deposit(key, stakerAddr, amount);
     }
 
-    function unstake(uint key, address stakerAddr, uint id, bool burn)
+    function unstake(uint key, address stakerAddr, uint id, bool keepAlive)
         external
         nonReentrant
     {
@@ -91,7 +91,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         delete owners[msg.sender][key][id];
         delete weights[msg.sender][key][id];
 
-        if (burn) {
+        if (keepAlive) {
             nft.safeTransferFrom(address(this), stakerAddr, id);
         } else {
             nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, id);
