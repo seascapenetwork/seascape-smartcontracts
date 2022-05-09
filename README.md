@@ -21,7 +21,7 @@ The Financal tools of Seascape Ecosystem is done by [Seastar Interactive](https:
 The game that is supported by Seascape Network, https://blocklords.com/ developed by Meta Kings studio. The public source codes are kept on
 https://github.com/blocklords3d/
 
-The abandoned codes and delayed codes from Seascape Network are kept on
+Achivated codes:
 https://github.com/seascape-archive/
 
 # Audit
