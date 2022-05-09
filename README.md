@@ -1,8 +1,6 @@
 # Seascape Ecosystem smartcontracts.
 ***Seascape Network**: https://seascape.network/*
 
-*Seascape Lightpaper: https://game.seascape.network/static/uploads/Seascape_lightpaper.pdf*
-
 *Detailed documentations: https://docs.seascape.network/*
 
 *Already deployed smartcontract addresses: https://docs.seascape.network/smartcontracts/addresses*
