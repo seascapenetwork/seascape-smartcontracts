@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/ERC721Burnable.sol)
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.0;
 
-import "../../GSN/Context.sol";
-import "./ERC721.sol";
+import "../ERC721.sol";
+import "../../../utils/Context.sol";
 
 /**
  * @title ERC721 Burnable Token
- * @dev ERC721 Token that can be irreversibly burned (destroyed).
+ * @dev ERC721 Token that can be burned (destroyed).
  */
 abstract contract ERC721Burnable is Context, ERC721 {
     /**

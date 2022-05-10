@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721.sol)
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.8.0;
 
-import "../../introspection/IERC165.sol";
+import "../../utils/introspection/IERC165.sol";
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
  */
 interface IERC721 is IERC165 {
     /**
-     * @dev Emitted when `tokenId` token is transfered from `from` to `to`.
+     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
@@ -38,6 +39,26 @@ interface IERC721 is IERC165 {
     function ownerOf(uint256 tokenId) external view returns (address owner);
 
     /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
+
+    /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
      * are aware of the ERC721 protocol to prevent tokens from being forever locked.
      *
@@ -51,7 +72,11 @@ interface IERC721 is IERC165 {
      *
      * Emits a {Transfer} event.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * @dev Transfers `tokenId` token from `from` to `to`.
@@ -67,7 +92,11 @@ interface IERC721 is IERC165 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, uint256 tokenId) external;
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * @dev Gives permission to `to` to transfer `tokenId` token to another account.
@@ -85,15 +114,6 @@ interface IERC721 is IERC165 {
     function approve(address to, uint256 tokenId) external;
 
     /**
-     * @dev Returns the account approved for `tokenId` token.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
-    function getApproved(uint256 tokenId) external view returns (address operator);
-
-    /**
      * @dev Approve or remove `operator` as an operator for the caller.
      * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
      *
@@ -106,24 +126,18 @@ interface IERC721 is IERC165 {
     function setApprovalForAll(address operator, bool _approved) external;
 
     /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
      * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
      *
      * See {setApprovalForAll}
      */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-
-    /**
-      * @dev Safely transfers `tokenId` token from `from` to `to`.
-      *
-      * Requirements:
-      *
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-      * - `tokenId` token must exist and be owned by `from`.
-      * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
-      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-      *
-      * Emits a {Transfer} event.
-      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
 }
