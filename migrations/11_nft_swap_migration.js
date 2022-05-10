@@ -13,9 +13,13 @@ let CityNft = artifacts.require("./CityNft.sol");
 let CityFactory = artifacts.require("./CityFactory.sol");
 let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
 
+var RiverboatNft = artifacts.require("./RiverboatNft.sol");
+var RiverboatFactory = artifacts.require("./RiverboatFactory.sol");
 let RiverboatSwapParams = artifacts.require("./swap_params/RiverboatSwapParams.sol");
 
-let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
+// let RiverboatSwapParams = artifacts.require("./swap_params/RiverboatSwapParams.sol");
+//
+// let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
 
 const _feeRate = web3.utils.toWei("1", "ether");
 
@@ -60,9 +64,20 @@ module.exports = async function(deployer, network) {
         // await deployer.deploy(CityFactory, CityNft.address).then(function(){
         //     console.log("CityFactory contract was deployed at address: "+CityFactory.address);
         // });
-        // await deployer.deploy(CitySwapParams).then(function(){
+        // await deployer.deploy(CitySwapParams, SwapSigner.address).then(function(){
         //     console.log("CitySwapParams contract was deployed at address: "+CitySwapParams.address);
         // });
+
+        await deployer.deploy(RiverboatNft).then(function(){
+            console.log("RiverboatNft contract was deployed at address: "+RiverboatNft.address);
+        });
+        await deployer.deploy(RiverboatFactory, RiverboatNft.address).then(function(){
+            console.log("RiverboatFactory contract was deployed at address: "+RiverboatFactory.address);
+        });
+        await deployer.deploy(RiverboatSwapParams, SwapSigner.address).then(function(){
+            console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
+        });
+
         //
         // await deployer.deploy(LighthouseSwapParams).then(function(){
         //     console.log("LighthouseSwapParams contract was deployed at address: "+LighthouseSwapParams.address);
