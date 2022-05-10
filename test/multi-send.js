@@ -120,14 +120,27 @@ contract("Multi Send", async accounts => {
     it("cant send nfts if not an owner", async () => {
       let amount = 3;
       let nftIds = await getNftIds(sender, scapes, amount);
-      let nftAddresses = new Array(amount);
-      nftAddresses.fill(scapes.address);
+      let nftAddresses = new Array(amount).fill(scapes.address);
 
       try{
         await multiSend.sendNfts(amount, sender, nftAddresses, nftIds, {from: receiver});
         assert.fail();
       }catch(e){
         assert.equal(e.reason, "sender not owner of nft");
+      }
+    });
+
+    it("cant send nfts to sender address", async () => {
+      let amount = 2;
+      let nftIds = await getNftIds(sender, scapes, amount);
+      let nftAddresses = new Array(amount).fill(scapes.address);
+
+      try{
+        await scapes.setApprovalForAll(multiSend.address, true, {from: sender});
+        await multiSend.sendNfts(amount, sender, nftAddresses, nftIds, {from: sender});
+        assert.fail();
+      }catch(e){
+        assert.equal(e.reason, "receiver cant be same as sender");
       }
     });
 
