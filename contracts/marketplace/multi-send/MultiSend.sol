@@ -1,6 +1,6 @@
-pragma solidity 0.6.7;
+pragma solidity 0.8.13;
 
-import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/token/ERC721/IERC721.sol";
 
 /// @title Multi send is a part of Seascape marketplace platform.
 /// It allows users to send a batch of nfts to desired address
