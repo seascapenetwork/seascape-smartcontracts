@@ -17,13 +17,16 @@ contract MultiSend {
     {
         require(amount > 1, "minimum 2 nfts are required");
         require(amount < 11, "maximum 10 nfts are allowed");  /// set max amount here
+        require(receiver != msg.sender, "receiver cant be same as sender");
         for(uint i = 0; i < amount; ++i){
             require(IERC721(nftAddresses[i]).ownerOf(nftIds[i]) == msg.sender,
               "sender not owner of nft");
         }
+
         for(uint i = 0; i < amount; ++i){
             IERC721(nftAddresses[i]).safeTransferFrom(msg.sender, receiver, nftIds[i]);
         }
+
         return amount;
     }
 }
