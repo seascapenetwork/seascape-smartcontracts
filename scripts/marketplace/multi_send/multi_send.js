@@ -17,10 +17,9 @@ let init = async function(networkId) {
     // Contracts setup
     //--------------------------------------------------
 
-    console.log("passing");
     let nft = await Nft.at("0xb807A3F0AF8dD50725DB01d0723930bB0DB9837f");
     let multiSend = await MultiSend.at("0xD9B9dC9fE2DEfc87f8d198b25cC8A068Ca45f330");
-    console.log("passing");
+
     //--------------------------------------------------
     // Parameters setup
     //--------------------------------------------------
@@ -32,9 +31,7 @@ let init = async function(networkId) {
     // NOTE if sending nfts with same address (recommended),
     // dont change the following values
     let nftIds = await getNftIds(sender, nft, amount);
-    console.log("passing");
     let nftAddresses = new Array(amount).fill(nft);
-    console.log("passing");
 
     //--------------------------------------------------
     // Function calls
@@ -57,10 +54,9 @@ let init = async function(networkId) {
     }
 
     async function getNftIds(user, token, amount){
-      let nftIds = [];
+      let nftIds = new Array(amount);
       for(let index = 0; index < amount; index++){
-        console.log("fetching..");
-        let tokenId = await token.tokenOfOwnerByIndex(user, index);
+        let tokenId = await nft.tokenOfOwnerByIndex(owner, index).catch(console.error);
         nftIds[index] = parseInt(tokenId);
       }
       return nftIds;
