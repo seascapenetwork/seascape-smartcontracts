@@ -87,6 +87,7 @@ module.exports = async function(deployer, network) {
     } else {
         var crowns = "0xaC0104Cca91D167873B8601d2e71EB3D4D8c33e0";
         var signer ="0xd4d2B5A1065252B59bf2EB08247C5A918A52e98d";
+        console.log(`SwapSigner contract set at ${signer}`);
 
         // await deployer.deploy(SwapSigner).then(function(){
         //     console.log("SwapSigner contract was deployed at address: "+SwapSigner.address);
