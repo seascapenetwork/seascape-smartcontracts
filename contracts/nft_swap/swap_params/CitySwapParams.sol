@@ -12,7 +12,6 @@ contract CitySwapParams {
         swapSigner = SwapSigner(_signerAddress);
     }
 
-    // takes in _encodedData and converts to seascape
     function paramsAreValid (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 

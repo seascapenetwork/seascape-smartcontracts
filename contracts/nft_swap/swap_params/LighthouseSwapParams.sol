@@ -12,7 +12,6 @@ contract LighthouseSwapParams {
         swapSigner = SwapSigner(_signerAddress);
     }
 
-    // takes in _encodedData and converts to seascape
     function paramsAreValid (
         uint256 _offerId,
         bytes memory _encodedData,
