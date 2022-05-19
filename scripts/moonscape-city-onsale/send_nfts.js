@@ -13,7 +13,7 @@ let init = async function(networkId) {
     accounts = await web3.eth.getAccounts();
     console.log(accounts);
 
-    let nft = await Nft.at("0x9ceAB9b5530762DE5409F2715e85663405129e54");
+    let nft = await Nft.at("0x14C7C9D806c7fd8c1B45d466B910c6AbF6428F07");
 
     // return current account and sessionId
     let user = accounts[0];
@@ -21,16 +21,16 @@ let init = async function(networkId) {
 
 
     // fetch nftIds
-    let receiver = "0xE71d14a3fA97292BDE885C1D134bE4698e09b3B7";
-    let amount = 5;
-    console.log(`attempting to send nfts...`);
-    for(let index = 0; index < amount; index++){
-      let tokenId = await nft.tokenOfOwnerByIndex(user, 0);
-      tokenId = parseInt(tokenId.toString());
-      await nft.safeTransferFrom(user, receiver, tokenId);
+    let receiver = "0xBAc0cC03dC049630C25504426263573d373316b2";
 
-      console.log(`Nft with id ${tokenId} was sent.`);
-    }
+
+      let tokenId = [210, 211, 303, 305, 401, 402, 503, 503];
+      for(i = 0; i<tokenId.length; i++){
+        console.log(`attempting to withdraw nft id ${tokenId[i]}...`);
+        await nft.safeTransferFrom(user, receiver, tokenId[i], {from: user});
+        console.log(`${tokenId[i]} was transfered`);
+      }
+
 
 
 

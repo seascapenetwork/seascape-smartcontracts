@@ -1,5 +1,5 @@
-var SwapSigner = artifacts.require("./SwapSigner.sol");
-var NftSwap = artifacts.require("./NftSwap.sol");
+// var SwapSigner = artifacts.require("./SwapSigner.sol");
+// var NftSwap = artifacts.require("./NftSwap.sol");
 //
 // var Crowns = artifacts.require("./CrownsToken.sol");
 // var MscpToken = artifacts.require("./MscpToken.sol");
@@ -11,16 +11,16 @@ var NftSwap = artifacts.require("./NftSwap.sol");
 //
 // let CityNft = artifacts.require("./CityNft.sol");
 // let CityFactory = artifacts.require("./CityFactory.sol");
-let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
+// let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
 //
 // var RiverboatNft = artifacts.require("./RiverboatNft.sol");
 // var RiverboatFactory = artifacts.require("./RiverboatFactory.sol");
 // let RiverboatSwapParams = artifacts.require("./swap_params/RiverboatSwapParams.sol");
 
-// let WichitaSwapParams = artifacts.require("./swap_params/WichitaSwapParams.sol");
-// let ZombieFighterSwapParams = artifacts.require("./ZombieFighterSwapParams.sol");
+let WichitaSwapParams = artifacts.require("./swap_params/WichitaSwapParams.sol");
+let ZombieFighterSwapParams = artifacts.require("./ZombieFighterSwapParams.sol");
 //
-let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
+// let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
 
 const _feeRate = web3.utils.toWei("1", "ether");
 
@@ -85,8 +85,8 @@ module.exports = async function(deployer, network) {
         // });
 
     } else {
-        var crowns = "0x1aBB8FdE5e64be3419FceF80df335C68dD2956C7";
-        var signer ="0x8033ebE98607FD9B596eC0D746ed197Ef3EAE311";
+        var crowns = "0xaC0104Cca91D167873B8601d2e71EB3D4D8c33e0";
+        var signer ="0xd4d2B5A1065252B59bf2EB08247C5A918A52e98d";
         console.log(`SwapSigner contract set at ${signer}`);
 
         // await deployer.deploy(SwapSigner).then(function(){
@@ -105,20 +105,20 @@ module.exports = async function(deployer, network) {
         //     console.log("CitySwapParams contract was deployed at address: "+CitySwapParams.address);
         // });
         //
-        await deployer.deploy(LighthouseSwapParams, signer).then(function(){
-            console.log("LighthouseSwapParams contract was deployed at address: "+LighthouseSwapParams.address);
-        });
+        // await deployer.deploy(LighthouseSwapParams, signer).then(function(){
+        //     console.log("LighthouseSwapParams contract was deployed at address: "+LighthouseSwapParams.address);
+        // });
         //
         // await deployer.deploy(RiverboatSwapParams, signer).then(function(){
         //     console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
         // });
 
-        // await deployer.deploy(WichitaSwapParams, signer).then(function(){
-        //     console.log("WichitaSwapParams contract was deployed at address: "+WichitaSwapParams.address);
-        // });
-        // await deployer.deploy(ZombieFighterSwapParams, signer).then(function(){
-        //     console.log("ZombieFighterSwapParams contract was deployed at address: "+ZombieFighterSwapParams.address);
-        // });
+        await deployer.deploy(WichitaSwapParams, signer).then(function(){
+            console.log("WichitaSwapParams contract was deployed at address: "+WichitaSwapParams.address);
+        });
+        await deployer.deploy(ZombieFighterSwapParams, signer).then(function(){
+            console.log("ZombieFighterSwapParams contract was deployed at address: "+ZombieFighterSwapParams.address);
+        });
 
     }
 
