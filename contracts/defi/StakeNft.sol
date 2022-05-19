@@ -76,7 +76,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         deposit(key, stakerAddr, amount);
     }
 
-    function unstake(uint key, address stakerAddr, uint id)
+    function unstake(uint key, address stakerAddr, uint id, bool keepAlive)
         external
         nonReentrant
     {
@@ -87,11 +87,15 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         require(owners[msg.sender][key][id] == stakerAddr);
 
         uint stakedAmount = weights[msg.sender][key][id];
-        
+
         delete owners[msg.sender][key][id];
         delete weights[msg.sender][key][id];
 
-        nft.safeTransferFrom(address(this), stakerAddr, id);
+        if (keepAlive) {
+            nft.safeTransferFrom(address(this), stakerAddr, id);
+        } else {
+            nft.safeTransferFrom(address(this), 0x000000000000000000000000000000000000dEaD, id);
+        }
 
 
         withdraw(key, stakerAddr, stakedAmount);
@@ -107,7 +111,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
 
     function _claim(uint key, address stakerAddr, uint interest) internal override returns(bool) {
         address rewardToken = periods[msg.sender][key].rewardToken;
-        
+
         if (rewardToken == address(0)) {
             payable(stakerAddr).transfer(interest);
             return true;
@@ -116,10 +120,10 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         uint contractBalance = _token.balanceOf(vault);
         require(contractBalance > interest, "Insufficient balance of reward");
         IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
-        
+
         return true;
     }
-    
+
     receive() external payable {
         // React to receiving ether
     }
