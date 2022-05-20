@@ -1,7 +1,7 @@
 pragma solidity 0.6.7;
 
 import "./Stake.sol";
-import "./../game_5/helpers/VaultHandler.sol";
+import "./../mini-game/game-5/helpers/VaultHandler.sol";
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
