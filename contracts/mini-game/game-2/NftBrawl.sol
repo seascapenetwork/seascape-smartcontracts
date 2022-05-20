@@ -1,26 +1,26 @@
 pragma solidity 0.6.7;
 
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../seascape_nft/NftTypes.sol";
-import "./../seascape_nft/NftFactory.sol";
-import "./NftRushCrowns.sol";
-import "./NftRushLeaderboard.sol";
-import "./NftRushGameSession.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../openzeppelin/contracts/utils/Counters.sol";
+import "./../../seascape_nft/NftTypes.sol";
+import "./../../seascape_nft/NftFactory.sol";
+import "./NftBrawlCrowns.sol";
+import "./NftBrawlLeaderboard.sol";
+import "./NftBrawlGameSession.sol";
 
 /// @title Nft Rush a game on seascape platform allowing to earn Nft by spending crowns
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
 /// @author Medet Ahmetson
-contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
+contract NftBrawl is Ownable, GameSession, NftBrawlCrowns, Leaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
     /// @notice nft factory is a contract that mints nfts
-    NftFactory nftFactory;    
+    NftFactory nftFactory;
 
     /// @notice minimum CWS amount to spend in game.
     /// @dev in WEI format.
@@ -29,8 +29,8 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
     /// @dev in WEI format.
     uint256 public maxSpend;
 
-    address public signer; 
-    
+    address public signer;
+
     struct Balance {
         uint256 amount;
         uint256 mintedTime;
@@ -57,19 +57,19 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
         nftFactory = NftFactory(_factory);
 
         /// @dev set crowns is defined in Crowns.sol
-        setCrowns(_crowns);     
+        setCrowns(_crowns);
 
         signer = msg.sender;
 
         minSpend = _minSpend;
         maxSpend = _maxSpend;
     }
-    
+
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
 
-    /** 
+    /**
      *  @notice Starts a staking session for a finite period of time.
      *  And activated in certain period.
      *
@@ -78,7 +78,7 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
      *  @param _startTime session start time in unix timestamp
      *  @param _generation Seascape Nft generation that is given as a reward
      *
-     *  Emits an {SessionStarted} event.  
+     *  Emits an {SessionStarted} event.
      *
      *  Requirements:
      *
@@ -90,14 +90,14 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
         }
 
         uint256 _sessionId = _startSession(_rewardToken, _interval, _period, _startTime, _generation);
-        
+
         announceLeaderboard(_sessionId, _startTime);
 
         emit SessionStarted(_rewardToken, _sessionId, _interval, _period, _generation);
     }
 
-    
-    /** 
+
+    /**
      *  @notice Sets NFT factory that will mint a token for stakers
      *
      *  @param _address a new Address of Nft Factory
@@ -110,8 +110,8 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
         emit NftFactorySet(_address);
     }
 
-    
-    /** 
+
+    /**
      *  @notice set signer
      *
      *  @param _signer a new Address of signer
@@ -133,7 +133,7 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
 
         emit MinSpendUpdated(_amount);
     }
-        
+
     /**
      *  @notice minimum amount of Crowns that players could spend
      *
@@ -189,14 +189,14 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
             "NFT Rush: Can not spent more than one time");
 
         _balance.amount = _balance.amount.add(_amount);
-    
+
         emit Spent(msg.sender, _sessionId, _balance.amount, _balance.mintedTime, _amount);
     }
 
 
     /**
      *  @notice mints Nft of {_quality}.
-     *  @dev The Quality of Nft is determined by centralized server. 
+     *  @dev The Quality of Nft is determined by centralized server.
      *  As a proof centrlized server returns a signature
      *  to validate the quality
      *
@@ -224,7 +224,7 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
         require(_balance.mintedTime == 0 ||
             (_balance.mintedTime.add(_session.interval) < block.timestamp),
             "NFT Rush: Still in locking period, please try again after locking interval passes");
-    
+
         /// Validation of quality
         /// message is generated as owner + amount + last time stamp + quality
         bytes memory _prefix = "\x19Ethereum Signed Message:\n32";
@@ -240,11 +240,11 @@ contract NftRush is Ownable, GameSession, NftRushCrowns, Leaderboard {
 
         require(_recover == signer,
             "NFT Rush: Failed to verify quality signature");
-    
+
         uint256 _tokenId = nftFactory.mintQuality(msg.sender, _session.generation, _quality);
         require(_tokenId > 0,
             "NFT Rush: failed to mint a token");
-    
+
         _balance.mintedTime = block.timestamp;
         _balance.amount = 0;
         nonces[msg.sender]++;

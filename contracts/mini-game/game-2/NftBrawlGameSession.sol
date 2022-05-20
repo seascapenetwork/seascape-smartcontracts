@@ -1,8 +1,8 @@
 pragma solidity 0.6.7;
 
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../openzeppelin/contracts/utils/Counters.sol";
 
 /// @dev Nft Rush and Leaderboard contracts both requires Game Session data
 /// So, making Game Session separated.
@@ -28,11 +28,11 @@ contract GameSession is Ownable {
     mapping(uint256 => Session) public sessions;
 
     event SessionStarted(address indexed rewardToken, uint256 id, uint256 startTime, uint256 endTime, uint256 generation);
-    
+
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
-    
+
     /**
      *  @notice Starts a staking session for a finite _period of
      *  time, starting from _startTime. It allows to claim a
@@ -51,16 +51,16 @@ contract GameSession is Ownable {
 
         uint256 _lastSessionId = lastSessionId();
         if (_lastSessionId > 0) {
-            require(!isActive(_lastSessionId), "NFT Rush: previous session should be expired"); 
+            require(!isActive(_lastSessionId), "NFT Rush: previous session should be expired");
         }
-    
-        sessionId.increment();      
+
+        sessionId.increment();
         uint256 _sessionId = sessionId.current();
-        
+
         sessions[_sessionId] = Session(_rewardToken, _interval, _period, _startTime, _generation);
 
         emit SessionStarted(_rewardToken, _sessionId, _startTime, _startTime.add(_period), _generation);
-        
+
         return _sessionId;
     }
 
