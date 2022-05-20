@@ -1,12 +1,12 @@
 pragma solidity 0.6.7;
 
-import "./../../defi/StakeToken.sol";
+import "./../../../defi/StakeToken.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../helpers/VaultHandler.sol";
-import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @notice Stake one token, and earn another token.
 /// @dev WARNING! WARNING! WARNING
@@ -91,7 +91,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         stakeToken          = _stake;
         rewardToken         = _reward;
         stakeHandler        = _stakeHandler;
-        
+
         initReentrancyStatus();
     }
 
@@ -108,7 +108,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
     {
         require(sessionChallenges[sessionId].levelId == 0, "already added to the session");
 
-        (uint256 reward, uint256 stakeAmount, uint256 stakePeriod, uint256 multiplier) 
+        (uint256 reward, uint256 stakeAmount, uint256 stakePeriod, uint256 multiplier)
             = abi.decode(data, (uint256, uint256, uint256, uint256));
         require(reward > 0 && stakeAmount > 0 && stakePeriod > 0, "zero_value");
 
@@ -165,7 +165,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         // if time completed, then user can only unstake his tokens.
         require(!playerChallenge.completed &&
             !isTimeCompleted(sessionChallenge, playerChallenge, block.timestamp), "time completed");
-    
+
         uint256 total = amount + playerChallenge.amount;
         require(total >= sessionChallenge.stakeAmount, "invalid stake amount");
 
@@ -222,7 +222,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
 
         // require(amount <= playerChallenge.amount, "unstake amout must equal stake!");
         if (block.timestamp < (startTime + period)) {
-        
+
             require(timeCompleted, "TokenChallenge Withdraw after completion");
 
             if (!playerChallenge.completed) {
@@ -309,7 +309,7 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         if (playerChallenge.amount < sessionChallenge.stakeAmount) {
             return false;
         }
-            
+
         uint256 duration    = (currentTime - playerChallenge.stakedTime);
         uint256 time        = playerChallenge.stakedDuration + duration;
 

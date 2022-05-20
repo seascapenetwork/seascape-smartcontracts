@@ -1,13 +1,13 @@
 pragma solidity 0.6.7;
 
-import "./../../defi/StakeNft.sol";
+import "./../../../defi/StakeNft.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
-import "./../../openzeppelin/contracts/access/Ownable.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @notice Stake a single nft , and earn ERC20 token
 ///
@@ -42,7 +42,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         bool counted;               // True if the stake amount is added to total season amount
 
         bool completed;             // True if challenge in the season was completed by the player
-        
+
 
         uint nftId;              //  that user staked in.
     }
@@ -113,7 +113,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
     {
         require(sessionChallenges[sessionId].levelId == 0, "already added to the session");
 
-        (uint reward, uint stakePeriod, uint8 burn) 
+        (uint reward, uint stakePeriod, uint8 burn)
             = abi.decode(data, (uint, uint, uint8));
         require(reward > 0 && stakePeriod > 0, "zero_value");
 
@@ -150,7 +150,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         require(sessionChallenge.levelId > 0, "session does not exist");
-        
+
         PlayerChallenge storage playerChallenge = playerParams[sessionId][staker];
 
         // if full completed, then user withdrew everything completely.
@@ -198,7 +198,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
 
         if (block.timestamp < (startTime + period)) {
             require(timeCompleted, "NftChallenge Withdraw after completion");
-            
+
             if (!playerChallenge.completed) {
                 playerChallenge.completed = true;
             }
@@ -281,7 +281,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         if (playerChallenge.nftId == 0) {
             return false;
         }
-            
+
          uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
         return (currentTime >= endTime);
@@ -314,7 +314,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         returns(uint, uint)
     {
         /// Staking amount
-        (uint8 v, bytes32 r, bytes32 s, uint nftId, uint weight) 
+        (uint8 v, bytes32 r, bytes32 s, uint nftId, uint weight)
             = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
         require(nftId > 0, "nft  null params");
         require(weight > 0, "weight is 0");
