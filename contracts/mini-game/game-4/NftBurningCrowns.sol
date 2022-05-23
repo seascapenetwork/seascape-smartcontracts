@@ -1,16 +1,16 @@
 pragma solidity 0.6.7;
 
-import "./../../interfaces/CrownsInterface.sol";
+import "./../../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
-/// @dev Set Crowns.
+/// @dev Nft Rush and Leaderboard contracts both are with Crowns.
 /// So, making Crowns available for both Contracts by moving it to another contract.
 ///
 /// @author Medet Ahmetson
 contract NftBurningCrowns {
-    CrownsInterface public crowns;
+    CrownsToken public crowns;
 
    function setCrowns(address _crowns) internal {
         require(_crowns != address(0), "Crowns can't be zero address");
-       	crowns = CrownsInterface(_crowns);
+       	crowns = CrownsToken(_crowns);
    }
 }

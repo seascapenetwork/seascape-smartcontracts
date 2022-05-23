@@ -1,14 +1,14 @@
 pragma solidity 0.6.7;
 
 //declare imports
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../seascape_nft/NftFactory.sol";
-import "./../seascape_nft/SeascapeNft.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../openzeppelin/contracts/utils/Counters.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./../../seascape_nft/NftFactory.sol";
+import "./../../seascape_nft/SeascapeNft.sol";
 import "./NftBurningCrowns.sol";
 
 
