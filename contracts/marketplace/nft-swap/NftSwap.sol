@@ -261,9 +261,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
             if (_bountyAddress == address(crowns)) {
                 crowns.transferFrom(msg.sender, address(this), fee + _bounty);
             } else {
-                if (_bountyAddress == address(0)) {
-                    payable(address(this)).transfer(_bounty);
-                } else {
+                if (_bountyAddress != address(0)) {
                     IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), _bounty);
                 }
                 crowns.transferFrom(msg.sender, address(this), fee);
