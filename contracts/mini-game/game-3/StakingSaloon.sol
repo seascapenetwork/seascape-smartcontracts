@@ -6,8 +6,8 @@ import "./../../openzeppelin/contracts/access/Ownable.sol";
 import "./../../openzeppelin/contracts/math/SafeMath.sol";
 import "./../../openzeppelin/contracts/utils/Counters.sol";
 import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../../seascape_nft/NftFactory.sol";
-import "./../../seascape_nft/SeascapeNft.sol";
+import "./../../seascape-nft/NftFactory.sol";
+import "./../../seascape-nft/SeascapeNft.sol";
 
 /// @title Seascape NFT staking contract.
 /// @author Medet Ahmetson <admin@blocklords.io>

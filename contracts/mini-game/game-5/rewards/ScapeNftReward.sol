@@ -2,7 +2,7 @@ pragma solidity 0.6.7;
 
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../interfaces/ZombieFarmRewardInterface.sol";
-import "./../../../seascape_nft/NftFactory.sol";
+import "./../../../seascape-nft/NftFactory.sol";
 import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../../../openzeppelin/contracts/access/Ownable.sol";
 
