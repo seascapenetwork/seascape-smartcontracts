@@ -1,6 +1,6 @@
 pragma solidity 0.6.7;
 
-import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
 
 /// @title SwapSigner holds address for signature verification.
 /// It is used by NftSwap and SwapParams contracts.
