@@ -1,17 +1,17 @@
 var SwapSigner = artifacts.require("./SwapSigner.sol");
 var NftSwap = artifacts.require("./NftSwap.sol");
 //
-// var Crowns = artifacts.require("./CrownsToken.sol");
+var Crowns = artifacts.require("./CrownsToken.sol");
 // var MscpToken = artifacts.require("./MscpToken.sol");
 //
 //
-// var Nft = artifacts.require("./SeascapeNft.sol");
-// var Factory = artifacts.require("./NftFactory.sol");
-// var ScapeSwapParams = artifacts.require("./swap_params/ScapeSwapParams.sol");
+var Nft = artifacts.require("./SeascapeNft.sol");
+var Factory = artifacts.require("./NftFactory.sol");
+var ScapeSwapParams = artifacts.require("./swap_params/ScapeSwapParams.sol");
 //
 // let CityNft = artifacts.require("./CityNft.sol");
 // let CityFactory = artifacts.require("./CityFactory.sol");
-let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
+// let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
 //
 // var RiverboatNft = artifacts.require("./RiverboatNft.sol");
 // var RiverboatFactory = artifacts.require("./RiverboatFactory.sol");
@@ -20,7 +20,7 @@ let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
 // let WichitaSwapParams = artifacts.require("./swap_params/WichitaSwapParams.sol");
 // let ZombieFighterSwapParams = artifacts.require("./ZombieFighterSwapParams.sol");
 //
-let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
+// let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
 
 const _feeRate = web3.utils.toWei("1", "ether");
 
@@ -69,15 +69,15 @@ module.exports = async function(deployer, network) {
         //     console.log("CitySwapParams contract was deployed at address: "+CitySwapParams.address);
         // });
 
-        await deployer.deploy(RiverboatNft).then(function(){
-            console.log("RiverboatNft contract was deployed at address: "+RiverboatNft.address);
-        });
-        await deployer.deploy(RiverboatFactory, RiverboatNft.address).then(function(){
-            console.log("RiverboatFactory contract was deployed at address: "+RiverboatFactory.address);
-        });
-        await deployer.deploy(RiverboatSwapParams, SwapSigner.address).then(function(){
-            console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
-        });
+        // await deployer.deploy(RiverboatNft).then(function(){
+        //     console.log("RiverboatNft contract was deployed at address: "+RiverboatNft.address);
+        // });
+        // await deployer.deploy(RiverboatFactory, RiverboatNft.address).then(function(){
+        //     console.log("RiverboatFactory contract was deployed at address: "+RiverboatFactory.address);
+        // });
+        // await deployer.deploy(RiverboatSwapParams, SwapSigner.address).then(function(){
+        //     console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
+        // });
 
         //
         // await deployer.deploy(LighthouseSwapParams).then(function(){
