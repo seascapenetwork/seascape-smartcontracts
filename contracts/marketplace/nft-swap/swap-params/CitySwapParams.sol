@@ -46,8 +46,8 @@ contract CitySwapParams {
         public
         view
         returns (
-            uint256 nftId,
-            uint8 category
+            uint256,
+            uint8
         )
     {
         (uint256 nftId, uint8 category) = abi

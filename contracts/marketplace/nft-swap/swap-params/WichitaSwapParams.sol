@@ -45,7 +45,7 @@ contract WichitaSwapParams {
         public
         view
         returns (
-            uint8 quality
+            uint8
         )
     {
         uint8 quality = abi.decode(_encodedData, (uint8));

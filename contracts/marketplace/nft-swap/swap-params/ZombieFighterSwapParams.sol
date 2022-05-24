@@ -47,8 +47,8 @@ contract ZombieFighterSwapParams {
         public
         view
         returns (
-            bytes32 name,
-            uint8 quality
+            bytes32,
+            uint8
         )
     {
         (bytes32 name, uint8 quality) = abi

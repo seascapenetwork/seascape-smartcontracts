@@ -48,9 +48,9 @@ contract ScapeSwapParams {
         public
         view
         returns (
-            uint256 imgId,
-            uint256 generation,
-            uint8 quality
+            uint256 ,
+            uint256,
+            uint8
         )
     {
         (uint256 imgId, uint256 generation, uint8 quality) = abi
