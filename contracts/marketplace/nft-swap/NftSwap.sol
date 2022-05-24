@@ -105,10 +105,6 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
     // External methods
     //--------------------------------------------------
 
-    fallback() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
     /// @notice enable/disable createOffer() and acceptOffer() functionality
     /// @param _tradeEnabled set tradeEnabled to true/false
     function enableTrade(bool _tradeEnabled) external onlyOwner { tradeEnabled = _tradeEnabled; }
