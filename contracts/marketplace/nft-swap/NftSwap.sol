@@ -315,7 +315,6 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
     )
         public
         nonReentrant
-        payable
     {
         OfferObject storage obj = offerObjects[_offerId];
         require(tradeEnabled, "trade is disabled");
