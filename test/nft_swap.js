@@ -710,7 +710,6 @@ contract("Nft Swap", async accounts => {
       //structure: (coin, amount, spender, owner)
       await approveCoins(crowns, fee+bounty, nftSwap.address, seller);
 
-      console.log(requestedTokensArray);
       await nftSwap.createOffer(offeredTokensAmount, offeredTokensArray, requestedTokensAmount,
         requestedTokensArray, bounty, bountyAddress, {from: seller}).catch(console.error);
 
@@ -751,7 +750,6 @@ contract("Nft Swap", async accounts => {
       //structure: (coin, amount, spender, owner)
       await approveCoins(crowns, fee+bounty, nftSwap.address, seller);
 
-      console.log(requestedTokensArray);
       await nftSwap.createOffer(offeredTokensAmount, offeredTokensArray, requestedTokensAmount,
         requestedTokensArray, bounty, bountyAddress, {from: seller}).catch(console.error);
 
