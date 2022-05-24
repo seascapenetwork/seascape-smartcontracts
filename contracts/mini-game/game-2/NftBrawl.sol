@@ -7,14 +7,14 @@ import "./../../openzeppelin/contracts/math/SafeMath.sol";
 import "./../../openzeppelin/contracts/utils/Counters.sol";
 import "./../../seascape-nft/NftTypes.sol";
 import "./../../seascape-nft/NftFactory.sol";
-import "./NftBrawlCrowns.sol";
+import "./../../utils/SetCrowns.sol";
 import "./NftBrawlLeaderboard.sol";
 import "./NftBrawlGameSession.sol";
 
 /// @title Nft Rush a game on seascape platform allowing to earn Nft by spending crowns
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
 /// @author Medet Ahmetson
-contract NftBrawl is Ownable, GameSession, NftBrawlCrowns, Leaderboard {
+contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;

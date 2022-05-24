@@ -9,14 +9,15 @@ import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./../../openzeppelin/contracts/access/Ownable.sol";
 import "./NftParamsInterface.sol";
 import "./SwapSigner.sol";
-import "./Crowns.sol";
+import "./../../utils/SetCrowns.sol";
 
 /// @title Nft Swap is a part of Seascape marketplace platform.
 /// It allows users to obtain desired nfts in exchange for their offered nfts,
 /// a fee and an optional bounty
 /// @author Nejc Schneider
-contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
+contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
     using SafeERC20 for IERC20;
+    using SafeERC20 for CrownsInterface;
 
     SwapSigner private swapSigner;
 
@@ -262,17 +263,17 @@ contract NftSwap is Crowns, Ownable, ReentrancyGuard, IERC721Receiver {
         // send fee and _bounty to contract
         if (_bounty > 0) {
             if (_bountyAddress == address(crowns)) {
-                IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee + _bounty);
+                crowns.transferFrom(msg.sender, address(this), fee + _bounty);
             } else {
                 if (_bountyAddress == address(0)) {
-                    address(this).transfer(_bounty);
+                    payable(address(this)).transfer(_bounty);
                 } else {
                     IERC20(_bountyAddress).safeTransferFrom(msg.sender, address(this), _bounty);
                 }
-                IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee);
+                crowns.transferFrom(msg.sender, address(this), fee);
             }
         } else {
-            IERC20(crowns).safeTransferFrom(msg.sender, address(this), fee);
+            crowns.transferFrom(msg.sender, address(this), fee);
         }
 
         /// update states
