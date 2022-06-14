@@ -1,17 +1,17 @@
 pragma solidity 0.6.7;
 
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./NftRushGameSession.sol";
-//import "./NftRushCrowns.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./NftBrawlGameSession.sol";
+//import "./NftBrawlCrowns.sol";
 
 /// @notice There are four types of leaderboards in the game:
 ///
 /// - all time spenders
 /// - top daily minters
-/// 
+///
 /// @author Medet Ahmetson
 contract Leaderboard is Ownable, GameSession { //, Crowns {
     using SafeMath for uint256;
@@ -26,31 +26,31 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     /// daily leaderboards were announced.
     /// @dev be careful, if the daily winners setting doesn't set all 10 winners,
     /// you wouldn't be able to set missed winners when settings next day winners.
-    mapping(uint256 => Announcement) public announcement;    
+    mapping(uint256 => Announcement) public announcement;
 
     /**
      *  @dev Amounts of CWS that winners will claim.
      *  The values should be set after launching the session
-     *  
+     *
      *  Example values:
      *
-     *  - 1st place gets 100K, 
+     *  - 1st place gets 100K,
      *  - 2nd place gets 50K...
      */
     uint256[10] public spentDailyPrizes;
     uint256[10] public mintedAllTimePrizes;
 
-    /** 
+    /**
      *  @notice tracks amount of claimable CWS tokens collected from leaderboards.
      *
      *  Structure:
-     *  
+     *
      *  - wallet address => token address => prizes sum
      */
     mapping(address => mapping(address => uint256)) public spentDailyClaimables;
     mapping(address => mapping(address => uint256)) public mintedAllTimeClaimables;
 
-    
+
     event Rewarded(address indexed owner, string rewardType, uint256 amount);
     event PrizeSet(uint256[10] _spentDaily, uint256[10] _mintedAllTime);
     event AnnounceDailyWinners(uint256 indexed sessionId, address[10] spentWinners);
@@ -73,10 +73,10 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  @param _sessionId a session Id, that leaderboard is attached to.
      *  @param _startTime the first day of leaderboard, to track daily winners announcement
      */
-    function announceLeaderboard(uint256 _sessionId, uint256 _startTime) internal {      
+    function announceLeaderboard(uint256 _sessionId, uint256 _startTime) internal {
         // this variables are part of leaderboard,
         // therefore located in leaderboard contract
-        announcement[_sessionId] = Announcement(false, _startTime);    
+        announcement[_sessionId] = Announcement(false, _startTime);
     }
 
 
@@ -88,9 +88,9 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      */
     function setPrizes(uint256[10] calldata _spentDaily, uint256[10] calldata _mintedAllTime) external onlyOwner {
         spentDailyPrizes = _spentDaily;
-        mintedAllTimePrizes = _mintedAllTime;    
+        mintedAllTimePrizes = _mintedAllTime;
 
-        emit PrizeSet(_spentDaily, _mintedAllTime);   
+        emit PrizeSet(_spentDaily, _mintedAllTime);
     }
 
 
@@ -101,7 +101,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
     /**
      *  @notice Announce winners list for daily top spenders leaderboard
-     *  
+     *
      *  @param _sessionId a session of the game
      *  @param _winners list of wallet addresses
      *  @param _winnersAmount number of winners. Some day would not have 10 winners
@@ -128,20 +128,20 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
                 require(_reward.transferFrom(owner(), address(this), _prizeSum), "NFT Rush: not enough tokens to give as a reward");
             }
 
-            for (uint i=0; i<_winnersAmount; i++) {     
+            for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
-            
-                spentDailyClaimables[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);     
+
+                spentDailyClaimables[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);
             }
         }
-    
+
         setDailySpentWinnersTime(_sessionId);
         emit AnnounceDailyWinners(_sessionId, _winners);
     }
 
     /**
      *  @notice Announce winners list for all time top minters leaderboard
-     *  
+     *
      *  @param _sessionId a session of the game
      *  @param _winners list of wallet addresses
      *  @param _winnersAmount number of winners. Some day would not have 10 winners
@@ -170,7 +170,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
 
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
-            
+
                 // increase amount of daily rewards that msg.sender could claim
                 mintedAllTimeClaimables[_winner][_session.rewardToken] = mintedAllTimeClaimables[_winner][_session.rewardToken].add(mintedAllTimePrizes[i]);
             }
@@ -191,11 +191,11 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  @notice Player can claim leaderboard rewards.
      *
      *  @param _sessionId a session of the game
-     * 
+     *
      *  Emits a {Rewarded} event.
      *
      *  Requirements:
-     * 
+     *
      *  - `spentDailyClaimables` for player should be greater than 0
      *  - transfer of Crowns from contract balance to player must be successful.
      */
@@ -209,7 +209,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
         spentDailyClaimables[_msgSender()][_session.rewardToken] = 0;
-        
+
         emit Rewarded(_msgSender(), "DAILY_SPENT", _amount);
     }
 
@@ -221,7 +221,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  Emits a {Rewarded} event.
      *
      *  Requirements:
-     * 
+     *
      *  - `mintedAllTimeClaimables` for player should be greater than 0
      *  - transfer of Crowns from contract balance to player must be successful.
      */
@@ -235,7 +235,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         _safeTransfer(_session.rewardToken, _msgSender(), _amount);
 
         mintedAllTimeClaimables[_msgSender()][_session.rewardToken] = 0;
-        
+
         emit Rewarded(_msgSender(), "ALL_TIME_MINTED", _amount);
     }
 
@@ -256,7 +256,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         uint256 dayAfterSession = _session.startTime.add(_session.period).add(1 days);
 
         uint256 today = announcement[_sessionId].dailySpentTime.add(1 days);
-        
+
         // time should be 24 hours later than last announcement.
         // as we announce leaders for the previous 24 hours.
         //
@@ -279,7 +279,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         Session storage _session = sessions[_sessionId];
         return !isActive(_sessionId)
             && _session.startTime > 0
-            && !announcement[_sessionId].minted;            
+            && !announcement[_sessionId].minted;
     }
 
 

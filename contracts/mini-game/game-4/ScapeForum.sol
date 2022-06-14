@@ -1,21 +1,21 @@
 pragma solidity 0.6.7;
 
 //declare imports
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
-import "./../openzeppelin/contracts/utils/Counters.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../seascape_nft/NftFactory.sol";
-import "./../seascape_nft/SeascapeNft.sol";
-import "./NftBurningCrowns.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/math/SafeMath.sol";
+import "./../../openzeppelin/contracts/utils/Counters.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./../../seascape-nft/NftFactory.sol";
+import "./../../seascape-nft/SeascapeNft.sol";
+import "./../../utils/SetCrowns.sol";
 
 
 /// @title Nft Burning contract  mints a higher quality nft in exchange for
 /// five lower quality nfts + CWS fee
 /// @author Nejc Schneider
-contract NftBurning is NftBurningCrowns, Ownable, IERC721Receiver{
+contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 

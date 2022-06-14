@@ -1,16 +1,16 @@
 pragma solidity 0.6.7;
 
-import "./NftRush.sol";
+import "./NftBrawl.sol";
 import "./NftBrawlInterface.sol";
-import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /// @title Nft Rush a game on seascape platform allowing to earn Nft by spending crowns
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
 /// @author Medet Ahmetson
 contract NftBrawlManager is Ownable, NftBrawlInterface {
     /// @notice nft factory is a contract that mints nfts
-    NftRush nftBrawl;
+    NftBrawl nftBrawl;
 
     address payable public immutable gelato;
     // Revoke/Allow gelato bot to announce leaderboard.
@@ -38,14 +38,14 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
 
     constructor(address payable _nftBrawl, address payable _gelato) public {
         gelato = _gelato;
-        nftBrawl = NftRush(payable(_nftBrawl));
+        nftBrawl = NftBrawl(payable(_nftBrawl));
         payment = address(0);
     }
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
-    
+
     //--------------------------------------------------
     // Only owner
     //--------------------------------------------------
@@ -78,7 +78,7 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
     function setMinSpendAmount(uint256 _amount) external override onlyOwner {
         nftBrawl.setMinSpendAmount(_amount);
     }
-        
+
     function setMaxSpendAmount(uint256 _amount) external override onlyOwner {
         nftBrawl.setMaxSpendAmount(_amount);
     }

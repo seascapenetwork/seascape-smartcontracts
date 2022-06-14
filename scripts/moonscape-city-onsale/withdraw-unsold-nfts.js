@@ -1,5 +1,5 @@
 let CityNftSale = artifacts.require("CityNftSale");
-let CityNft = artifacts.require("CityNft");
+let CityNft = artifacts.require("ERC721");
 
 
 // global variables
@@ -62,14 +62,21 @@ let init = async function(networkId) {
       while(true){
         let tokenId = await cityNft.tokenOfOwnerByIndex(cityNftSale.address, 0).catch(console.error);
         tokenId = parseInt(tokenId);
-        if(tokenId == NaN){
+        if(isNaN(tokenId)){
           console.log("no more nfts in the contract");
-          break;
+          return;
+        } else {
+          console.log(`transfering nfts to ${receiverAddress}`);
+          console.log(`attempting to withdraw nft id ${tokenId}...`);
+          await cityNft.safeTransferFrom(cityNftSale.address, receiverAddress, tokenId, {from: owner});
+          console.log(`${tokenId} was transfered`);
         }
-
-        console.log(`attempting to withdraw nft id ${tokenId}...`);
-        await cityNft.safeTransferFrom(cityNftSale.address, receiverAddress, tokenId, {from: owner});
-        console.log(`${tokenId} was transfered`);
+        // let tokenId = [100, 101, 200, 201, 300, 301, 400, 401, 500, 501];
+        // for(i = 0; i<tokenId.length; i++){
+        //   console.log(`attempting to withdraw nft id ${tokenId[i]}...`);
+        //   await cityNft.safeTransferFrom(cityNftSale.address, receiverAddress, tokenId[i], {from: owner});
+        //   console.log(`${tokenId} was transfered`);
+        // }
       }
     }
 

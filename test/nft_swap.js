@@ -11,6 +11,11 @@ let ScapeSwapParams = artifacts.require("./swap_params/ScapeSwapParams.sol");
 // let Cities = artifacts.require("./CityNft.sol");
 // let CityFactory = artifacts.require("./CityFactory.sol");
 // let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
+
+// let Boats = artifacts.require("./riverboat/RiverboatNft.sol");
+// let BoatsFactory = artifacts.require("./../riverboat/RiverboatFactory.sol");
+// let BoatsSwapParams = artifacts.require("./swap_params/RiverboatSwapParams.sol");
+
 //
 // let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
 //
@@ -176,6 +181,10 @@ contract("Nft Swap", async accounts => {
     let cityFactory = null;
     let citySwapParams = null;
 
+    let boats = null;
+    let boatsFactory = null;
+    let boatsSwapParams = null;
+
     let lighthouseSwapParams = null;
 
     //accounts
@@ -296,7 +305,11 @@ contract("Nft Swap", async accounts => {
        // cities = await Cities.deployed();
        // cityFactory = await CityFactory.deployed();
        // citySwapParams = await CitySwapParams.deployed();
-       //
+
+       // boats = await Boats.deployed();
+       // boatsFactory = await BoatsFactory.deployed();
+       // boatsSwapParams = await BoatsSwapParams.deployed();
+
        // lighthouseSwapParams = await LighthouseSwapParams.deployed();
 
        //initialize accounts
@@ -319,6 +332,14 @@ contract("Nft Swap", async accounts => {
 
       let isStaticUser = await cityFactory.isStaticUser(owner).catch(console.error);
       assert.equal(isStaticUser, true, `owner should be given a role of static user`);
+    });
+
+    xit("set boat factory and add generator", async () => {
+      await boats.setFactory(boatsFactory.address).catch(console.error); //same as setMinter
+      await boatsFactory.addGenerator(owner, {from: owner}).catch(console.error);
+
+      let isGenerator = await boatsFactory.isGenerator(owner).catch(console.error);
+      assert.equal(isGenerator, true, `owner should be given a role of generator`);
     });
 
     it("mint scapes", async () => {
@@ -397,6 +418,42 @@ contract("Nft Swap", async accounts => {
 
     });
 
+    xit("mint boats", async () => {
+      const amountToMint = {
+        seller: 0, //9
+        buyer: 1,   //5
+      };
+
+      let boatsBeforeSeller = await getNftBalance(boats, seller);
+      let boatsBeforeBuyer = await getNftBalance(boats, buyer);
+
+      await mintBoats();
+
+      let boatsAfterSeller = await getNftBalance(boats, seller);
+      let boatsAftereBuyer = await getNftBalance(boats, buyer);
+
+      assert.equal(boatsAfterSeller, boatsBeforeSeller + amountToMint.seller,
+        `${amountToMint.seller} boats should be minted for seller`);
+      assert.equal(boatsAftereBuyer, boatsBeforeBuyer + amountToMint.buyer,
+        `${amountToMint.buyer} boats should be minted for buyer`);
+
+      // --------------------------------------------------
+      // Internal functions
+      // --------------------------------------------------
+
+      async function mintBoats(){
+        let type = 1;
+
+        for(var i = 0; i < amountToMint.seller; i++){
+          await boatsFactory.mintType(seller, type, {from: owner}).catch(console.error);
+        }
+        for(var i = 0; i < amountToMint.buyer; i++){
+          await boatsFactory.mintType(buyer, type, {from: owner}).catch(console.error);
+        }
+      }
+
+    });
+
     it("approve scapes", async () => {
       await scapes.setApprovalForAll(nftSwap.address, true, {from: seller}).catch(console.error);
       await scapes.setApprovalForAll(nftSwap.address, true, {from: buyer}).catch(console.error);
@@ -414,6 +471,17 @@ contract("Nft Swap", async accounts => {
 
       let buyerIsApproved = await cities.isApprovedForAll(buyer, nftSwap.address);
       let sellerIsApproved = await cities.isApprovedForAll(seller, nftSwap.address);
+
+      assert.equal(buyerIsApproved, true, "buyers tokens are not approved");
+      assert.equal(sellerIsApproved, true, "seller tokens are not approved");
+    });
+
+    xit("approve boats", async () => {
+      await boats.setApprovalForAll(nftSwap.address, true, {from: seller}).catch(console.error);
+      await boats.setApprovalForAll(nftSwap.address, true, {from: buyer}).catch(console.error);
+
+      let buyerIsApproved = await boats.isApprovedForAll(buyer, nftSwap.address);
+      let sellerIsApproved = await boats.isApprovedForAll(seller, nftSwap.address);
 
       assert.equal(buyerIsApproved, true, "buyers tokens are not approved");
       assert.equal(sellerIsApproved, true, "seller tokens are not approved");
@@ -466,7 +534,7 @@ contract("Nft Swap", async accounts => {
       assert.equal(isBountySupported, true, "bounty address not added");
     });
 
-    xit("add native bounty address", async () => {
+    it("add native bounty address", async () => {
       let bountyAddress = "0x0000000000000000000000000000000000000000";
 
       await nftSwap.addSupportedBountyAddress(bountyAddress, {from: owner})
@@ -497,7 +565,17 @@ contract("Nft Swap", async accounts => {
       assert.equal(cityAddressAdded, citySwapParams.address, "cities address not added");
     });
 
-    it("SwapSigner returns signer", async() => {
+    xit("enable boats", async () => {
+      // configure the contract
+      await nftSwap.enableSupportedNftAddress(boats.address, boatsSwapParams.address,
+        {from: owner}).catch(console.error);
+
+      let boatsAddressAdded = await nftSwap.supportedNftAddresses(boats.address);
+
+      assert.equal(boatsAddressAdded, boatsSwapParams.address, "boats address not added");
+    });
+
+    xit("SwapSigner returns signer", async() => {
 
       let signer = await swapSigner.getSigner().catch(console.error);
 
@@ -546,6 +624,24 @@ contract("Nft Swap", async accounts => {
       await signCities(requestedTokensAmount, offerId, requestedTokenParams);
 
       let signatureValid = await citySwapParams.paramsAreValid(offerId, requestedTokensArray[0][1], requestedTokensArray[0][2],
+        requestedTokensArray[0][3], requestedTokensArray[0][4], {from: seller}).catch(console.error);
+
+       assert.equal(signatureValid, true, `signature invalid`);
+    });
+
+    xit("verify boats offer", async() => {
+      // parameters setup
+      let offerId = await getLastOfferId();
+      let requestedTokensAmount = 1;
+      let requestedTokenParams = [
+        //structure: [tokenAddress, nftId, category]
+        ["26", "3"],
+        [null], [null], [null], [null]
+      ];
+
+      await signCities(requestedTokensAmount, offerId, requestedTokenParams);
+
+      let signatureValid = await boatsSwapParams.paramsAreValid(offerId, requestedTokensArray[0][1], requestedTokensArray[0][2],
         requestedTokensArray[0][3], requestedTokensArray[0][4], {from: seller}).catch(console.error);
 
        assert.equal(signatureValid, true, `signature invalid`);
@@ -626,7 +722,47 @@ contract("Nft Swap", async accounts => {
          "Seller didnt pay enough fee");
     });
 
-    it("accept scapes offer", async() => {
+    xit("create scapes offer with riverboat requested nft", async() => {
+      // parameters setup
+      let offerId = await getLastOfferId();
+      let offeredTokensAmount = 1;
+      let requestedTokensAmount = 1;
+      let bounty = web3.utils.toWei("0", "ether");
+      let bountyAddress = crowns.address;
+      let offeredTokenAddress = scapes.address;
+      let requestedTokenAddress = boats.address;
+      let offeredTokenIds = await getTokenIds(seller, scapes, offeredTokensAmount);
+      let requestedTokenParams = [
+        //structure: [tokenAddress, nftId, category]
+        [boats.address, "24", "3"],
+        [null], [null], [null], [null]
+      ];
+
+      setOfferedTokensArray(offeredTokensAmount, offeredTokenIds, offeredTokenAddress)
+      setRequestedTokensArray(requestedTokensAmount, requestedTokenAddress);
+
+      await signCities(requestedTokensAmount, offerId, requestedTokenParams);
+
+      let scapesBeforeSeller = await getNftBalance(scapes, seller);
+      let crownsBeforeSeller = await getCoinsBalance(crowns, seller);
+
+      // contract calls
+      //structure: (coin, amount, spender, owner)
+      await approveCoins(crowns, fee+bounty, nftSwap.address, seller);
+
+      await nftSwap.createOffer(offeredTokensAmount, offeredTokensArray, requestedTokensAmount,
+        requestedTokensArray, bounty, bountyAddress, {from: seller}).catch(console.error);
+
+       let scapesAfterSeller = await getNftBalance(scapes, seller);
+       let crownsAfterSeller = await getCoinsBalance(crowns, seller);
+
+       assert.equal(scapesAfterSeller + offeredTokensAmount, scapesBeforeSeller,
+         `${offeredTokensAmount} tokens should be taken from seller`);
+       assert.equal(crownsBeforeSeller, crownsAfterSeller + fee/ether + bounty/ether,
+         "Seller didnt pay enough fee");
+    });
+
+    xit("accept scapes offer", async() => {
       let offerId = await getLastOfferId();
       let offeredTokensAmount = 1;
       let requestedTokensAmount = 1;
@@ -661,7 +797,7 @@ contract("Nft Swap", async accounts => {
           "contract didnt burn enough fee");
     });
 
-    xit("cancel scapes offer", async() => {
+    it("cancel scapes offer", async() => {
       let offerId = await getLastOfferId();
       let offerTokensAmount = 1;
       let bounty = web3.utils.toWei("1", "ether");
@@ -798,7 +934,7 @@ contract("Nft Swap", async accounts => {
         "seller received insufficient bounty");
     });
 
-    xit("create scapes offer with native bounty", async() => {
+    it("create scapes offer with native bounty", async() => {
       // parameters setup
       let offerId = await getLastOfferId();
       let offeredTokensAmount = 1;
@@ -842,7 +978,7 @@ contract("Nft Swap", async accounts => {
          "contract didnt receive enough bounty");
     });
 
-    xit("accept scapes offer with native bounty", async() => {
+    it("accept scapes offer with native bounty", async() => {
       let offerId = await getLastOfferId();
       let offeredTokensAmount = 1;
       let requestedTokensAmount = 1;

@@ -3,16 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import "./../SwapSigner.sol";
 
-/// @title CitySwapParams is nft params encoder/decoder, signature verifyer
+/// @title RiverboatSwapParams is nft params encoder/decoder, signature verifyer
 /// @author Nejc Schneider
-contract CitySwapParams {
+contract RiverboatSwapParams {
     SwapSigner private swapSigner;
 
     constructor(address _signerAddress) public {
         swapSigner = SwapSigner(_signerAddress);
     }
 
-    // takes in _encodedData and converts to seascape
     function paramsAreValid (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 
@@ -47,8 +46,8 @@ contract CitySwapParams {
         public
         view
         returns (
-            uint256 nftId,
-            uint8 category
+            uint256,
+            uint8
         )
     {
         (uint256 nftId, uint8 category) = abi

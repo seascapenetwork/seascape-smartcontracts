@@ -3,22 +3,21 @@ pragma experimental ABIEncoderV2;
 
 import "./../SwapSigner.sol";
 
-/// @title RiverboatSwapParams is nft params encoder/decoder, signature verifyer
+/// @title WichitaSwapParams is nft params encoder/decoder, signature verifyer
 /// @author Nejc Schneider
-contract RiverboatSwapParams {
+contract WichitaSwapParams {
     SwapSigner private swapSigner;
 
     constructor(address _signerAddress) public {
         swapSigner = SwapSigner(_signerAddress);
     }
 
-    // takes in _encodedData and converts to seascape
     function paramsAreValid (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 
-      (uint256 nftId, uint8 category) = decodeParams(_encodedData);
+      uint8 quality = decodeParams(_encodedData);
 
-      bytes32 hash = this.encodeParams(_offerId, nftId, category);
+      bytes32 hash = this.encodeParams(_offerId, quality);
 
       address recover = ecrecover(hash, v, r, s);
       require(recover == swapSigner.getSigner(),  "Verification failed");
@@ -28,8 +27,7 @@ contract RiverboatSwapParams {
 
     function encodeParams(
         uint256 _offerId,
-        uint256 _nftId,
-        uint8 _category
+        uint8 _quality
     )
         public
         view
@@ -37,7 +35,7 @@ contract RiverboatSwapParams {
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 messageNoPrefix = keccak256(abi
-            .encode(_offerId, _nftId, _category));
+            .encode(_offerId, _quality));
         bytes32 hash = keccak256(abi.encodePacked(prefix, messageNoPrefix));
 
         return hash;
@@ -47,15 +45,12 @@ contract RiverboatSwapParams {
         public
         view
         returns (
-            uint256 nftId,
-            uint8 category
+            uint8
         )
     {
-        (uint256 nftId, uint8 category) = abi
-            .decode(_encodedData, (uint256, uint8));
+        uint8 quality = abi.decode(_encodedData, (uint8));
 
-        return (nftId, category);
+        return quality;
     }
-
 
 }

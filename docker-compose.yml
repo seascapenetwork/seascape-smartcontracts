@@ -16,24 +16,7 @@ services:
       - net
     entrypoint: sh
     command: '-c "sleep 1d"'
-    links:
-      - local-node
     env_file:
       - ./.env
-  local-node:
-    build:
-      context: ./ganache
-    container_name: "local-node"
-    ports:
-      - 8545:8545
-    networks:
-      - net
-    env_file:
-      - ./.env
-    volumes:
-      - type: bind
-        source: ./ganache/ganache_with_accounts.sh
-        target: /app/ganache_with_accounts.sh
-    command: "bash ganache_with_accounts.sh"
 networks:
   net:

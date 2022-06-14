@@ -1,22 +1,27 @@
-pragma solidity ^0.6.7;
+pragma solidity 0.6.7;
 pragma experimental ABIEncoderV2;
 
-import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../SwapSigner.sol";
 
-/// @title NftSwapParams is a digital signature verifyer / nft parameters encoder / decoder
+/// @title ScapeSwapParams is nft params encoder/decoder, signature verifyer
 /// @author Nejc Schneider
-contract ScapeSwapParams is Ownable{
+contract ScapeSwapParams {
+    SwapSigner private swapSigner;
+
+    constructor(address _signerAddress) public {
+        swapSigner = SwapSigner(_signerAddress);
+    }
 
     // takes in _encodedData and converts to seascape
-    function isValidParams (uint256 _offerId, bytes memory _encodedData,
+    function paramsAreValid (uint256 _offerId, bytes memory _encodedData,
       uint8 v, bytes32 r, bytes32 s) public view returns (bool){
 
       (uint256 imgId, uint256 generation, uint8 quality) = decodeParams(_encodedData);
 
       bytes32 hash = this.encodeParams(_offerId, imgId, generation, quality);
 
-      address signer = ecrecover(hash, v, r, s);
-      require(signer == owner(),  "Verification failed");
+      address recover = ecrecover(hash, v, r, s);
+      require(recover == swapSigner.getSigner(),  "Verification failed");
 
     	return true;
     }
@@ -43,7 +48,7 @@ contract ScapeSwapParams is Ownable{
         public
         view
         returns (
-            uint256,
+            uint256 ,
             uint256,
             uint8
         )

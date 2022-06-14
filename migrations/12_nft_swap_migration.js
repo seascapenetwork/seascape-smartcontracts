@@ -1,12 +1,26 @@
+var SwapSigner = artifacts.require("./SwapSigner.sol");
 var NftSwap = artifacts.require("./NftSwap.sol");
-let ScapeSwapParams = artifacts.require("./ScapeSwapParams.sol");
+//
 var Crowns = artifacts.require("./CrownsToken.sol");
+// var MscpToken = artifacts.require("./MscpToken.sol");
+//
+//
 var Nft = artifacts.require("./SeascapeNft.sol");
 var Factory = artifacts.require("./NftFactory.sol");
-var SampleERC20Token = artifacts.require("./SampleERC20Token.sol");
-let SampleSwapParams = artifacts.require("./SampleSwapParams.sol")
-let SampleNft = artifacts.require("./SampleNft.sol");
+var ScapeSwapParams = artifacts.require("./swap_params/ScapeSwapParams.sol");
+//
+// let CityNft = artifacts.require("./CityNft.sol");
+// let CityFactory = artifacts.require("./CityFactory.sol");
+// let CitySwapParams = artifacts.require("./swap_params/CitySwapParams.sol");
+//
+// var RiverboatNft = artifacts.require("./RiverboatNft.sol");
+// var RiverboatFactory = artifacts.require("./RiverboatFactory.sol");
+// let RiverboatSwapParams = artifacts.require("./swap_params/RiverboatSwapParams.sol");
 
+// let WichitaSwapParams = artifacts.require("./swap_params/WichitaSwapParams.sol");
+// let ZombieFighterSwapParams = artifacts.require("./ZombieFighterSwapParams.sol");
+//
+// let LighthouseSwapParams = artifacts.require("./swap_params/LighthouseSwapParams.sol");
 
 const _feeRate = web3.utils.toWei("1", "ether");
 
@@ -14,61 +28,99 @@ const _feeRate = web3.utils.toWei("1", "ether");
                         // e.g. if _feeRate is set to 1000 than fee will be 1 CWS
 
 module.exports = async function(deployer, network) {
+
     if (network == "ganache") {
-        deployer.deploy(NftSwap, _feeRate, Crowns.address, Nft.address).then(function(){
-            console.log("NftSwap contract was deployed at address: "+NftSwap.address);
-            console.log("It is using Crowns (CWS) Token at address: "+Crowns.address);
-            console.log("It is using Scape NFT contract at address: "+Nft.address);
+
+        await deployer.deploy(Crowns).then(function(){
+          console.log("Crowns deployed on "+Crowns.address);
         });
 
-        deployer.deploy(ScapeSwapParams).then(function(){
+        // await deployer.deploy(MscpToken).then(function(){
+        //   console.log("Mscp token contract was deployed at address: "+MscpToken.address);
+        // });
+
+        await deployer.deploy(SwapSigner).then(function(){
+            console.log("SwapSigner contract was deployed at address: "+SwapSigner.address);
+        });
+
+        await deployer.deploy(NftSwap, _feeRate, Crowns.address, SwapSigner.address).then(function(){
+            console.log("NftSwap contract was deployed at address: "+NftSwap.address);
+        });
+
+        await deployer.deploy(Nft).then(function(){
+          console.log("Seascape Nft deployed on "+Nft.address);
+        });
+
+        await deployer.deploy(Factory, Nft.address).then(function(){
+          console.log("Nft Factory was deployed at address: "+Factory.address);
+        });
+
+        await deployer.deploy(ScapeSwapParams, SwapSigner.address).then(function(){
             console.log("ScapeSwapParams contract was deployed at address: "+ScapeSwapParams.address);
         });
 
-        deployer.deploy(SampleERC20Token).then(function(){
-            console.log("SampleERC20Token contract was deployed at address: "+SampleERC20Token.address);
+        // await deployer.deploy(CityNft).then(function(){
+        //     console.log("CityNft contract was deployed at address: "+CityNft.address);
+        // });
+        // await deployer.deploy(CityFactory, CityNft.address).then(function(){
+        //     console.log("CityFactory contract was deployed at address: "+CityFactory.address);
+        // });
+        // await deployer.deploy(CitySwapParams, SwapSigner.address).then(function(){
+        //     console.log("CitySwapParams contract was deployed at address: "+CitySwapParams.address);
+        // });
+
+        // await deployer.deploy(RiverboatNft).then(function(){
+        //     console.log("RiverboatNft contract was deployed at address: "+RiverboatNft.address);
+        // });
+        // await deployer.deploy(RiverboatFactory, RiverboatNft.address).then(function(){
+        //     console.log("RiverboatFactory contract was deployed at address: "+RiverboatFactory.address);
+        // });
+        // await deployer.deploy(RiverboatSwapParams, SwapSigner.address).then(function(){
+        //     console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
+        // });
+
+        //
+        // await deployer.deploy(LighthouseSwapParams).then(function(){
+        //     console.log("LighthouseSwapParams contract was deployed at address: "+LighthouseSwapParams.address);
+        // });
+
+    } else {
+        var crowns = "0x1aBB8FdE5e64be3419FceF80df335C68dD2956C7";
+        var signer ="0x8033ebE98607FD9B596eC0D746ed197Ef3EAE311";
+        console.log(`SwapSigner contract set at ${signer}`);
+
+        // await deployer.deploy(SwapSigner).then(function(){
+        //     console.log("SwapSigner contract was deployed at address: "+SwapSigner.address);
+        // });
+
+        // await deployer.deploy(NftSwap, _feeRate, crowns, signer).then(function(){
+        //     console.log("NftSwap contract was deployed at address: "+NftSwap.address);
+        // });
+        //
+        // await deployer.deploy(ScapeSwapParams, signer).then(function(){
+        //     console.log("ScapeSwapParams contract was deployed at address: "+ScapeSwapParams.address);
+        // });
+
+        // await deployer.deploy(CitySwapParams, signer).then(function(){
+        //     console.log("CitySwapParams contract was deployed at address: "+CitySwapParams.address);
+        // });
+        //
+        await deployer.deploy(LighthouseSwapParams, signer).then(function(){
+            console.log("LighthouseSwapParams contract was deployed at address: "+LighthouseSwapParams.address);
         });
-        deployer.deploy(SampleSwapParams).then(function(){
-            console.log("SampleSwapParams contract was deployed at address: "+SampleSwapParams.address);
-        });
-        deployer.deploy(SampleNft).then(function(){
-            console.log("SampleNft contract was deployed at address: "+SampleNft.address);
-        });
+        //
+        // await deployer.deploy(RiverboatSwapParams, signer).then(function(){
+        //     console.log("RiverboatSwapParams contract was deployed at address: "+RiverboatSwapParams.address);
+        // });
 
-    } else if (network == "rinkeby") {
-        var crowns = "0x168840Df293413A930d3D40baB6e1Cd8F406719D";
-		    var nft = "0x7115ABcCa5f0702E177f172C1c14b3F686d6A63a";
+        // await deployer.deploy(WichitaSwapParams, signer).then(function(){
+        //     console.log("WichitaSwapParams contract was deployed at address: "+WichitaSwapParams.address);
+        // });
+        // await deployer.deploy(ZombieFighterSwapParams, signer).then(function(){
+        //     console.log("ZombieFighterSwapParams contract was deployed at address: "+ZombieFighterSwapParams.address);
+        // });
 
-        await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
-
-    } else if (network == "bsctestnet") {
-        var crowns = "0x4Ca0ACab9f6B9C084d216F40963c070Eef95033B";
-  	    var nft = "0x66638F4970C2ae63773946906922c07a583b6069";
-
-        await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
-
-    } else if (network == "moonbase") {
-        var crowns = "0x7F8F2A4Ae259B3655539a58636f35DAD0A1D9989";
-        var nft = "0xBD29CE50f23e9dcFCfc7c85e3BC0231ab68cbC37";
-
-        await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
-
-    } else if (network == "mainnet") {
-        var crowns = "0xac0104cca91d167873b8601d2e71eb3d4d8c33e0";
-        var nft = "0x828e2cb8d03b52d408895e0844a6268c4c7ef3ad";
-
-        await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
-
-    } else if (network == "bsc") {
-        var crowns = "0xbcf39F0EDDa668C58371E519AF37CA705f2bFcbd";
-        var nft = "0xc54b96b04AA8828b63Cf250408E1084E9F6Ac6c8";
-
-        await deployer.deploy(NftSwap, _feeRate, crowns, nft);
-        console.log("NftSwap contract was deployed at address: " +NftSwap.address);
     }
+
 
 };
