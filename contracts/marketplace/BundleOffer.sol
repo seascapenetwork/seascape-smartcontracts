@@ -141,7 +141,53 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         emit CancelSell(obj.id, obj.tokenId);
     }
 
-    function sell() external { }
+    /// @notice create an offer by sending up to 20 nfts to contract,
+    /// which are available for purchase in exchange for specified price.
+    /// @param _price in buy function fee is substracted from _price, so seller gets less.
+    function sell(
+        address _currencyAddress,
+        uint _price,
+        uint8 _amount,
+        address[] calldata _nftAddresses,
+        uint[] calldata _nftIds
+    )
+        external
+    {
+        require(tradeEnabled, "trade is disabled");
+        require(supportedCurrency[_currencyAddress], "unsupported currency address");
+        require(_price > 0, "invalid price");
+        require(_amount > 0, "should offer at least one nft");
+        require(_amount <= 20, "cant offer more than 20 nfts");
+
+        for (uint index = 0; index < _amount; ++index) {
+            //IERC721 nft = IERC721(_nftAddresses[index]);
+            require(_nftAddresses[index] != address(0), "invalid nft address");
+            require(IERC721(_nftAddresses[index]).ownerOf(_nftIds[index]) == msg.sender,
+                "sender not owner of nft");
+            require(supportedNft[_nftAddresses[index]], "nft address unsupported");
+        }
+        /// TODO transfer nfts to contract
+        for (uint index = 0; index < _amount; ++index) {
+            // send nfts to contract
+            IERC721(_nftAddresses[index])
+                .safeTransferFrom(msg.sender, address(this), _nftIds[index]);
+        }
+
+        lastSaleId++;
+        // salesObjects[lastSaleId] = SalesObject(
+        //     lastSaleId,
+        //     msg.sender,
+        //     _currencyAddress,
+        //     _price,
+        //     _amount, ,
+        // );
+        for(uint256 i = 0; i < _amount; ++i){
+            salesObjects[lastSaleId].offeredTokens[i].tokenId = _nftIds[i];
+            salesObjects[lastSaleId].offeredTokens[i].tokenAddress = _nftAddresses[i];
+        }
+
+        emit Sell(lastSaleId, _amount, _price, _currencyAddress, msg.sender);
+    }
 
     /// @notice pay erc20 in exchange for offered tokens
     function buy(uint _saleId) external nonReentrant payable {
