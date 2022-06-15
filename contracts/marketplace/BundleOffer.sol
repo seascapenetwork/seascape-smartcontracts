@@ -36,7 +36,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     }
 
     /// @param saleId => SalesObject
-    mapping(uint256 => SalesObject)) saleObjects;
+    mapping(uint256 => SalesObject) salesObjects;
     mapping(address => bool) public supportedNft;
     mapping(address => bool) public supportedCurrency;
 
@@ -114,10 +114,10 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     }
 
     /// @notice change fee rate
-    /// @param _rate amount value. Actual rate in percent = _rate / 10
-    function setFeeRate(uint256 _rate) external onlyOwner {
+    /// @param _feeRate Actual rate in percent = _rate / 10
+    function setFeeRate(uint256 _feeRate) external onlyOwner {
         require(_feeRate <= 1000, "fee rate maximum value is 1000");
-        feeRate = _rate;
+        feeRate = _feeRate;
     }
 
     //--------------------------------------------------
@@ -191,7 +191,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     function buy(uint _saleId) external nonReentrant payable {
         SalesObject storage offer = salesObjects[_saleId];
         require(tradeEnabled, "trade is disabled");
-        require(offer.price > "sold/canceled/nonexistent sale");
+        require(offer.price > 0, "sold/canceled/nonexistent sale");
 
         uint tipsFee = offer.price.mul(feeRate).div(1000);
         uint purchase = offer.price.sub(tipsFee);
@@ -207,12 +207,12 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
             offer.seller.transfer(purchase);
         } else {
             IERC20(offer.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
-            IERC20(offer.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
+            IERC20(offer.currency).safeTransferFrom(msg.sender, offer.seller, purchase);
         }
 
         for(uint i = 0; i < offer.nftsAmount; ++i){
             IERC721(offer.offeredTokens[i].tokenAddress)
-                .safeTransferFrom(address(this), msg.sender, obj.offeredTokens[i].tokenId);
+                .safeTransferFrom(address(this), msg.sender, offer.offeredTokens[i].tokenId);
         }
 
         delete salesObjects[_saleId];
