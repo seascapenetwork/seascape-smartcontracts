@@ -42,26 +42,24 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
 
     event Buy(
-        uint256 indexed saleId,
-        uint256[] nftIds,
-        address[] nftAddresses,
+        uint indexed saleId,
+        uint nftsAmount,
+        uint price,
+        uint fee,
+        address currency,
         address buyer,
-        address seller,
-        uint256 price,
-        uint256 fee,
-        address currency
+        address seller
     );
 
     event Sell(
         uint256 indexed saleId,
-        uint256[] nftIds,
-        address[] nftAddresses,
+        uint nftsAmount,
+        uint256 price,
         address currency,
-        address seller,
-        uint256 price
+        address seller
     );
 
-    event CancelSell(uint256 indexed saleId, uint256[] nftIds, address[] nftAddresses);
+    event CancelSale(uint256 indexed saleId, uint256[] nftIds, address[] nftAddresses);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
     /// @dev set fee reciever address and fee rate
