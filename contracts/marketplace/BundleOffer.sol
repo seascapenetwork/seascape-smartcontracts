@@ -229,4 +229,30 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
           offer.seller
         );
     }
+
+    //--------------------------------------------------
+    // public methods
+    //--------------------------------------------------
+
+    /// @dev encrypt token data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes memory data
+    )
+        public
+        override
+        returns (bytes4)
+    {
+        //only receive the _nft staff
+        if (address(this) != operator) {
+            //invalid from nft
+            return 0;
+        }
+
+        //success
+        emit NftReceived(operator, from, tokenId, data);
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    }
 }
