@@ -143,4 +143,44 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
     function sell() external { }
 
-    function buy() external { }
+    /// @notice pay erc20 in exchange for offered tokens
+    function buy(uint _saleId) external nonReentrant payable {
+        SalesObject storage offer = salesObjects[_saleId];
+        require(tradeEnabled, "trade is disabled");
+        require(offer.price > "sold/canceled/nonexistent sale");
+
+        uint tipsFee = offer.price.mul(feeRate).div(1000);
+        uint purchase = offer.price.sub(tipsFee);
+
+        if(offer.currency == address(0)){
+            require(msg.value >= offer.price, "insufficient ether amount sent");
+            if (msg.value.sub(offer.price) > 0){
+                uint refund = msg.value.sub(offer.price);
+                msg.sender.transfer(refund);
+            }
+            if (tipsFee > 0)
+                feeReceiver.transfer(tipsFee);
+            offer.seller.transfer(purchase);
+        } else {
+            IERC20(offer.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
+            IERC20(offer.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
+        }
+
+        for(uint i = 0; i < offer.nftsAmount; ++i){
+            IERC721(offer.offeredTokens[i].tokenAddress)
+                .safeTransferFrom(address(this), msg.sender, obj.offeredTokens[i].tokenId);
+        }
+
+        delete salesObjects[_saleId];
+
+        emit Buy(
+          offer.saleId,
+          offer.nftsAmount,
+          offer.price,
+          feeRate,
+          offer.currency,
+          msg.sender,
+          offer.seller
+        );
+    }
+}
