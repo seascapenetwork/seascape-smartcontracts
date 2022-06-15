@@ -27,6 +27,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         address payable seller;
         address currency;
         uint256 price;
+        uint8 nftsAmount;
         mapping(uint256 => OfferedToken) offeredTokens;
     }
 
