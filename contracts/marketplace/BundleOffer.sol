@@ -16,28 +16,29 @@ contract BundleOffer is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    uint256 public lastSaleId;
+    uint public lastSaleId;
     bool public tradeEnabled = true;
-    uint256 public feeRate;   // 5 = 0.5%; 100 = 10%
+    uint public feeRate;   // 5 = 0.5%; 100 = 10%
     address payable private feeReceiver;
 
     struct SalesObject {
-        uint256 saleId;
+        uint saleId;
+        uint price;
+        uint nftsAmount;
         address payable seller;
         address currency;
-        uint256 price;
-        mapping(uint256 => OfferedToken) offeredTokens;
+        mapping(uint => OfferedToken) offeredTokens;
     }
 
     struct OfferedToken{
-        uint256 tokenId;
+        uint tokenId;
         address tokenAddress;
     }
 
     /// @param saleId => SalesObject
-    mapping(uint256 => SalesObject)) saleObjects;
-    mapping(address => bool) public supportedNft;
-    mapping(address => bool) public supportedCurrency;
+    mapping(uint => SalesObject) salesObjects;
+    mapping(address => bool) public supportedNfts;
+    mapping(address => bool) public supportedCurrencies;
 
 
     event Buy(
@@ -82,26 +83,26 @@ contract BundleOffer is IERC721Receiver, Ownable {
     /// @notice add supported nft address
     function addSupportedNft(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportedNft[_nftAddress] = true;
+        supportedNfts[_nftAddress] = true;
     }
 
     /// @notice disable supported nft address
     function removeSupportedNft(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
-        supportedNft[_nftAddress] = false;
+        supportedNfts[_nftAddress] = false;
     }
 
     /// @notice add supported erc20 token
     function addSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(!supportedCurrency[_currencyAddress], "currency already supported");
-        supportedCurrency[_currencyAddress] = true;
+        require(!supportedCurrencies[_currencyAddress], "currency already supported");
+        supportedCurrencies[_currencyAddress] = true;
     }
 
     /// @notice disable supported currency token
     /// @param _currencyAddress ERC20 contract address
     function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
-        require(supportedCurrency[_currencyAddress], "currency already removed");
-        supportedCurrency[_currencyAddress] = false;
+        require(supportedCurrencies[_currencyAddress], "currency already removed");
+        supportedCurrencies[_currencyAddress] = false;
     }
 
     /// @notice change fee receiver address
@@ -111,10 +112,10 @@ contract BundleOffer is IERC721Receiver, Ownable {
     }
 
     /// @notice change fee rate
-    /// @param _rate amount value. Actual rate in percent = _rate / 10
-    function setFeeRate(uint256 _rate) external onlyOwner {
+    /// @param _feeRate Actual rate in percent = _rate / 10
+    function setFeeRate(uint _feeRate) external onlyOwner {
         require(_feeRate <= 1000, "fee rate maximum value is 1000");
-        feeRate = _rate;
+        feeRate = _feeRate;
     }
 
     //--------------------------------------------------
