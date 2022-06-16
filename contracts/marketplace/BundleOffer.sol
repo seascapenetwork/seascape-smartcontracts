@@ -144,7 +144,9 @@ contract BundleOffer is IERC721Receiver, Ownable {
     function buy(uint _saleId) external payable {
         SalesObject storage offer = salesObjects[_saleId];
         require(tradeEnabled, "trade is disabled");
-        require(offer.price > "sold/canceled/nonexistent sale");
+        require(offer.price > 0, "sold/canceled/nonexistent sale");
+
+        delete salesObjects[_saleId];
 
         uint tipsFee = offer.price.mul(feeRate).div(1000);
         uint purchase = offer.price.sub(tipsFee);
@@ -160,15 +162,13 @@ contract BundleOffer is IERC721Receiver, Ownable {
             offer.seller.transfer(purchase);
         } else {
             IERC20(offer.currency).safeTransferFrom(msg.sender, feeReceiver, tipsFee);
-            IERC20(offer.currency).safeTransferFrom(msg.sender, obj.seller, purchase);
+            IERC20(offer.currency).safeTransferFrom(msg.sender, offer.seller, purchase);
         }
 
         for(uint i = 0; i < offer.nftsAmount; ++i){
             IERC721(offer.offeredTokens[i].tokenAddress)
-                .safeTransferFrom(address(this), msg.sender, obj.offeredTokens[i].tokenId);
+                .safeTransferFrom(address(this), msg.sender, offer.offeredTokens[i].tokenId);
         }
-
-        delete salesObjects[_saleId];
 
         emit Buy(
           offer.saleId,
