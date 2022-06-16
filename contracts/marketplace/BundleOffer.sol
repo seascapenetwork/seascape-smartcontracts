@@ -7,13 +7,12 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
-import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 /// @title Bundle Offer is a part of Seascape marketplace platform.
 /// Users can sell up to 20 nfts in exchange for ERC20
 /// @author Nejc Schneider
-contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
+contract BundleOffer is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -73,8 +72,6 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
         feeReceiver = _feeReceiver;
         feeRate = _feeRate;
-
-        initReentrancyStatus();
     }
 
     //--------------------------------------------------
@@ -127,9 +124,9 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     //--------------------------------------------------
 
     /// @notice cancel nft sale
-    function cancelSale(uint _saleId) external nonReentrant {
         SalesObject storage saleObject = saleObjects[_saleId];
         require(saleObject.seller == msg.sender, "seller not nft owner");
+    function cancelSale(uint _saleId) external {
 
         delete saleObjects[_offerId];
 
@@ -144,7 +141,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     function sell() external { }
 
     /// @notice pay erc20 in exchange for offered tokens
-    function buy(uint _saleId) external nonReentrant payable {
+    function buy(uint _saleId) external payable {
         SalesObject storage offer = salesObjects[_saleId];
         require(tradeEnabled, "trade is disabled");
         require(offer.price > "sold/canceled/nonexistent sale");
