@@ -123,6 +123,22 @@ contract BundleOffer is IERC721Receiver, Ownable {
     // external methods
     //--------------------------------------------------
 
+    /// @dev returns all properties of sale object at _saleId element
+    /// @return elements of SaleObject at given saleId
+    function getOffer(uint _saleId)
+        external
+        view
+        returns(uint, uint, uint, address, address)
+    {
+        return
+        (
+            salesObjects[_saleId].saleId,
+            salesObjects[_saleId].price,
+            salesObjects[_saleId].nftsAmount,
+            salesObjects[_saleId].seller,
+            salesObjects[_saleId].currency
+        );
+    }
     /// @notice cancel nft sale
         SalesObject storage saleObject = saleObjects[_saleId];
         require(saleObject.seller == msg.sender, "seller not nft owner");
