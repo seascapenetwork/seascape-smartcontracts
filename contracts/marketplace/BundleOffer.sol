@@ -139,19 +139,20 @@ contract BundleOffer is IERC721Receiver, Ownable {
             salesObjects[_saleId].currency
         );
     }
+
     /// @notice cancel nft sale
-        SalesObject storage saleObject = saleObjects[_saleId];
-        require(saleObject.seller == msg.sender, "seller not nft owner");
     function cancelSale(uint _saleId) external {
+        SalesObject storage offer = salesObjects[_saleId];
+        require(offer.seller == msg.sender, "sender not creator of offer");
 
-        delete saleObjects[_offerId];
+        delete salesObjects[_saleId];
 
-        // TODO transfer back all the nfts
-        IERC721 nft = IERC721(obj.nft);
-        nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
+        for(uint i = 0; i < offer.nftsAmount; ++i){
+            IERC721(offer.offeredTokens[i].tokenAddress)
+                .safeTransferFrom(address(this), msg.sender, offer.offeredTokens[i].tokenId);
+        }
 
-        // TODO update state
-        emit CancelSell(obj.id, obj.tokenId);
+        emit CancelSale(offer.saleId, offer.nftsAmount, offer.seller);
     }
 
     /// @notice create an offer by sending up to 20 nfts to contract,
