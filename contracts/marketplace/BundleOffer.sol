@@ -145,7 +145,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     function sell(
         address _currencyAddress,
         uint _price,
-        uint8 _amount,
+        uint _amount,
         address[] calldata _nftAddresses,
         uint[] calldata _nftIds
     )
