@@ -98,5 +98,51 @@ contract("Bundle Offer", async accounts => {
 
   });
 
-  it("")
+  it("approve scapes", async () => {
+    await scapes.setApprovalForAll(bundleOffer.address, true, {from: seller}).catch(console.error);
+    await scapes.setApprovalForAll(bundleOffer.address, true, {from: buyer}).catch(console.error);
+
+    let buyerIsApproved = await scapes.isApprovedForAll(buyer, bundleOffer.address);
+    let sellerIsApproved = await scapes.isApprovedForAll(seller, bundleOffer.address);
+
+    assert.equal(buyerIsApproved, true, "buyers tokens are not approved");
+    assert.equal(sellerIsApproved, true, "seller tokens are not approved");
+  });
+
+  it("mint crowns", async () => {
+
+    let amountToMint = web3.utils.toWei("100", "ether");
+
+    let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/ether);
+
+    await crowns.transfer(seller, amountToMint, {from: owner});
+
+    let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/ether);
+
+    assert.equal(sellerCwsBalanceBefore+ amountToMint/ether, sellerCwsBalanceAfter,
+      "Seller didnt receive enough coins");
+  });
+
+  it("add native currency address", async () => {
+    let currencyAddress = "0x0000000000000000000000000000000000000000";
+
+    await bundleOffer.addSupportedCurrency(currencyAddress, {from: owner})
+      .catch(console.error);
+
+    let isCurrencySupported = await bundleOffer.supportedCurrencies(currencyAddress);
+
+    assert.equal(isCurrencySupported, true, "bounty address not added");
+  });
+
+  it("create offer with scapes", async () => {});
+
+  it("cancel offer with scapes", async () => {});
+
+  it("accept offer with scapes", async () => {});
+
+  it("create offer with native currency", async () => {});
+
+  it("cancel offer with native currency", async () => {});
+
+  it("accept offer with native currency", async () => {});
 })
