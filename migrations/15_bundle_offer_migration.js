@@ -17,12 +17,12 @@ module.exports = async function(deployer, network) {
     if (network == "ganache") {
         var feeReceiver = getAccount(3);
 
-        await deployer.deploy(Crowns).then(function(){
-          console.log("Crowns deployed on "+Crowns.address);
-        });
-
         await deployer.deploy(BundleOffer, feeReceiver, feeRate).then(function(){
             console.log("BundleOffer contract was deployed at address: "+BundleOffer.address);
+        });
+
+        await deployer.deploy(Crowns).then(function(){
+          console.log("Crowns deployed on "+Crowns.address);
         });
 
         await deployer.deploy(Nft).then(function(){
@@ -33,14 +33,12 @@ module.exports = async function(deployer, network) {
           console.log("Nft Factory was deployed at address: "+Factory.address);
         });
 
-
-
     } else {
         var feeReceiver = "0x1aBB8FdE5e64be3419FceF80df335C68dD2956C7";
 
         await deployer.deploy(BundleOffer, feeReceiver, feeRate).then(function(){
             console.log("BundleOffer contract was deployed at address: "+BundleOffer.address);
+        });
     }
-
 
 };
