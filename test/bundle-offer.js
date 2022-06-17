@@ -1,6 +1,8 @@
 let BundleOffer = artifacts.require("./BundleOffer.sol");
-let Scapes = artifacts.require("./ScapeNft.sol");
-let ScapesFatory = artifacts.require("./NftFactory.sol");
+
+let Crowns = artifacts.require("./CrownsToken.sol");
+let Scapes = artifacts.require("./SeascapeNft.sol");
+let ScapesFactory = artifacts.require("./NftFactory.sol");
 
 
 
@@ -10,6 +12,9 @@ contract("Bundle Offer", async accounts => {
   // Global variables
   // --------------------------------------------------
 
+  // scalers
+  let ether = 1000000000000000000;
+
   // contracts
   let scapes = null;
   let factory = null;
@@ -17,8 +22,8 @@ contract("Bundle Offer", async accounts => {
 
   // EOAs
   let owner = null;
-  let sender = null;
-  let receiver = null;
+  let seller = null;
+  let buyer = null;
 
   // --------------------------------------------------
   // Global functions
@@ -50,13 +55,15 @@ contract("Bundle Offer", async accounts => {
   it("link required contracts", async () => {
     // initialize contracts
      bundleOffer = await BundleOffer.deployed();
+
+     crowns = await Crowns.deployed();
      scapes = await  Scapes.deployed();
      factory = await  ScapesFactory.deployed();
 
      // initialize accounts
      owner = accounts[0];
-     sender = accounts[1];
-     receiver = accounts[2];
+     seller = accounts[1];
+     buyer = accounts[2];
   });
 
   it("set scape factory and add generator", async () => {
@@ -70,14 +77,14 @@ contract("Bundle Offer", async accounts => {
   it("mint scapes", async () => {
     const amountToMint = 3;
 
-    let senderScapesBefore = await getNftBalance(scapes, sender);
+    let sellerScapesBefore = await getNftBalance(scapes, seller);
 
     await mintScapes(amountToMint);
 
-    let senderScapesAfter = await getNftBalance(scapes, sender);
+    let sellerScapesAfter = await getNftBalance(scapes, seller);
 
-    assert.equal(senderScapesAfter, senderScapesBefore + amountToMint,
-      `${amountToMint} werent minted for sender`);
+    assert.equal(sellerScapesAfter, sellerScapesBefore + amountToMint,
+      `${amountToMint} werent minted for seller`);
 
     // minting
     async function mintScapes(amountToMint){
@@ -85,7 +92,7 @@ contract("Bundle Offer", async accounts => {
       let quality = 1;
 
       for(var i = 0; i < amountToMint; i++){
-        await factory.mintQuality(sender, generation, quality, {from: owner}).catch(console.error);
+        await factory.mintQuality(seller, generation, quality, {from: owner}).catch(console.error);
       }
     }
 
