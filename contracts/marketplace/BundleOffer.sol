@@ -83,12 +83,13 @@ contract BundleOffer is IERC721Receiver, Ownable {
     /// @notice add supported nft address
     function addSupportedNft(address _nftAddress) external onlyOwner {
         require(_nftAddress != address(0x0), "invalid address");
+        require(!supportedNfts[_nftAddress], "currency already enabled");
         supportedNfts[_nftAddress] = true;
     }
 
     /// @notice disable supported nft address
-    function removeSupportedNft(address _nftAddress) external onlyOwner {
-        require(_nftAddress != address(0x0), "invalid address");
+    function disableSupportedNft(address _nftAddress) external onlyOwner {
+        require(supportedNfts[_nftAddress], "currency already removed");
         supportedNfts[_nftAddress] = false;
     }
 
@@ -100,7 +101,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
 
     /// @notice disable supported currency token
     /// @param _currencyAddress ERC20 contract address
-    function removeSupportedCurrency(address _currencyAddress) external onlyOwner {
+    function disableSupportedCurrency(address _currencyAddress) external onlyOwner {
         require(supportedCurrencies[_currencyAddress], "currency already removed");
         supportedCurrencies[_currencyAddress] = false;
     }
@@ -108,6 +109,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     /// @notice change fee receiver address
     function setFeeReceiver(address payable _feeReceiver) external onlyOwner {
         require(_feeReceiver != address(0x0), "invalid address");
+        require(_feeReceiver != feeReceiver, "already set to same address");
         feeReceiver = _feeReceiver;
     }
 
