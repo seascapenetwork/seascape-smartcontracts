@@ -154,7 +154,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         require(tradeEnabled, "trade is disabled");
         require(supportedCurrencies[_currencyAddress], "unsupported currency address");
         require(_price > 0, "invalid price");
-        require(_amount > 0, "should offer at least one nft");
+        require(_amount > 1, "should offer at least 2 nfts");
         require(_amount <= 20, "cant offer more than 20 nfts");
 
         for (uint index = 0; index < _amount; ++index) {
