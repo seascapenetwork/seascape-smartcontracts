@@ -16,13 +16,13 @@ contract BundleOffer is IERC721Receiver, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    uint public lastSaleId;
+    uint public lastOfferId;
     bool public tradeEnabled = true;
     uint public feeRate;   // 5 = 0.5%; 100 = 10%
     address payable private feeReceiver;
 
-    struct SalesObject {
-        uint saleId;
+    struct OffersObject {
+        uint offerId;
         uint price;
         uint nftsAmount;
         address payable seller;
@@ -35,14 +35,14 @@ contract BundleOffer is IERC721Receiver, Ownable {
         address tokenAddress;
     }
 
-    /// @param saleId => SalesObject
-    mapping(uint => SalesObject) salesObjects;
+    /// @param offerId => OffersObject
+    mapping(uint => OffersObject) offersObjects;
     mapping(address => bool) public supportedNfts;
     mapping(address => bool) public supportedCurrencies;
 
 
     event Buy(
-        uint indexed saleId,
+        uint indexed offerId,
         uint nftsAmount,
         uint price,
         uint fee,
@@ -52,14 +52,14 @@ contract BundleOffer is IERC721Receiver, Ownable {
     );
 
     event Sell(
-        uint indexed saleId,
+        uint indexed offerId,
         uint nftsAmount,
         uint price,
         address currency,
         address seller
     );
 
-    event CancelSale(uint indexed saleId, uint nftsAmount, address seller);
+    event CancelOffer(uint indexed offerId, uint nftsAmount, address seller);
     event NftReceived(address operator, address from, uint tokenId, bytes data);
 
     /// @dev set fee reciever address and fee rate
@@ -124,19 +124,19 @@ contract BundleOffer is IERC721Receiver, Ownable {
     // external methods
     //--------------------------------------------------
 
-    /// @notice cancel nft sale
-    function cancelSale(uint _saleId) external {
-        SalesObject storage offer = salesObjects[_saleId];
+    /// @notice cancel nft offer
+    function cancelOffer(uint _offerId) external {
+        OffersObject storage offer = offersObjects[_offerId];
         require(offer.seller == msg.sender, "sender not creator of offer");
 
-        delete salesObjects[_saleId];
+        delete offersObjects[_offerId];
 
         for(uint i = 0; i < offer.nftsAmount; ++i){
             IERC721(offer.offeredTokens[i].tokenAddress)
                 .safeTransferFrom(address(this), msg.sender, offer.offeredTokens[i].tokenId);
         }
 
-        emit CancelSale(offer.saleId, offer.nftsAmount, offer.seller);
+        emit CancelOffer(offer.offerId, offer.nftsAmount, offer.seller);
     }
 
     /// @notice create an offer by sending up to 20 nfts to contract,
@@ -165,15 +165,15 @@ contract BundleOffer is IERC721Receiver, Ownable {
             require(supportedNfts[_nftAddresses[index]], "nft address unsupported");
         }
 
-        lastSaleId++;
-        salesObjects[lastSaleId].saleId = lastSaleId;
-        salesObjects[lastSaleId].price = _price;
-        salesObjects[lastSaleId].nftsAmount = _amount;
-        salesObjects[lastSaleId].seller = msg.sender;
-        salesObjects[lastSaleId].currency = _currencyAddress;
+        lastOfferId++;
+        offersObjects[lastOfferId].offerId = lastOfferId;
+        offersObjects[lastOfferId].price = _price;
+        offersObjects[lastOfferId].nftsAmount = _amount;
+        offersObjects[lastOfferId].seller = msg.sender;
+        offersObjects[lastOfferId].currency = _currencyAddress;
         for(uint i = 0; i < _amount; ++i){
-            salesObjects[lastSaleId].offeredTokens[i].tokenId = _nftIds[i];
-            salesObjects[lastSaleId].offeredTokens[i].tokenAddress = _nftAddresses[i];
+            offersObjects[lastOfferId].offeredTokens[i].tokenId = _nftIds[i];
+            offersObjects[lastOfferId].offeredTokens[i].tokenAddress = _nftAddresses[i];
         }
 
         for (uint index = 0; index < _amount; ++index) {
@@ -181,16 +181,16 @@ contract BundleOffer is IERC721Receiver, Ownable {
                 .safeTransferFrom(msg.sender, address(this), _nftIds[index]);
         }
 
-        emit Sell(lastSaleId, _amount, _price, _currencyAddress, msg.sender);
+        emit Sell(lastOfferId, _amount, _price, _currencyAddress, msg.sender);
     }
 
     /// @notice pay erc20 in exchange for offered tokens
-    function buy(uint _saleId) external payable {
-        SalesObject storage offer = salesObjects[_saleId];
+    function buy(uint _offerId) external payable {
+        OffersObject storage offer = offersObjects[_offerId];
         require(tradeEnabled, "trade is disabled");
-        require(offer.price > 0, "sold/canceled/nonexistent sale");
+        require(offer.price > 0, "sold/canceled/nonexistent offer");
 
-        delete salesObjects[_saleId];
+        delete offersObjects[_offerId];
 
         uint tipsFee = offer.price.mul(feeRate).div(1000);
         uint purchase = offer.price.sub(tipsFee);
@@ -215,7 +215,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         }
 
         emit Buy(
-          offer.saleId,
+          offer.offerId,
           offer.nftsAmount,
           offer.price,
           feeRate,
