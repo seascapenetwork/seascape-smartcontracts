@@ -146,7 +146,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     /// @notice create an offer by sending up to 20 nfts to contract,
     /// which are available for purchase in exchange for specified price.
     /// @param _price in buy function fee is substracted from _price, so seller gets less.
-    function sell(
+    function createOffer(
         address _currencyAddress,
         uint _price,
         uint _amount,
@@ -198,7 +198,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     }
 
     /// @notice pay erc20 in exchange for offered nfts
-    function buy(uint _offerId) external payable {
+    function acceptOffer(uint _offerId) external payable {
         OffersObject storage offer = offersObjects[_offerId];
         require(tradeEnabled, "trade is disabled");
         require(offer.price > 0, "sold/canceled/nonexistent offer");
