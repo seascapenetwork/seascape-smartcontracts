@@ -202,6 +202,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         OffersObject storage offer = offersObjects[_offerId];
         require(tradeEnabled, "trade is disabled");
         require(offer.price > 0, "sold/canceled/nonexistent offer");
+        require(offer.seller != msg.sender, "cant accept self-made offer");
 
         delete offersObjects[_offerId];
 
