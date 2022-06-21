@@ -41,7 +41,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     mapping(address => bool) public supportedCurrencies;
 
     // TODO need to emit
-    event Buy(
+    event CreateOffer(
         uint indexed offerId,
         uint nftsAmount,
         uint price,
@@ -51,7 +51,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         address seller
     );
 
-    event Sell(
+    event AcceptOffer(
         uint indexed offerId,
         uint nftsAmount,
         uint price,
@@ -181,7 +181,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
                 .safeTransferFrom(msg.sender, address(this), _nftIds[index]);
         }
 
-        emit Sell(lastOfferId, _amount, _price, _currencyAddress, msg.sender);
+        emit AcceptOffer(lastOfferId, _amount, _price, _currencyAddress, msg.sender);
     }
 
     /// @notice pay erc20 in exchange for offered nfts
@@ -214,7 +214,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
                 .safeTransferFrom(address(this), msg.sender, offer.offeredNfts[i].nftId);
         }
 
-        emit Buy(
+        emit CreateOffer(
           offer.offerId,
           offer.nftsAmount,
           offer.price,
