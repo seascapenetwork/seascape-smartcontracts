@@ -25,6 +25,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         uint offerId;
         uint price;
         uint nftsAmount;
+        uint fee;     // current fee rate is stored
         address payable seller;
         address currency;
         mapping(uint => OfferedNft) offeredNfts;
@@ -55,6 +56,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         uint indexed offerId,
         uint nftsAmount,
         uint price,
+        uint fee,
         address currency,
         address seller
     );
@@ -117,6 +119,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
     /// @param _feeRate Actual rate in percent = _rate / 10
     function setFeeRate(uint _feeRate) external onlyOwner {
         require(_feeRate <= 1000, "fee rate maximum value is 1000");
+        require(_feeRate != feeRate, "already using same fee value");
         feeRate = _feeRate;
     }
 
@@ -169,6 +172,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         offersObjects[lastOfferId].offerId = lastOfferId;
         offersObjects[lastOfferId].price = _price;
         offersObjects[lastOfferId].nftsAmount = _amount;
+        offersObjects[lastOfferId].fee = feeRate;
         offersObjects[lastOfferId].seller = msg.sender;
         offersObjects[lastOfferId].currency = _currencyAddress;
         for(uint i = 0; i < _amount; ++i){
@@ -192,7 +196,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
 
         delete offersObjects[_offerId];
 
-        uint tipsFee = offer.price.mul(feeRate).div(1000);
+        uint tipsFee = offer.price.mul(offer.fee).div(1000);
         uint purchase = offer.price.sub(tipsFee);
 
         if(offer.currency == address(0)){
@@ -218,7 +222,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
           offer.offerId,
           offer.nftsAmount,
           offer.price,
-          feeRate,
+          offer.fee,
           offer.currency,
           msg.sender,
           offer.seller
