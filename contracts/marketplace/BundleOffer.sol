@@ -162,7 +162,6 @@ contract BundleOffer is IERC721Receiver, Ownable {
         require(_amount <= 20, "cant offer more than 20 nfts");
 
         for (uint index = 0; index < _amount; ++index) {
-            //IERC721 nft = IERC721(_nftAddresses[index]);
             require(_nftAddresses[index] != address(0), "invalid nft address");
             require(IERC721(_nftAddresses[index]).ownerOf(_nftIds[index]) == msg.sender,
                 "sender not owner of nft");
