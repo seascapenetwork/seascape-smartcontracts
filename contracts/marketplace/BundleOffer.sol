@@ -62,7 +62,7 @@ contract BundleOffer is IERC721Receiver, Ownable {
         OfferedNft [] offeredNfts //TODO delete, create seperate event(s)
     );
 
-    event CancelOffer(uint indexed offerId, uint nftsAmount, address seller);
+    event CancelOffer(uint indexed offerId, uint nftsAmount, address indexed seller);
     event NftReceived(address operator, address from, uint nftId, bytes data);
 
     /// @dev set fee reciever address and fee rate
