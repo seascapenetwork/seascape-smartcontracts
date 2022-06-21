@@ -48,8 +48,8 @@ contract BundleOffer is IERC721Receiver, Ownable {
         uint price,
         uint fee,
         address currency,
-        address buyer,
-        address seller
+        address indexed seller,
+        OfferedNft [] offeredNfts //TODO delete, create seperate event(s)
     );
 
     event AcceptOffer(
@@ -58,7 +58,8 @@ contract BundleOffer is IERC721Receiver, Ownable {
         uint price,
         uint fee,
         address currency,
-        address seller
+        address indexed buyer,
+        OfferedNft [] offeredNfts //TODO delete, create seperate event(s)
     );
 
     event CancelOffer(uint indexed offerId, uint nftsAmount, address seller);
@@ -185,7 +186,15 @@ contract BundleOffer is IERC721Receiver, Ownable {
                 .safeTransferFrom(msg.sender, address(this), _nftIds[index]);
         }
 
-        emit AcceptOffer(lastOfferId, _amount, _price, _currencyAddress, msg.sender);
+        emit CreateOffer(
+            lastOfferId,
+            _amount,
+            _price,
+            feeRate,
+            _currencyAddress,
+            msg.sender,
+            offersObjects[lastOfferId].offeredNfts
+        );
     }
 
     /// @notice pay erc20 in exchange for offered nfts
@@ -218,14 +227,14 @@ contract BundleOffer is IERC721Receiver, Ownable {
                 .safeTransferFrom(address(this), msg.sender, offer.offeredNfts[i].nftId);
         }
 
-        emit CreateOffer(
+        emit AcceptOffer(
           offer.offerId,
           offer.nftsAmount,
           offer.price,
           offer.fee,
           offer.currency,
           msg.sender,
-          offer.seller
+          offer.offeredNfts
         );
     }
 
