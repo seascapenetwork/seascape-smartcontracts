@@ -153,9 +153,10 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     function createOffer(
         address _currencyAddress,
         uint _price,
-        uint _amount,
-        address[] calldata _nftAddresses,
-        uint[] calldata _nftIds
+        uint _nftsAmount,
+        uint[] calldata _nftIds,
+        address[] calldata _nftAddresses
+
     )
         external
     {
