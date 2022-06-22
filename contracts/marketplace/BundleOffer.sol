@@ -19,14 +19,14 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
     uint public lastOfferId;
     bool public tradeEnabled = true;
-    uint public feeRate;   // 5 = 0.5%; 100 = 10%
+    uint public feeRate;     // 5 = 0.5%; 100 = 10%
     address payable private feeReceiver;
 
     struct OfferObject {
         uint offerId;
         uint price;
         uint nftsAmount;
-        uint fee;     // current fee rate is stored
+        uint fee;     // value is saved at createOffer() and used at acceptOffer()
         address payable seller;
         address currency;
         mapping(uint => OfferedNft) offeredNfts;
