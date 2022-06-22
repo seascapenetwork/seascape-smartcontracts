@@ -42,7 +42,6 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     mapping(address => bool) public supportedNfts;
     mapping(address => bool) public supportedCurrencies;
 
-    // TODO need to emit
     event CreateOffer(
         uint indexed offerId,
         uint nftsAmount,
