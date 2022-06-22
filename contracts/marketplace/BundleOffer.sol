@@ -22,7 +22,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     uint public feeRate;   // 5 = 0.5%; 100 = 10%
     address payable private feeReceiver;
 
-    struct OffersObject {
+    struct OfferObject {
         uint offerId;
         uint price;
         uint nftsAmount;
@@ -37,8 +37,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         address nftAddress;
     }
 
-    /// @param offerId => OffersObject
-    mapping(uint => OffersObject) offersObjects;
+    /// @param offerId => OfferObject
+    mapping(uint => OfferObject) public offerObjects;
     mapping(address => bool) public supportedNfts;
     mapping(address => bool) public supportedCurrencies;
 
@@ -132,8 +132,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     //--------------------------------------------------
 
     /// @notice cancel nft offer
-        OffersObject storage offer = offersObjects[_offerId];
     function cancelOffer(uint _offerId) external nonReentrant {
+        OfferObject storage offer = offerObjects[_offerId];
         require(offer.seller == msg.sender, "sender not creator of offer");
 
         for(uint i = 0; i < offer.nftsAmount; ++i){
@@ -199,10 +199,10 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         );
     }
 
-        OffersObject storage offer = offersObjects[_offerId];
     /// @notice pay erc20 in exchange for offered nfts.
     /// Fee part of the price is sent to feeReceiver, the rest goes to seller.
     function acceptOffer(uint _offerId) external nonReentrant payable {
+        OfferObject storage offer = offerObjects[_offerId];
         require(tradeEnabled, "trade is disabled");
         require(offer.price > 0, "sold/canceled/nonexistent offer");
         require(offer.seller != msg.sender, "cant accept self-made offer");
