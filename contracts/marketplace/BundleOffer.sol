@@ -171,15 +171,15 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         }
 
         lastOfferId++;
-        offersObjects[lastOfferId].offerId = lastOfferId;
-        offersObjects[lastOfferId].price = _price;
-        offersObjects[lastOfferId].nftsAmount = _amount;
-        offersObjects[lastOfferId].fee = feeRate;
-        offersObjects[lastOfferId].seller = msg.sender;
-        offersObjects[lastOfferId].currency = _currencyAddress;
-        for(uint i = 0; i < _amount; ++i){
-            offersObjects[lastOfferId].offeredNfts[i].nftId = _nftIds[i];
-            offersObjects[lastOfferId].offeredNfts[i].nftAddress = _nftAddresses[i];
+        offerObjects[lastOfferId].offerId = lastOfferId;
+        offerObjects[lastOfferId].price = _price;
+        offerObjects[lastOfferId].nftsAmount = _nftsAmount;
+        offerObjects[lastOfferId].fee = feeRate;
+        offerObjects[lastOfferId].seller = msg.sender;
+        offerObjects[lastOfferId].currency = _currencyAddress;
+        for(uint i = 0; i < _nftsAmount; ++i){
+            offerObjects[lastOfferId].offeredNfts[i].nftId = _nftIds[i];
+            offerObjects[lastOfferId].offeredNfts[i].nftAddress = _nftAddresses[i];
         }
 
         for (uint index = 0; index < _amount; ++index) {
