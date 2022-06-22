@@ -166,11 +166,11 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         require(_nftsAmount > 1, "should offer at least 2 nfts");
         require(_nftsAmount <= 20, "cant offer more than 20 nfts");
 
-        for (uint index = 0; index < _amount; ++index) {
-            require(_nftAddresses[index] != address(0), "invalid nft address");
-            require(IERC721(_nftAddresses[index]).ownerOf(_nftIds[index]) == msg.sender,
+        for (uint i = 0; i < _nftsAmount; ++i) {
+            require(_nftAddresses[i] != address(0), "invalid nft address");
+            require(IERC721(_nftAddresses[i]).ownerOf(_nftIds[i]) == msg.sender,
                 "sender not owner of nft");
-            require(supportedNfts[_nftAddresses[index]], "nft address unsupported");
+            require(supportedNfts[_nftAddresses[i]], "nft address unsupported");
         }
 
         lastOfferId++;
