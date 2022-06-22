@@ -7,12 +7,13 @@ import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 /// @title Bundle Offer is a part of Seascape marketplace platform.
 /// Users can sell up to 20 nfts in exchange for ERC20
 /// @author Nejc Schneider
-contract BundleOffer is IERC721Receiver, Ownable {
+contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -74,6 +75,8 @@ contract BundleOffer is IERC721Receiver, Ownable {
 
         feeReceiver = _feeReceiver;
         feeRate = _feeRate;
+
+        initReentrancyStatus();
     }
 
     //--------------------------------------------------
@@ -129,8 +132,8 @@ contract BundleOffer is IERC721Receiver, Ownable {
     //--------------------------------------------------
 
     /// @notice cancel nft offer
-    function cancelOffer(uint _offerId) external {
         OffersObject storage offer = offersObjects[_offerId];
+    function cancelOffer(uint _offerId) external nonReentrant {
         require(offer.seller == msg.sender, "sender not creator of offer");
 
         delete offersObjects[_offerId];
@@ -196,9 +199,10 @@ contract BundleOffer is IERC721Receiver, Ownable {
         );
     }
 
-    /// @notice pay erc20 in exchange for offered nfts
-    function acceptOffer(uint _offerId) external payable {
         OffersObject storage offer = offersObjects[_offerId];
+    /// @notice pay erc20 in exchange for offered nfts.
+    /// Fee part of the price is sent to feeReceiver, the rest goes to seller.
+    function acceptOffer(uint _offerId) external nonReentrant payable {
         require(tradeEnabled, "trade is disabled");
         require(offer.price > 0, "sold/canceled/nonexistent offer");
         require(offer.seller != msg.sender, "cant accept self-made offer");
