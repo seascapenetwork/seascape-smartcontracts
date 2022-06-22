@@ -49,7 +49,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         uint fee,
         address currency,
         address indexed seller,
-        OfferedNft [] offeredNfts //TODO delete, create seperate event(s)
+        uint[] nftIds,
+        address[] nftAddresses
     );
 
     event AcceptOffer(
@@ -59,7 +60,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         uint fee,
         address currency,
         address indexed buyer,
-        OfferedNft [] offeredNfts //TODO delete, create seperate event(s)
+        uint[] nftIds,
+        address[] nftAddresses
     );
 
     event CancelOffer(uint indexed offerId, uint nftsAmount, address indexed seller);
@@ -189,12 +191,13 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
         emit CreateOffer(
             lastOfferId,
-            _amount,
+            _nftsAmount,
             _price,
             feeRate,
             _currencyAddress,
             msg.sender,
-            offersObjects[lastOfferId].offeredNfts
+            _nftIds,
+            _nftAddresses
         );
     }
 
@@ -223,7 +226,12 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
             IERC20(offer.currency).safeTransferFrom(msg.sender, offer.seller, purchase);
         }
 
+        // @dev nftIds[] and nftAddresses[] are used for emitting values from mapping
+        uint[] memory _nftIds = new uint[](offer.nftsAmount);
+        address[] memory _nftAddresses = new address[](offer.nftsAmount);
         for(uint i = 0; i < offer.nftsAmount; ++i){
+            _nftIds[i] = offer.offeredNfts[i].nftId;
+            _nftAddresses[i] = offer.offeredNfts[i].nftAddress;
             IERC721(offer.offeredNfts[i].nftAddress)
                 .safeTransferFrom(address(this), msg.sender, offer.offeredNfts[i].nftId);
         }
@@ -237,7 +245,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
           offer.fee,
           offer.currency,
           msg.sender,
-          offer.offeredNfts
+          _nftIds,
+          _nftAddresses
         );
     }
 
