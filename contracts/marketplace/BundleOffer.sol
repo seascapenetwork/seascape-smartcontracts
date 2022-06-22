@@ -136,12 +136,12 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     function cancelOffer(uint _offerId) external nonReentrant {
         require(offer.seller == msg.sender, "sender not creator of offer");
 
-        delete offersObjects[_offerId];
-
         for(uint i = 0; i < offer.nftsAmount; ++i){
             IERC721(offer.offeredNfts[i].nftAddress)
                 .safeTransferFrom(address(this), msg.sender, offer.offeredNfts[i].nftId);
         }
+
+        delete offerObjects[_offerId];
 
         emit CancelOffer(offer.offerId, offer.nftsAmount, offer.seller);
     }
@@ -207,8 +207,6 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         require(offer.price > 0, "sold/canceled/nonexistent offer");
         require(offer.seller != msg.sender, "cant accept self-made offer");
 
-        delete offersObjects[_offerId];
-
         uint tipsFee = offer.price.mul(offer.fee).div(1000);
         uint purchase = offer.price.sub(tipsFee);
 
@@ -230,6 +228,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
             IERC721(offer.offeredNfts[i].nftAddress)
                 .safeTransferFrom(address(this), msg.sender, offer.offeredNfts[i].nftId);
         }
+
+        delete offerObjects[_offerId];
 
         emit AcceptOffer(
           offer.offerId,
