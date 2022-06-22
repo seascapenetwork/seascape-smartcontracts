@@ -163,8 +163,8 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         require(tradeEnabled, "trade is disabled");
         require(supportedCurrencies[_currencyAddress], "unsupported currency address");
         require(_price > 0, "invalid price");
-        require(_amount > 1, "should offer at least 2 nfts");
-        require(_amount <= 20, "cant offer more than 20 nfts");
+        require(_nftsAmount > 1, "should offer at least 2 nfts");
+        require(_nftsAmount <= 20, "cant offer more than 20 nfts");
 
         for (uint index = 0; index < _amount; ++index) {
             require(_nftAddresses[index] != address(0), "invalid nft address");
@@ -185,9 +185,9 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
             offerObjects[lastOfferId].offeredNfts[i].nftAddress = _nftAddresses[i];
         }
 
-        for (uint index = 0; index < _amount; ++index) {
-            IERC721(_nftAddresses[index])
-                .safeTransferFrom(msg.sender, address(this), _nftIds[index]);
+        for (uint i = 0; i < _nftsAmount; ++i) {
+            IERC721(_nftAddresses[i])
+                .safeTransferFrom(msg.sender, address(this), _nftIds[i]);
         }
 
         emit CreateOffer(
