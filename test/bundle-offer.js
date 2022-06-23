@@ -29,6 +29,21 @@ contract("Bundle Offer", async accounts => {
   // Global functions
   // --------------------------------------------------
 
+  async function approveERC20(token, amount, spender, owner){
+    await token.approve(spender, amount, {from: owner});
+    let allowance = await token.allowance(owner, spender);
+    assert.equal(allowance, amount, "not enough coins allowed to be spent");
+  }
+
+  async function getERC20Balance(coin, owner){
+    try{
+      let balance = await coin.balanceOf(owner);
+      return parseInt(balance) ;
+    }catch(e){
+      return "invalid value";
+    }
+  };
+
   async function getNftBalance(token, owner){
     try{
       let balance = await token.balanceOf(owner);
@@ -47,6 +62,26 @@ contract("Bundle Offer", async accounts => {
     }
     return nftIds;
   }
+
+  async function getOfferedNftsAmount(offerId){
+    // TODO create helper function getOfferObject for following line
+    let nftsAmountToReceive = await bundleOffer.offerObjects(offerId).catch(console.error);
+    return nftsAmountToReceive[2].words[0];
+  }
+
+  async function getOfferPrice(offerId){
+    // TODO create helper function getOfferObject for following line
+    let offerPrice = await bundleOffer.offerObjects(offerId).catch(console.error);
+    return web3.utils.fromWei(offerPrice[1], "wei");
+  }
+
+  async function calculateFeeAmount(offerId, offerPrice){
+    // TODO create helper function getOfferObject for following line
+    let feePercentage = await bundleOffer.offerObjects(offerId).catch(console.error);
+    feePercentage = (feePercentage[3].words[0]) / 10;
+    return feeToPay = offerPrice * feePercentage / 100;
+  }
+
 
   // --------------------------------------------------
   // Unit tests
@@ -75,7 +110,7 @@ contract("Bundle Offer", async accounts => {
   });
 
   it("mint scapes", async () => {
-    const amountToMint = 3;
+    const amountToMint = 2;
 
     let sellerScapesBefore = await getNftBalance(scapes, seller);
 
@@ -113,14 +148,23 @@ contract("Bundle Offer", async accounts => {
 
     let amountToMint = web3.utils.toWei("100", "ether");
 
-    let sellerCwsBalanceBefore = Math.floor(parseInt(await crowns.balanceOf(seller))/ether);
+    let buyerCwsBefore = Math.floor(parseInt(await crowns.balanceOf(buyer))/ether);
 
-    await crowns.transfer(seller, amountToMint, {from: owner});
+    await crowns.transfer(buyer, amountToMint, {from: owner});
 
-    let sellerCwsBalanceAfter = Math.floor(parseInt(await crowns.balanceOf(seller))/ether);
+    let buyerCwsAfter = Math.floor(parseInt(await crowns.balanceOf(buyer))/ether);
 
-    assert.equal(sellerCwsBalanceBefore+ amountToMint/ether, sellerCwsBalanceAfter,
-      "Seller didnt receive enough coins");
+    assert.equal(buyerCwsBefore+ amountToMint/ether, buyerCwsAfter,
+      "user received insufficient amount");
+  });
+
+  it("add crowns currency address", async () => {
+    await bundleOffer.addSupportedCurrency(crowns.address, {from: owner})
+      .catch(console.error);
+
+    let currencyIsSupported = await bundleOffer.supportedCurrencies(crowns.address);
+
+    assert.equal(currencyIsSupported, true, "currency address not added");
   });
 
   it("add native currency address", async () => {
@@ -129,16 +173,84 @@ contract("Bundle Offer", async accounts => {
     await bundleOffer.addSupportedCurrency(currencyAddress, {from: owner})
       .catch(console.error);
 
-    let isCurrencySupported = await bundleOffer.supportedCurrencies(currencyAddress);
+    let currencyIsSupported = await bundleOffer.supportedCurrencies(currencyAddress);
 
-    assert.equal(isCurrencySupported, true, "bounty address not added");
+    assert.equal(currencyIsSupported, true, "currency address not added");
   });
 
-  it("create offer with scapes", async () => {});
+  it("add scapes nft address", async () => {
+    await bundleOffer.addSupportedNft(scapes.address, {from: owner}).catch(console.error);
 
-  it("cancel offer with scapes", async () => {});
+    let addressAdded = await bundleOffer.supportedNfts(scapes.address);
 
-  it("accept offer with scapes", async () => {});
+    assert.isTrue(addressAdded, "nft address not added");
+  });
+
+  it("create offer with scapes", async () => {
+    // address _currencyAddress,
+    // uint _price,
+    // uint _nftsAmount,
+    // address[] calldata _nftAddresses,
+    // uint[] calldata _nftIds
+
+    let currencyAddress = crowns.address;
+    let price = web3.utils.toWei("5", "ether");
+    let nftsAmount = 2;
+    let nftIds = await getNftIds(seller, scapes, nftsAmount);
+    let nftAddresses = new Array(nftsAmount).fill(scapes.address);
+
+    let contractScapesBefore = await getNftBalance(scapes, bundleOffer.address);
+
+    await scapes.setApprovalForAll(bundleOffer.address, true, {from: seller});
+    await bundleOffer.createOffer(currencyAddress, price, nftsAmount, nftIds, nftAddresses,
+      {from: seller});
+
+    let contractScapesAfter = await getNftBalance(scapes, bundleOffer.address);
+
+    assert.equal(contractScapesAfter, contractScapesBefore + nftsAmount,
+      `${nftsAmount} nfts werent sent to contract`);
+  });
+
+  xit("cancel previous offer", async () => {
+    let offerId = 1;  // TODO fetch offerId
+    console.log(offerId);
+
+    let sellerScapesBefore = await getNftBalance(scapes, seller);
+
+    let nftsToReceive = await getOfferedNftsAmount(offerId);
+    await bundleOffer.cancelOffer(offerId, {from: seller});
+
+    let sellerScapesAfter = await getNftBalance(scapes, seller);
+
+    // assert.equal(sellerScapesAfter, sellerScapesBefore + nftsToReceive,
+    //   `${nftsToReceive} nfts werent sent to seller`);
+  });
+
+  it("accept offer with scapes", async () => {
+    let offerId = 1;
+    let nftsToReceive = await getOfferedNftsAmount(offerId);
+    let offerPrice = await getOfferPrice(offerId);    //TODO rename to priceToPay
+    let feeToReceive = await calculateFeeAmount(offerId, offerPrice);
+    let priceToReceive = offerPrice - feeToReceive;
+
+    let buyerScapesBefore = await getNftBalance(scapes, buyer);
+    let sellerCrownsBefore = await getERC20Balance(crowns, seller);
+    let crownsBeforeFeeReceiver = await getERC20Balance(crowns, owner);
+
+    await approveERC20(crowns, offerPrice, bundleOffer.address, buyer);
+    await bundleOffer.acceptOffer(offerId, {from: buyer});
+
+    let buyerScapesAfter = await getNftBalance(scapes, buyer);
+    let sellerCrownsAfter = await getERC20Balance(crowns, seller);
+    let crownsAfterFeeReceiver = await getERC20Balance(crowns, owner);
+
+    assert.equal(buyerScapesAfter, buyerScapesBefore + nftsToReceive,
+      `${nftsToReceive} nfts werent sent to buyer`);
+    assert.equal(sellerCrownsAfter, sellerCrownsBefore + priceToReceive,
+      `price of ${priceToReceive/ether} wasnt sent to seller`);
+    assert.equal(sellerCrownsAfter, sellerCrownsBefore + priceToReceive,
+      `fee of ${feeToReceive/ether} wasnt sent to feeReceiver`);
+  });
 
   it("create offer with native currency", async () => {});
 
