@@ -240,19 +240,18 @@ contract("Bundle Offer", async accounts => {
       `${nftsAmount} nfts werent sent to contract`);
   });
 
-  xit("cancel previous offer", async () => {
-    let offerId = 1;  // TODO fetch offerId
-    console.log(offerId);
+  it("cancel last offer", async () => {
+    let offerId = await bundleOffer.lastOfferId.call();
+    let nftsToReceive = await getNftsToReceive(offerId);
 
     let sellerScapesBefore = await getNftBalance(scapes, seller);
 
-    let nftsToReceive = await getOfferedNftsAmount(offerId);
     await bundleOffer.cancelOffer(offerId, {from: seller});
 
     let sellerScapesAfter = await getNftBalance(scapes, seller);
 
-    // assert.equal(sellerScapesAfter, sellerScapesBefore + nftsToReceive,
-    //   `${nftsToReceive} nfts werent sent to seller`);
+    assert.equal(sellerScapesAfter, sellerScapesBefore + nftsToReceive,
+      `${nftsToReceive} nfts werent sent to seller`);
   });
 
   it("accept offer with scapes", async () => {
