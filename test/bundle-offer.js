@@ -254,29 +254,22 @@ contract("Bundle Offer", async accounts => {
       `${nftsToReceive} nfts werent sent to seller`);
   });
 
-  it("accept offer with scapes", async () => {
-    let offerId = 1;
-    let nftsToReceive = await getOfferedNftsAmount(offerId);
-    let offerPrice = await getOfferPrice(offerId);    //TODO rename to priceToPay
-    let feeToReceive = await calculateFeeAmount(offerId, offerPrice);
-    let priceToReceive = offerPrice - feeToReceive;
+  xit("accept offer with scapes", async () => {
+    let offerId = await bundleOffer.lastOfferId.call();
+    let [nftsToReceive, offerPrice, feeToReceive, priceToReceive] = await getOfferValues(offerId);
 
-    let buyerScapesBefore = await getNftBalance(scapes, buyer);
-    let sellerCrownsBefore = await getERC20Balance(crowns, seller);
-    let crownsBeforeFeeReceiver = await getERC20Balance(crowns, owner);
+    let [buyerScapesBefore, sellerCrownsBefore, feeReceiverCrownsBefore] = await getAcceptOfferBalances();
 
     await approveERC20(crowns, offerPrice, bundleOffer.address, buyer);
     await bundleOffer.acceptOffer(offerId, {from: buyer});
 
-    let buyerScapesAfter = await getNftBalance(scapes, buyer);
-    let sellerCrownsAfter = await getERC20Balance(crowns, seller);
-    let crownsAfterFeeReceiver = await getERC20Balance(crowns, owner);
+    let [buyerScapesAfter, sellerCrownsAfter, feeReceiverCrownsAfter] = await getAcceptOfferBalances();
 
     assert.equal(buyerScapesAfter, buyerScapesBefore + nftsToReceive,
       `${nftsToReceive} nfts werent sent to buyer`);
     assert.equal(sellerCrownsAfter, sellerCrownsBefore + priceToReceive,
       `price of ${priceToReceive/ether} wasnt sent to seller`);
-    assert.equal(sellerCrownsAfter, sellerCrownsBefore + priceToReceive,
+    assert.equal(feeReceiverCrownsAfter, feeReceiverCrownsBefore + feeToReceive,
       `fee of ${feeToReceive/ether} wasnt sent to feeReceiver`);
   });
 
