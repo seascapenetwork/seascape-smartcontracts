@@ -132,7 +132,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     // external methods
     //--------------------------------------------------
 
-    /// @notice cancel nft offer
+    /// @notice seller gets back offered nfts from the contract
     function cancelOffer(uint _offerId) external nonReentrant {
         OfferObject storage offer = offerObjects[_offerId];
         require(offer.seller == msg.sender, "sender not creator of offer");
