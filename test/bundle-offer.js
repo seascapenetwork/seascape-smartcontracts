@@ -14,6 +14,7 @@ contract("Bundle Offer", async accounts => {
 
   // scalers
   let ether = 1000000000000000000;
+  let nativeCurrency = "0x0000000000000000000000000000000000000000";
 
   // contracts
   let scapes = null;
