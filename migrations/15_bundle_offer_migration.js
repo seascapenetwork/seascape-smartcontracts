@@ -15,7 +15,7 @@ const feeRate = 10;	// 1 = 0.1%, 10 = 1%, 100 = 10%
 module.exports = async function(deployer, network) {
 
     if (network == "ganache") {
-        var feeReceiver = getAccount(3);
+        var feeReceiver = getAccount(0);
 
         await deployer.deploy(BundleOffer, feeReceiver, feeRate).then(function(){
             console.log("BundleOffer contract was deployed at address: "+BundleOffer.address);
