@@ -82,8 +82,43 @@ contract("Bundle Offer", async accounts => {
     return offerPrice * feePercentage / 100;
   }
 
+  // --------------------------------------------------
+  // Helper functions
+  // --------------------------------------------------
+
+  async function getOfferValues(offerId){
+    let offerObject = await getOfferObject(offerId);
+
+    let nftsToReceive = getOfferedNftsAmount(offerObject);
+    let offerPrice = web3.utils.fromWei(offerObject[1], "wei");
+    let feeToReceive = getFeeAmount(offerObject, offerPrice);
+    let priceToReceive = offerPrice - feeToReceive;
+
+    return [nftsToReceive, offerPrice, feeToReceive, priceToReceive];
   }
 
+  async function getNftsToReceive(offerId){
+    let offerObject = await getOfferObject(offerId);
+
+    return getOfferedNftsAmount(offerObject);
+  }
+
+  async function getAcceptOfferBalances(){
+    let buyerScapes = await getNftBalance(scapes, buyer);
+    let sellerCrowns = await getERC20Balance(crowns, seller);
+    let crownsFeeReceiver = await getERC20Balance(crowns, owner);
+
+    return [buyerScapes, sellerCrowns, crownsFeeReceiver];
+  }
+
+  async function getAcceptOfferNativeBalances(){
+    let buyerScapes = await getNftBalance(scapes, buyer);
+    let sellerEther = await getNativeBalance(seller);
+
+    let feeReceiverEther = await getNativeBalance(owner);
+
+    return [buyerScapes, sellerEther, feeReceiverEther];
+  }
 
   // --------------------------------------------------
   // Unit tests
