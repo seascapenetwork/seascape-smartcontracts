@@ -222,12 +222,6 @@ contract("Bundle Offer", async accounts => {
   });
 
   it("create offer with scapes", async () => {
-    // address _currencyAddress,
-    // uint _price,
-    // uint _nftsAmount,
-    // address[] calldata _nftAddresses,
-    // uint[] calldata _nftIds
-
     let currencyAddress = crowns.address;
     let price = web3.utils.toWei("5", "ether");
     let nftsAmount = 2;
