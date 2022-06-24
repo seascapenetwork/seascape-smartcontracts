@@ -205,12 +205,10 @@ contract("Bundle Offer", async accounts => {
   });
 
   it("add native currency address", async () => {
-    let currencyAddress = "0x0000000000000000000000000000000000000000";
-
-    await bundleOffer.addSupportedCurrency(currencyAddress, {from: owner})
+    await bundleOffer.addSupportedCurrency(nativeCurrency, {from: owner})
       .catch(console.error);
 
-    let currencyIsSupported = await bundleOffer.supportedCurrencies(currencyAddress);
+    let currencyIsSupported = await bundleOffer.supportedCurrencies(nativeCurrency);
 
     assert.equal(currencyIsSupported, true, "currency address not added");
   });
