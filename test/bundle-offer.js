@@ -45,6 +45,11 @@ contract("Bundle Offer", async accounts => {
     }
   };
 
+  async function getNativeBalance(user){
+    let balance = await web3.eth.getBalance(user);
+    return parseInt(balance);
+  }
+
   async function getNftBalance(token, owner){
     try{
       let balance = await token.balanceOf(owner);
@@ -64,23 +69,19 @@ contract("Bundle Offer", async accounts => {
     return nftIds;
   }
 
-  async function getOfferedNftsAmount(offerId){
-    // TODO create helper function getOfferObject for following line
-    let nftsAmountToReceive = await bundleOffer.offerObjects(offerId).catch(console.error);
-    return nftsAmountToReceive[2].words[0];
+  async function getOfferObject(offerId){
+    return await bundleOffer.offerObjects(offerId).catch(console.error);
   }
 
-  async function getOfferPrice(offerId){
-    // TODO create helper function getOfferObject for following line
-    let offerPrice = await bundleOffer.offerObjects(offerId).catch(console.error);
-    return web3.utils.fromWei(offerPrice[1], "wei");
+  function getOfferedNftsAmount(offerObject){
+    return offerObject[2].words[0];
   }
 
-  async function calculateFeeAmount(offerId, offerPrice){
-    // TODO create helper function getOfferObject for following line
-    let feePercentage = await bundleOffer.offerObjects(offerId).catch(console.error);
-    feePercentage = (feePercentage[3].words[0]) / 10;
-    return feeToPay = offerPrice * feePercentage / 100;
+  function getFeeAmount(offerObject, offerPrice){
+    let feePercentage = offerObject[3].words[0] / 10;
+    return offerPrice * feePercentage / 100;
+  }
+
   }
 
 
