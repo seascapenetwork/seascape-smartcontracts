@@ -273,9 +273,13 @@ contract("Bundle Offer", async accounts => {
       `fee of ${feeToReceive/ether} wasnt sent to feeReceiver`);
   });
 
-  it("create offer with native currency", async () => {});
+  it("create offer with native currency", async () => {
+    let price = web3.utils.toWei("5", "ether");
+    let nftsAmount = 2;
+    let nftIds = await getNftIds(seller, scapes, nftsAmount);
+    let nftAddresses = new Array(nftsAmount).fill(scapes.address);
 
-  it("cancel offer with native currency", async () => {});
+    let contractScapesBefore = await getNftBalance(scapes, bundleOffer.address);
 
   it("accept offer with native currency", async () => {});
 })
