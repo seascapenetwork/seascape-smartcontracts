@@ -281,5 +281,31 @@ contract("Bundle Offer", async accounts => {
 
     let contractScapesBefore = await getNftBalance(scapes, bundleOffer.address);
 
-  it("accept offer with native currency", async () => {});
-})
+    await scapes.setApprovalForAll(bundleOffer.address, true, {from: seller});
+    await bundleOffer.createOffer(nativeCurrency, price, nftsAmount, nftIds, nftAddresses,
+      {from: seller});
+
+    let contractScapesAfter = await getNftBalance(scapes, bundleOffer.address);
+
+    assert.equal(contractScapesAfter, contractScapesBefore + nftsAmount,
+      `${nftsAmount} nfts werent sent to contract`);
+  });
+
+  it("accept offer with native currency", async () => {
+    let offerId = await bundleOffer.lastOfferId.call();
+    let [nftsToReceive, offerPrice, feeToReceive, priceToReceive] = await getOfferValues(offerId);
+
+    let [buyerScapesBefore, sellerEtherBefore, feeReceiverEtherBefore] = await getAcceptOfferNativeBalances();
+
+    await bundleOffer.acceptOffer(offerId, {from: buyer, value: offerPrice});
+
+    let [buyerScapesAfter, sellerEtherAfter, feeReceiverEtherAfter] = await getAcceptOfferNativeBalances();
+
+    assert.equal(buyerScapesAfter, buyerScapesBefore + nftsToReceive,
+      `${nftsToReceive} nfts werent sent to buyer`);
+    assert.equal(sellerEtherAfter, sellerEtherBefore + priceToReceive,
+      `price of ${priceToReceive/ether} wasnt sent to seller`);
+    assert.equal(feeReceiverEtherAfter, feeReceiverEtherBefore + feeToReceive,
+      `fee of ${feeToReceive/ether} wasnt sent to feeReceiver`);
+  });
+});
