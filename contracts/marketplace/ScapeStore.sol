@@ -222,7 +222,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     /// @param _tokenId nft unique ID
     /// @param _nftAddress nft token address
     /// @param _currency currency token address
-    function buy(uint _tokenId, address _nftAddress, address _currency)
+    function buy(uint _tokenId, address _nftAddress, address _currency, uint _price)
         public
         nonReentrant
         payable
@@ -235,6 +235,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
 
         require(obj.currency == _currency, "must pay same currency as sold");
         uint256 price = this.getSalesPrice(_tokenId, _nftAddress);
+        require(price == _price, "invalid price");
         uint256 tipsFee = price.mul(feeRate).div(1000);
         uint256 purchase = price.sub(tipsFee);
 
