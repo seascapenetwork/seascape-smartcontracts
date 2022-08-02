@@ -45,7 +45,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
 
 
     event Buy(
-        uint256 indexed id,
+        uint256 indexed saleId,
         uint256 tokenId,
         address buyer,
         uint256 price,
@@ -54,7 +54,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     );
 
     event Sell(
-        uint256 indexed id,
+        uint256 indexed saleId,
         uint256 tokenId,
         address nft,
         address currency,
@@ -64,7 +64,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
         uint256 price
     );
 
-    event SaleCanceled(uint256 indexed id, uint256 tokenId);
+    event CancelSell(uint256 indexed saleId, uint256 tokenId);
     event NftReceived(address operator, address from, uint256 tokenId, bytes data);
 
     /// @dev set fee reciever address and fee rate
@@ -141,13 +141,12 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         require(obj.status == 0, "status: sold or canceled");
         require(obj.seller == msg.sender, "seller not nft owner");
-        require(salesEnabled, "sales are closed");
-        
+
         obj.status = 2;
         IERC721 nft = IERC721(obj.nft);
         nft.safeTransferFrom(address(this), obj.seller, obj.tokenId);
 
-        emit SaleCanceled(_tokenId, obj.tokenId);
+        emit CancelSell(obj.id, obj.tokenId);
     }
 
     /// @notice put nft for sale
