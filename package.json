@@ -13,6 +13,7 @@
   "author": "",
   "license": "GPLv3",
   "devDependencies": {
+    "seascape": "^2.0.3",
     "solium": "1.1.3",
     "truffle-plugin-verify": "^0.5.24"
   },

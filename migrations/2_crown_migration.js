@@ -1,9 +1,13 @@
 var Crowns = artifacts.require("./CrownsToken.sol");
+let seascape = require("seascape");
 
-let type = 1;
-
-module.exports = function(deployer, network) {
-    deployer.deploy(Crowns, type).then(function(){
-	    console.log("Crowns deployed on "+Crowns.address);
-    });
+module.exports = async function(deployer) {
+    try {
+        let crowns = await deployer.deploy(Crowns);
+        console.log("Crowns deployed on "+Crowns.address);
+        console.log(Crowns.abi);
+        console.log(Crowns.transactionHash);
+    } catch (e) {
+        console.error(e);
+    }
 }
