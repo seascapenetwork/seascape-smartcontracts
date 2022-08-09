@@ -115,10 +115,18 @@ contract ProfitCircus is Ownable {
 		Season storage _session  = sessions[_sessionId];
 		Balance storage _balance  = balances[_sessionId][msg.sender];
 
+		StakeToken handler = StakeToken(payable(stakeHandler));
+
+		// todo
+		// check the time when the last staking happened.
+		//  if its happening in the same block then no need to claim
+		if (_balance.amount > 0) {
+			handler.claim(_sessionId, msg.sender);
+		}
+
 		_balance.amount += _amount;
 		_session.amount += _amount;
 
-		StakeToken handler = StakeToken(payable(stakeHandler));
 		handler.stake(_sessionId, msg.sender, _amount);
 
 		depositTimes[_sessionId][msg.sender]    = block.timestamp;
