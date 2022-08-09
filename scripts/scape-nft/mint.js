@@ -7,7 +7,7 @@ let Nft = artifacts.require("SeascapeNft");
 
 // bsc mainnet
 let factoryAddress = '0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d';
-let gasPrice = 5000000000;
+// let gasPrice = 5000000000;
 
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
@@ -28,7 +28,7 @@ let grantPermission = async function(factory, address) {
 }.bind(this);
 
 let staticPermission = async function(factory, address) {
-    let res = await factory.addGenerator(address);
+    let res = await factory.addStaticUser(address);
     console.log(res);
     console.log(`Account ${address} granted a GENERATOR permission in Nft Factory`);
     return res;
