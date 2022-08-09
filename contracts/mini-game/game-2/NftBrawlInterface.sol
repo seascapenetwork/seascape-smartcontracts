@@ -1,4 +1,5 @@
-pragma solidity 0.6.7;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.9;
 
 /// @notice The list of methods that Manager can call.
 /// @author Medet Ahmetson

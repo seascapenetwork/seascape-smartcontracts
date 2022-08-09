@@ -1,6 +1,6 @@
 // contracts/Crowns.sol
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.7;
+pragma solidity 0.8.9;
 
 interface CrownsInterface {
     function balanceOf(address account) external view returns (uint256);

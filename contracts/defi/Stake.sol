@@ -1,4 +1,5 @@
-pragma solidity 0.6.7;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.9;
 
 /** @notice The general Token agnostic Staking Contract.
  * You have a pool of reward, that is distributed among users based on their deposits.

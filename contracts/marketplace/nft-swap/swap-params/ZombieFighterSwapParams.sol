@@ -1,5 +1,5 @@
-pragma solidity 0.6.7;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.9;
 
 import "./../SwapSigner.sol";
 

@@ -1,10 +1,11 @@
-pragma solidity 0.6.7;
 
 import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./../openzeppelin/contracts/access/Ownable.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.9;
 import "./LighthouseTierInterface.sol";
 
 
