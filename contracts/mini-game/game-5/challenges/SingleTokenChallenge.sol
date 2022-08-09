@@ -92,8 +92,6 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         stakeToken          = _stake;
         rewardToken         = _reward;
         stakeHandler        = _stakeHandler;
-
-        initReentrancyStatus();
     }
 
     /// @notice a new challenge of this challenge category was added to the session.

@@ -104,8 +104,6 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         nft                 = _nft;
         rewardToken         = _reward;
         stakeHandler        = _stakeHandler;
-
-        initReentrancyStatus();
     }
 
     function getStakeAmount(bytes calldata data) external override view returns (uint256) {

@@ -89,7 +89,6 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         nft = _nft;
         rewardToken = _reward;
         stakeHandler = _handler;
-        initReentrancyStatus();
     }
 
     function getStakeAmount(bytes calldata data) external override view returns (uint256) {

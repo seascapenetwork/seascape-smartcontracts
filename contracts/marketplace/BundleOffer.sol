@@ -73,8 +73,6 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
 
         feeReceiver = _feeReceiver;
         feeRate = _feeRate;
-
-        initReentrancyStatus();
     }
 
     //--------------------------------------------------
