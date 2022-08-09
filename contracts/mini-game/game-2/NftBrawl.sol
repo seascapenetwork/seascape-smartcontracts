@@ -15,7 +15,6 @@ import "./NftBrawlGameSession.sol";
 /// @notice Game comes with Leaderboard located on it's on Solidity file.
 /// @author Medet Ahmetson
 contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
     using NftTypes for NftTypes;
 
@@ -185,7 +184,7 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
         require(_balance.amount == 0,
             "NFT Rush: Can not spent more than one time");
 
-        _balance.amount = _balance.amount.add(_amount);
+        _balance.amount = _balance.amount + _amount;
 
         emit Spent(msg.sender, _sessionId, _balance.amount, _balance.mintedTime, _amount);
     }
@@ -219,7 +218,7 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
         require(_balance.amount > 0,
             "NFT Rush: No deposit was found");
         require(_balance.mintedTime == 0 ||
-            (_balance.mintedTime.add(_session.interval) < block.timestamp),
+            (_balance.mintedTime + _session.interval < block.timestamp),
             "NFT Rush: Still in locking period, please try again after locking interval passes");
 
         /// Validation of quality

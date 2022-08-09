@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @author Nejc Schneider
 contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     /// @dev keep count of SalesObject amount
     uint256 public salesAmount;
@@ -232,12 +231,12 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
         require(obj.currency == _currency, "must pay same currency as sold");
         uint256 price = this.getSalesPrice(_tokenId, _nftAddress);
         require(price == _price, "invalid price");
-        uint256 tipsFee = price.mul(feeRate).div(1000);
-        uint256 purchase = price.sub(tipsFee);
+        uint256 tipsFee = price * feeRate / 1000;
+        uint256 purchase = price - tipsFee;
 
         if (obj.currency == address(0x0)) {
             require (msg.value >= price, "your price is too low");
-            uint256 returnBack = msg.value.sub(price);
+            uint256 returnBack = msg.value - price;
             if (returnBack > 0)
                 payable(msg.sender).transfer(returnBack);
             if (tipsFee > 0)

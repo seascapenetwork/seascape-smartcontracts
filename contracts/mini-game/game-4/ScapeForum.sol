@@ -16,7 +16,6 @@ import "./../../utils/SetCrowns.sol";
 /// five lower quality nfts + CWS fee
 /// @author Nejc Schneider
 contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     NftFactory nftFactory;
@@ -246,16 +245,15 @@ contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
         require(_sessionId > 0, "No active session");
         require(isActive(_sessionId), "Session not active");
         require(_amount > 0, "Should stake more than 0");
-        require(_balance.totalStaked.add(_amount) <= _session.maxStake,
+        require(_balance.totalStaked + _amount <= _session.maxStake,
             "Cant stake more than maxStake");
-        require(_balance.totalStaked.add(_amount) >= _session.minStake,
+        require(_balance.totalStaked + _amount >= _session.minStake,
             "Cant stake less than minStake");
         require(crowns.balanceOf(msg.sender) >= _amount, "Not enough CWS in your wallet");
         crowns.transferFrom(msg.sender, address(this), _amount);
 
         /// @dev update balance
-        balances[_sessionId][msg.sender].totalStaked = balances[_sessionId][msg.sender]
-            .totalStaked.add(_amount);
+        balances[_sessionId][msg.sender].totalStaked += _amount;
 
         emit Staked(_sessionId, msg.sender, _amount,  _balance.totalStaked);
     }

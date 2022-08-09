@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 /// Only, during the game session period, players can spend crowns to mint tokens.
 /// @author Medet Ahmetson
 contract GameSession is Ownable {
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     Counters.Counter private sessionId;
@@ -59,7 +58,7 @@ contract GameSession is Ownable {
 
         sessions[_sessionId] = Session(_rewardToken, _interval, _period, _startTime, _generation);
 
-        emit SessionStarted(_rewardToken, _sessionId, _startTime, _startTime.add(_period), _generation);
+        emit SessionStarted(_rewardToken, _sessionId, _startTime, _startTime + _period, _generation);
 
         return _sessionId;
     }

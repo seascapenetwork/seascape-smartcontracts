@@ -14,8 +14,6 @@ import "./NftBrawlGameSession.sol";
 ///
 /// @author Medet Ahmetson
 contract Leaderboard is Ownable, GameSession { //, Crowns {
-    using SafeMath for uint256;
-
     struct Announcement {
         bool    minted;             // was all time winners announced
         uint256 dailySpentTime;     // time when last day was announced
@@ -131,7 +129,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
             for (uint i=0; i<_winnersAmount; i++) {
                 address _winner = _winners[i];
 
-                spentDailyClaimables[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken].add(spentDailyPrizes[i]);
+                spentDailyClaimables[_winner][_session.rewardToken] = spentDailyClaimables[_winner][_session.rewardToken] + spentDailyPrizes[i];
             }
         }
 
@@ -172,7 +170,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
                 address _winner = _winners[i];
 
                 // increase amount of daily rewards that msg.sender could claim
-                mintedAllTimeClaimables[_winner][_session.rewardToken] = mintedAllTimeClaimables[_winner][_session.rewardToken].add(mintedAllTimePrizes[i]);
+                mintedAllTimeClaimables[_winner][_session.rewardToken] = mintedAllTimeClaimables[_winner][_session.rewardToken] + mintedAllTimePrizes[i];
             }
         }
 
@@ -253,9 +251,9 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
     function dailySpentWinnersAnnouncable(uint256 _sessionId) internal view returns(bool) {
         Session storage _session = sessions[_sessionId];
 
-        uint256 dayAfterSession = _session.startTime.add(_session.period).add(1 days);
+        uint256 dayAfterSession = _session.startTime + _session.period + 1 days;
 
-        uint256 today = announcement[_sessionId].dailySpentTime.add(1 days);
+        uint256 today = announcement[_sessionId].dailySpentTime + 1 days;
 
         // time should be 24 hours later than last announcement.
         // as we announce leaders for the previous 24 hours.
@@ -293,7 +291,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
      *  that one more day's winners were announced.
      */
     function setDailySpentWinnersTime(uint256 _sessionId) internal {
-        announcement[_sessionId].dailySpentTime = announcement[_sessionId].dailySpentTime.add(1 days);
+        announcement[_sessionId].dailySpentTime = announcement[_sessionId].dailySpentTime + 1 days;
     }
 
     /**
@@ -314,7 +312,7 @@ contract Leaderboard is Ownable, GameSession { //, Crowns {
         uint256 _sum = 0;
 
         for (uint i=0; i<_winnersAmount; i++) {
-            _sum = _sum.add(_prizes[i]);
+            _sum += _prizes[i];
         }
 
         return _sum;

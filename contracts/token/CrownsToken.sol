@@ -15,7 +15,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 /// to be claimed by users by triggering any transaction in the ERC-20 contract.
 /// @dev Implementation of the {IERC20} interface.
 contract CrownsToken is Context, IERC20, Ownable {
-    using SafeMath for uint256;
     using Address for address;
 
     struct Account {
@@ -71,12 +70,12 @@ contract CrownsToken is Context, IERC20, Ownable {
 	    address newOwner             = 0xbfdadB9a06C90B6625aF3C6DAc0Bb7f56a852886;
 
 
-	// 5 million tokens
+	    // 5 million tokens
         uint256 gameIncentives       = 5e6 * SCALER;
         // 1,5 million tokens
         uint256 reserve              = 15e5 * SCALER; // reserve for the next 5 years.
-	// 1 million tokens
-	uint256 community            = 1e6 * SCALER;
+	    // 1 million tokens
+	    uint256 community            = 1e6 * SCALER;
         uint256 team                 = 1e6 * SCALER;
         uint256 investment           = 1e6 * SCALER;
         // 500,000 tokens
@@ -101,15 +100,15 @@ contract CrownsToken is Context, IERC20, Ownable {
     function payWaveOwing (address account) public view returns(uint256) {
         Account memory _account = _accounts[account];
 
-        uint256 newPayWave = totalPayWave.sub(_account.lastPayWave);
-        uint256 proportion = _account.balance.mul(newPayWave);
+        uint256 newPayWave = totalPayWave - _account.lastPayWave;
+        uint256 proportion = _account.balance * newPayWave;
 
         // The PayWave is not a part of total supply, since it was moved out of balances
-        uint256 supply = _totalSupply.sub(newPayWave);
+        uint256 supply = _totalSupply - newPayWave;
 
         // PayWave owed proportional to current balance of the account.
         // The decimal factor is used to avoid floating issue.
-        uint256 payWave = proportion.div(supply);
+        uint256 payWave = proportion / supply;
 
         return payWave;
     }
@@ -124,8 +123,8 @@ contract CrownsToken is Context, IERC20, Ownable {
         _accounts[account].lastPayWave = totalPayWave;
 
         if (owing > 0) {
-            _accounts[account].balance    = _accounts[account].balance.add(owing);
-            unclaimedPayWave     = unclaimedPayWave.sub(owing);
+            _accounts[account].balance += owing;
+            unclaimedPayWave     -= owing;
 
             emit Transfer(
                 address(0),
@@ -232,7 +231,7 @@ contract CrownsToken is Context, IERC20, Ownable {
      */
     function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
         return true;
     }
 
@@ -249,7 +248,7 @@ contract CrownsToken is Context, IERC20, Ownable {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
         return true;
     }
 
@@ -268,7 +267,7 @@ contract CrownsToken is Context, IERC20, Ownable {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] - subtractedValue);
         return true;
     }
 
@@ -294,8 +293,8 @@ contract CrownsToken is Context, IERC20, Ownable {
 
         _beforeTokenTransfer(sender, recipient, amount);
 
-        _accounts[sender].balance =  _accounts[sender].balance.sub(amount);
-        _accounts[recipient].balance = _accounts[recipient].balance.add(amount);
+        _accounts[sender].balance -=  amount;
+        _accounts[recipient].balance += amount;
 
         emit Transfer(sender, recipient, amount);
     }
@@ -314,8 +313,8 @@ contract CrownsToken is Context, IERC20, Ownable {
 
         _beforeTokenTransfer(address(0), account, amount);
 
-        _totalSupply = _totalSupply.add(amount);
-        _accounts[account].balance = _accounts[account].balance.add(amount);
+        _totalSupply += amount;
+        _accounts[account].balance += amount;
         emit Transfer(address(0), account, amount);
     }
 
@@ -336,9 +335,9 @@ contract CrownsToken is Context, IERC20, Ownable {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        _accounts[account].balance = _accounts[account].balance.sub(amount);
+        _accounts[account].balance -= amount;
 
-        unconfirmedPayWave = unconfirmedPayWave.add(amount);
+        unconfirmedPayWave += amount;
 
         emit Transfer(account, address(0), amount);
     }
@@ -399,7 +398,7 @@ contract CrownsToken is Context, IERC20, Ownable {
 	require(_getBalance(sender) >= amount, "Crowns: not enough balance");
 
 	_burn(sender, amount);
-	_approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+	_approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
 
 	return true;
     }
@@ -423,7 +422,7 @@ contract CrownsToken is Context, IERC20, Ownable {
     	}
     	uint256 owing = payWaveOwing(account);
 
-    	return balance.add(owing);
+    	return balance + owing;
     }
 
     /**
@@ -434,10 +433,10 @@ contract CrownsToken is Context, IERC20, Ownable {
      * Emits a {PayWave} event.
      */
     function payWave() public onlyOwner() returns (bool) {
-    	totalPayWave = totalPayWave.add(unconfirmedPayWave);
-    	unclaimedPayWave = unclaimedPayWave.add(unconfirmedPayWave);
-	uint256 payWaved = unconfirmedPayWave;
-	unconfirmedPayWave = 0;
+    	totalPayWave += unconfirmedPayWave;
+    	unclaimedPayWave += unconfirmedPayWave;
+	    uint256 payWaved = unconfirmedPayWave;
+	    unconfirmedPayWave = 0;
 
         emit PayWave (
             payWaved,

@@ -14,7 +14,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @author Nejc Schneider
 contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     uint public lastOfferId;
     bool public tradeEnabled = true;
@@ -208,13 +207,13 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         require(offer.price > 0, "sold/canceled/nonexistent offer");
         require(offer.seller != msg.sender, "cant accept self-made offer");
 
-        uint tipsFee = offer.price.mul(offer.fee).div(1000);
-        uint purchase = offer.price.sub(tipsFee);
+        uint tipsFee = offer.price * offer.fee / 1000;
+        uint purchase = offer.price - tipsFee;
 
         if(offer.currency == address(0)){
             require(msg.value >= offer.price, "insufficient ether amount sent");
-            if (msg.value.sub(offer.price) > 0){
-                uint refund = msg.value.sub(offer.price);
+            if (msg.value - offer.price > 0){
+                uint refund = msg.value - offer.price;
                 payable(msg.sender).transfer(refund);
             }
             if (tipsFee > 0)

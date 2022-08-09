@@ -17,7 +17,6 @@ import "./../../seascape-nft/SeascapeNft.sol";
 /// such as generation and quality.
 /// The higher the NFT weight, the more user gets reward for NFT staking.
 contract NftStaking is Ownable, IERC721Receiver {
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     uint256 constant MULTIPLIER = 10**18;
@@ -127,7 +126,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	// creating the session
       	//--------------------------------------------------------------------
       	uint256 _sessionId = sessionId.current();
-      	uint256 _rewardUnit = _totalReward.mul(MULTIPLIER).div(_period);
+      	uint256 _rewardUnit = _totalReward * MULTIPLIER / _period;
       	sessions[_sessionId] = Session(_totalReward, _period, _startTime, 0, 0, _rewardUnit, 0, 0, _startTime);
 
       	//--------------------------------------------------------------------
@@ -159,7 +158,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 			crowns.transfer(_address, _debt);
 			debts[_address] = 0;
 
-            earning[_sessionId][_address] = earning[_sessionId][_address].add(_debt);
+            earning[_sessionId][_address] += _debt;
 		}
 	}
 
@@ -187,16 +186,16 @@ contract NftStaking is Ownable, IERC721Receiver {
       	Session storage _session  = sessions[_sessionId];
       	Balance[3] storage _balances  = balances[_sessionId][msg.sender];
 
-      	_session.totalSp = _session.totalSp.add(_sp);
+      	_session.totalSp += _sp;
 
         // update the interestPerPoint variable of the session
         updateInterestPerPoint(_sessionId);
 
       	depositTimes[_sessionId][msg.sender] = block.timestamp;
-      	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].add(1);
+      	slots[_sessionId][msg.sender]++;
 
         _balances[_index] = Balance(block.timestamp, _nftId, _sp, 0);
-		_balances[_index].claimedAmount = _session.claimedPerPoint.mul(_balances[_index].sp).div(MULTIPLIER); // 0
+		_balances[_index].claimedAmount = _session.claimedPerPoint * _balances[_index].sp / MULTIPLIER; // 0
 
         emit Deposited(msg.sender, _sessionId, _nftId, _index + 1);
     }
@@ -215,10 +214,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 
 	    uint256 _claimed = transfer(_sessionId, _index);
 	
-        earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
+        earning[_sessionId][msg.sender] += _claimed;
 
-      	sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_balance.sp);
-      	slots[_sessionId][msg.sender] = slots[_sessionId][msg.sender].sub(1);
+      	sessions[_sessionId].totalSp -= _balance.sp;
+      	slots[_sessionId][msg.sender]++;
 
       	delete balances[_sessionId][msg.sender][_index];
 
@@ -257,7 +256,7 @@ contract NftStaking is Ownable, IERC721Receiver {
       	for (uint _index=0; _index < slots[_sessionId][msg.sender]; _index++) {
             uint256 _claimed = transfer(_sessionId, _index);
 
-            earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_claimed);
+            earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender] + _claimed;
 
             updateCalculation(_sessionId);
 
@@ -270,7 +269,7 @@ contract NftStaking is Ownable, IERC721Receiver {
             
       	    delete balances[_sessionId][msg.sender][_index];
 	    
-      	    sessions[_sessionId].totalSp = sessions[_sessionId].totalSp.sub(_sp);
+      	    sessions[_sessionId].totalSp -= _sp;
 
             updateInterestPerPoint(_sessionId);
 
@@ -342,10 +341,10 @@ contract NftStaking is Ownable, IERC721Receiver {
 	    uint256 _interests = 0;
 	
         for(uint _index = 0; _index < 3; _index++){
-	        _interests = _interests.add(calculateInterest(_sessionId, msg.sender, _index));
+	        _interests += calculateInterest(_sessionId, msg.sender, _index);
         }
 
-	    uint256 _totalBonus = _interests.mul(MULTIPLIER).mul(_bonusPercent).div(100).div(MULTIPLIER);
+	    uint256 _totalBonus = _interests * MULTIPLIER * _bonusPercent / 100 / MULTIPLIER;
         require(crowns.allowance(owner(), address(this)) >= _totalBonus, "Seascape Staking: Not enough bonus balance");
 
         bool res = crowns.transferFrom(owner(), msg.sender, _totalBonus);
@@ -353,7 +352,7 @@ contract NftStaking is Ownable, IERC721Receiver {
             return false;
         }
 
-        earning[_sessionId][msg.sender] = earning[_sessionId][msg.sender].add(_totalBonus);
+        earning[_sessionId][msg.sender] += _totalBonus;
 
         emit BonusClaimed(msg.sender, _sessionId, _interests, _totalBonus, _bonusPercent);
 
@@ -368,14 +367,14 @@ contract NftStaking is Ownable, IERC721Receiver {
 
         uint256 _crownsBalance = crowns.balanceOf(address(this));
         if (_interest > 0 && _interest > _crownsBalance) {
-            debts[msg.sender] = _interest.sub(_crownsBalance).add(debts[msg.sender]);
+            debts[msg.sender] = (_interest - _crownsBalance) + debts[msg.sender];
             crowns.transfer(msg.sender, _crownsBalance);
-            _session.claimed = _session.claimed.add(_crownsBalance);
+            _session.claimed += _crownsBalance;
 
             return _crownsBalance;
         } else {
             crowns.transfer(msg.sender, _interest);
-            _session.claimed = _session.claimed.add(_interest);
+            _session.claimed += _interest;
         }
 
         return _interest;
@@ -390,13 +389,13 @@ contract NftStaking is Ownable, IERC721Receiver {
 	    /// @dev  How much of total deposit belongs to player as a floating number
 	    uint256 _sessionCap = block.timestamp;
 	    if (!isActive(_sessionId)) {
-	        _sessionCap = _session.startTime.add(_session.period);
+	        _sessionCap = _session.startTime + _session.period;
 	    }
 
-        uint256 claimedPerPoint = _session.claimedPerPoint.add(
-            _sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
+        uint256 claimedPerPoint = _session.claimedPerPoint + (
+            (_sessionCap - _session.lastInterestUpdate) * _session.interestPerPoint);
 
-        uint256 _interest = _balance.sp.mul(claimedPerPoint).div(MULTIPLIER).sub(_balance.claimedAmount);
+        uint256 _interest = _balance.sp * claimedPerPoint / MULTIPLIER - _balance.claimedAmount;
 
 	    return _interest;
     }
@@ -422,7 +421,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 
 		uint256 _sessionCap = block.timestamp;
 		if (!isActive(_sessionId)) {
-			_sessionCap = _session.startTime.add(_session.period);
+			_sessionCap = _session.startTime + _session.period;
 		}
 
         // I calculate previous claimed rewards
@@ -446,7 +445,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 		if (_session.totalSp == 0) {
 			_session.interestPerPoint = 0;
 		} else {
-			_session.interestPerPoint = _session.rewardUnit.div(_session.totalSp); // 0.1
+			_session.interestPerPoint = _session.rewardUnit / _session.totalSp; // 0.1
 		}
     }
     

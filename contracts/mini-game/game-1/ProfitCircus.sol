@@ -11,7 +11,6 @@ import "./../../seascape-nft/NftFactory.sol";
 /// @author Medet Ahmetson <admin@blocklords.io>
 /// @notice Contract is attached to Seascape Nft Factory
 contract ProfitCircus is Ownable {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
 
@@ -108,7 +107,7 @@ contract ProfitCircus is Ownable {
 		// creating the session
 		//--------------------------------------------------------------------
 		uint256 _sessionId = sessionId.current();
-		uint256 _rewardUnit = _totalReward.div(_period);	
+		uint256 _rewardUnit = _totalReward / _period;	
 		sessions[_sessionId] = Session(_rewardToken, _lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
 			0, 0, _startTime, _stakeAmount, _stakePeriod);
 
@@ -176,12 +175,12 @@ contract ProfitCircus is Ownable {
 		}
 
 		// I add amount of deposits to session.amount
-		_session.amount = _session.amount.add(_amount); // 10
+		_session.amount = _session.amount + _amount; // 10
 
 		// interest per token is updated. maybe need to withdraw out?
 		updateInterestPerToken(_sessionId);
 		
-		_balance.amount = _amount.add(_balance.amount);
+		_balance.amount += _amount;
 		_balance.claimedTime = block.timestamp;
 
 		depositTimes[_sessionId][msg.sender]    = block.timestamp;
@@ -232,18 +231,18 @@ contract ProfitCircus is Ownable {
 			_contractBalance = address(this).balance;
 		}
 		if (_interest > 0 && _contractBalance < _interest) {
-			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
+			_balance.unpaidReward = (_interest - _contractBalance) + _balance.unpaidReward;
 		}
 
-		_balance.amount = _balance.amount.sub(_amount);
-		_session.amount = _session.amount.sub(_amount);
+		_balance.amount = _balance.amount - _amount;
+		_session.amount = _session.amount - _amount;
 
 		/// reward claims as in claim method
 		if (_interest > 0) {
-			_session.claimed     = _session.claimed.add(_interest);	
-			_balance.claimed     = _balance.claimed.add(_interest);
+			_session.claimed     = _session.claimed + _interest;	
+			_balance.claimed     = _balance.claimed + _interest;
 			if (isActive(_sessionId) == false) {
-				_balance.claimedTime = _session.startTime.add(_session.period);
+				_balance.claimedTime = _session.startTime + _session.period;
 			} else {
 				_balance.claimedTime = block.timestamp;
 			}
@@ -267,7 +266,7 @@ contract ProfitCircus is Ownable {
 		// it also indicates that session exists
 		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
-		require(_balance.claimed.add(_balance.amount) > 0, "Profit Circus: Deposit first");
+		require(_balance.claimed + _balance.amount > 0, "Profit Circus: Deposit first");
 		require(isMintable(_session, _balance), "Profit Circus: already claimed or time not passed");
 
 		uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
@@ -288,7 +287,7 @@ contract ProfitCircus is Ownable {
     /// @notice Returns amount of reward Tokens earned by _address
     function earned(uint256 _sessionId, address _owner) external view returns(uint256) {
 		uint256 _interest = calculateInterest(_sessionId, _owner);
-		return balances[_sessionId][_owner].claimed.add(_interest);
+		return balances[_sessionId][_owner].claimed + _interest;
     }
 
     /// @notice Returns amount of reward Tokens that _address could claim.
@@ -336,7 +335,7 @@ contract ProfitCircus is Ownable {
 
     /// @dev check whether the session is active or not
     function isActive(uint256 _sessionId) internal view returns(bool) {
-		uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
+		uint256 _endTime = sessions[_sessionId].startTime + sessions[_sessionId].period;
 
 		// _endTime will be 0 if session never started.
 		if (block.timestamp < sessions[_sessionId].startTime || block.timestamp > _endTime) {
@@ -355,8 +354,8 @@ contract ProfitCircus is Ownable {
 		uint256 time = 0;
 
         if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
-            time = time.add(duration);
             uint256 duration = block.timestamp - _balance.stakeTime;
+            time += duration;
         }
 
         return time >= _session.stakePeriod;
@@ -373,7 +372,7 @@ contract ProfitCircus is Ownable {
 
 		uint256 _sessionCap = block.timestamp;
 		if (isActive(_sessionId) == false) {
-			_sessionCap = _session.startTime.add(_session.period);
+			_sessionCap = _session.startTime + _session.period;
 
 			// claimed after session expire, means no any claimables
 			if (_balance.claimedTime >= _sessionCap) {
@@ -381,11 +380,11 @@ contract ProfitCircus is Ownable {
 			}
 		}
 
-		uint256 claimedPerToken = _session.claimedPerToken.add(
-			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken));
+		uint256 claimedPerToken = _session.claimedPerToken + (
+			(_sessionCap - _session.lastInterestUpdate) * _session.interestPerToken);
 		
 		// (balance * total claimable) - user deposit earned amount per token - balance.claimedTime
-    	uint256 _interest = _balance.amount.mul(claimedPerToken).div(scaler).sub(_balance.claimedReward);
+    	uint256 _interest = _balance.amount * claimedPerToken / scaler - _balance.claimedReward;
 
 		return _interest;
     }
@@ -399,7 +398,7 @@ contract ProfitCircus is Ownable {
 
 		uint256 _sessionCap = block.timestamp;
 		if (isActive(_sessionId) == false) {
-			_sessionCap = _session.startTime.add(_session.period);
+			_sessionCap = _session.startTime + _session.period;
 		}
 
         // I calculate previous claimed rewards
@@ -412,7 +411,7 @@ contract ProfitCircus is Ownable {
 		if (_session.amount == 0) {
 			_session.interestPerToken = 0;
 		} else {
-			_session.interestPerToken = _session.rewardUnit.mul(scaler).div(_session.amount); // 0.1
+			_session.interestPerToken = _session.rewardUnit * scaler / _session.amount; // 0.1
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerToken
@@ -425,7 +424,7 @@ contract ProfitCircus is Ownable {
 
 		// also, need to attach to alex, 
 		// that previous earning (session.claimedPerToken) is 0.
-		_balance.claimedReward = _session.claimedPerToken.mul(_balance.amount).div(scaler); // 0
+		_balance.claimedReward = _session.claimedPerToken * _balance.amount / scaler; // 0
 	}
 
 	function _claim(uint256 _sessionId) internal returns(bool) {
@@ -449,17 +448,17 @@ contract ProfitCircus is Ownable {
 			_contractBalance = address(this).balance;
 		}
 		if (_interest > 0 && _contractBalance < _interest) {
-			_balance.unpaidReward = _interest.sub(_contractBalance).add(_balance.unpaidReward);
+			_balance.unpaidReward = (_interest - _contractBalance) + _balance.unpaidReward;
 		}
 
 		// we avoid sub. underflow, for calulating session.claimedPerToken
 		if (isActive(_sessionId) == false) {
-			_balance.claimedTime = _session.startTime.add(_session.period);
+			_balance.claimedTime = _session.startTime + _session.period;
 		} else {
 			_balance.claimedTime = block.timestamp;
 		}
-		_session.claimed     = _session.claimed.add(_interest);
-		_balance.claimed     = _balance.claimed.add(_interest);
+		_session.claimed     = _session.claimed + _interest;
+		_balance.claimed     = _balance.claimed + _interest;
 		
 		_safeTransfer(_session.rewardToken, msg.sender, _interest);
 			
