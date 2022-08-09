@@ -16,7 +16,7 @@ import "./../../seascape-nft/SeascapeNft.sol";
 /// in Seascape Network platform. The Seascape Point is calculated by Nft parameters
 /// such as generation and quality.
 /// The higher the NFT weight, the more user gets reward for NFT staking.
-contract NftStaking is Ownable, IERC721Receiver {
+contract NewNftStaking is Ownable, IERC721Receiver {
     using Counters for Counters.Counter;//
 
     uint256 constant MULTIPLIER = 10**18;
