@@ -14,11 +14,13 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
     Counters.Counter private tokenId;
 
     struct Params {
-	uint256 quality;   // seascape points
-	uint8 generation;
+	    uint256 quality;   // seascape points
+	    uint8 generation;
     }
 
     address private factory;
+
+    string private _baseLink;
 
     mapping(uint256 => Params) public paramsOf;
 
@@ -60,7 +62,11 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
 	factory = _factory;
     }
 
+    function _baseURI() internal override view returns (string memory) {
+        return _baseLink;
+    }
+
     function setBaseUri(string memory _uri) public onlyOwner {
-	_setBaseURI(_uri);
+        _baseLink = _uri;
     }
 }
