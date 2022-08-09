@@ -35,8 +35,6 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
         uint8 status;             // 2 = sale canceled, 1 = sold, 0 = for sale
     }
 
-    /// @dev store sales objects.
-    /// @param nft token address => (nft id => salesObject)
     mapping(address => mapping(uint256 => SalesObject)) salesObjects; // store sales in a mapping
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedNft;

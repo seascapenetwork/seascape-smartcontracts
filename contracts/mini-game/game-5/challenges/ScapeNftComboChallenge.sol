@@ -145,7 +145,6 @@ pragma solidity 0.8.9;
 //         zombieFarm = _zombieFarm;
 //         scape = _scape;
 //         pool = _pool;
-//         initReentrancyStatus();
 //     }
 
 //     /// @notice support a new Challenge of this category by Zombie Farm
@@ -282,7 +281,7 @@ pragma solidity 0.8.9;
 //         }
 
 //         for (uint8 i = 0; i < challenge.nftAmount; i++) {
-//             sessionChallenge.amount = sessionChallenge.amount.add(weight[i]);
+//             sessionChallenge.amount = sessionChallenge.amount + weight[i];
 //         }
 
 //         // before updating player's challenge parameters, we auto-claim earned tokens till block.timestamp.
@@ -355,7 +354,7 @@ pragma solidity 0.8.9;
 //             for (uint8 i = 0; i < challenge.nftAmount; i++) {
 //                 _nft.safeTransferFrom(address(this), staker, playerChallenge.nftId[i]);
 //                 playerChallenge.nftId[i] = 0;
-//                 sessionChallenge.amount = sessionChallenge.amount.sub(playerChallenge.weight[i]);
+//                 sessionChallenge.amount -= playerChallenge.weight[i];
 //                 claimedAmount += playerChallenge.weight[i];
 //                 playerChallenge.weight[i] = 0;
 //             }

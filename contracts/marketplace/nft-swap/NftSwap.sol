@@ -50,13 +50,10 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
         bytes32 s;
     }
 
-    /// @dev store offer objects.
-    /// @param offerId => OfferObject
     mapping(uint256 => OfferObject) offerObjects;
     /// @dev supported ERC721 and ERC20 contracts
     mapping(address => bool) public supportedBountyAddresses;
     /// @dev parse params contract addresses (1 per individual nftSeries)
-    /// @param nftAddress => nftParams contract address
     mapping(address => address) public supportedNftAddresses;
 
     event CreateOffer(

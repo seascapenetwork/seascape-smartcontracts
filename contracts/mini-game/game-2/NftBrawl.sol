@@ -42,7 +42,6 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
     /// @dev session id =>(wallet address => (Balance struct))
     mapping(uint256 => mapping(address => Balance)) public balances;
 
-    event SessionStarted(address indexed rewardToken, uint256 indexed sessionId, uint256 interval, uint256 period, uint256 generation);
     event Spent(address indexed owner, uint256 sessionId, uint256 balanceAmount, uint256 prevMintedTime, uint256 amount);
     event Minted(address indexed owner, uint256 sessionId, uint256 nftId);
     event NftFactorySet(address factory);
@@ -92,8 +91,6 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
         uint256 _sessionId = _startSession(_rewardToken, _interval, _period, _startTime, _generation);
 
         announceLeaderboard(_sessionId, _startTime);
-
-        emit SessionStarted(_rewardToken, _sessionId, _interval, _period, _generation);
     }
 
 
@@ -143,7 +140,7 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
         require(_amount > minSpend, "Max amount should be greater than min amount");
         maxSpend = _amount;
 
-        MaxSpendUpdated(_amount);
+        emit MaxSpendUpdated(_amount);
     }
 
     //--------------------------------------------------
