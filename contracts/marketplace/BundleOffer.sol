@@ -36,7 +36,6 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         address nftAddress;
     }
 
-    /// @param offerId => OfferObject
     mapping(uint => OfferObject) public offerObjects;
     mapping(address => bool) public supportedNfts;
     mapping(address => bool) public supportedCurrencies;
