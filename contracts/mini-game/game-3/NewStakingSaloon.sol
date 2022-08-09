@@ -85,7 +85,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     event GetSignInReward(address owner, uint256 sessionId, uint8 completedNum, uint256 NftId, uint256 generation, uint8 quality, uint256 imgId);
 
     /// @dev instantinate contracts, start session
-    constructor(address _nftFactory, address _nft) public {
+    constructor(address _nftFactory, address _nft) {
         require(_nftFactory != address(0), "Nft Factory can't be zero address");
         require(_nft != address(0), "Nft can't be zero address");
         sessionId.increment(); 	// starts at value 1

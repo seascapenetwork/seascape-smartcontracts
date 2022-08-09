@@ -70,7 +70,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     /// @dev set fee reciever address and fee rate
     /// @param _feeReceiver fee receiving address
     /// @param _feeRate fee amount
-    constructor(address payable _feeReceiver, uint256 _feeRate) public {
+    constructor(address payable _feeReceiver, uint256 _feeRate) {
         feeReceiver = _feeReceiver;
         feeRate = _feeRate;
         initReentrancyStatus();

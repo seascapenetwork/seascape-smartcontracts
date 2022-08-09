@@ -79,7 +79,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         uint amount
     );
 
-    constructor (address _zombieFarm, address _nft, address _reward, address payable _handler) public {
+    constructor (address _zombieFarm, address _nft, address _reward, address payable _handler) {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft != address(0), "invalid _scape address");
 

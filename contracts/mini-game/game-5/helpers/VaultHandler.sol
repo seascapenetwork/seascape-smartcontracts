@@ -12,7 +12,7 @@ contract VaultHandler {
 
     event VaultSet(address indexed vault);
 
-    constructor(address _vault) public {
+    constructor(address _vault) {
         require(_vault != address(0), "VAULT_HANDLER: ZERO_ADDR");
         vault = _vault;
 

@@ -8,7 +8,7 @@ import "./../SwapSigner.sol";
 contract ZombieFighterSwapParams {
     SwapSigner private swapSigner;
 
-    constructor(address _signerAddress) public {
+    constructor(address _signerAddress) {
         swapSigner = SwapSigner(_signerAddress);
     }
 

@@ -50,7 +50,7 @@ contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
     event MinSpendUpdated(uint256 amount);
     event MaxSpendUpdated(uint256 amount);
 
-    constructor(address _crowns, address _factory, uint256 _minSpend, uint256 _maxSpend) public {
+    constructor(address _crowns, address _factory, uint256 _minSpend, uint256 _maxSpend) {
         require(_crowns != address(0), "Crowns can't be zero address");
         require(_factory != address(0), "Nft Factory can't be zero address");
         require(_minSpend > 0, "Min spend can't be 0");

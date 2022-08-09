@@ -10,7 +10,7 @@ contract SwapSigner is Ownable {
 
     address public signer;         // @dev verify v, r, s signature
 
-    constructor() public { signer = msg.sender; }
+    constructor() { signer = msg.sender; }
 
     /// @notice change address to verify signature against
     /// @param _signer new signer address

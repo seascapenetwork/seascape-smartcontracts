@@ -24,7 +24,7 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
 
     event NewPeriod(address indexed namespace, uint256 key, address indexed stakeToken, address indexed rewardToken, uint256 startTime, uint256 endTime);
 
-    constructor (address _vault) VaultHandler(_vault) public {}
+    constructor (address _vault) VaultHandler(_vault) {}
 
     /// @notice a new staking period in the namespace of this method caller.
     function newPeriod(

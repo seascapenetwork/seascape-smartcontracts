@@ -69,7 +69,7 @@ contract ProfitCircus is Ownable {
     event Withdrawn(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
     event FactorySet(address indexed factoryAddress);	
 
-    constructor(address _nftFactory) public {
+    constructor(address _nftFactory) {
 		sessionId.increment(); 	// starts at value 1
 
 		nftFactory = NftFactory(_nftFactory);

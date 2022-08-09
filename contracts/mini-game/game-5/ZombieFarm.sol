@@ -127,7 +127,7 @@ contract ZombieFarm is Ownable {
         uint256 fee
     );
 
-    constructor(address _crowns, address _verifier) public {
+    constructor(address _crowns, address _verifier) {
         require(_crowns != address(0),"invalid _crowns address!");
         crowns = CrownsInterface(_crowns);
         verifier = _verifier;

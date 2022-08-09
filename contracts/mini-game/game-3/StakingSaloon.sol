@@ -68,7 +68,7 @@ contract NftStaking is Ownable, IERC721Receiver {
     event NftFactorySet(address factory);
 
     /// @dev instantinate contracts, start session
-    constructor(address _crowns, address _nftFactory, address _nft) public {
+    constructor(address _crowns, address _nftFactory, address _nft) {
         require(_crowns != address(0), "Crowns can't be zero address");
         require(_nftFactory != address(0), "Nft Factory can't be zero address");
 

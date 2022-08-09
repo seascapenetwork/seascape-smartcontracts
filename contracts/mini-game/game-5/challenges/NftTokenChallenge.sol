@@ -88,7 +88,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         uint amount
     );
 
-    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) public {
+    constructor (address _zombieFarm, address _vault, address _nft, address _stake, address _reward, address payable _stakeHandler) VaultHandler(_vault) {
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
         require(_nft      != address(0), "data.stake verification failed");
 

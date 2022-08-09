@@ -93,7 +93,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
 
     /// @param _feeRate - fee amount
     /// @param _crownsAddress staking currency address
-    constructor(uint256 _feeRate, address _crownsAddress, address _signerAddress) public {
+    constructor(uint256 _feeRate, address _crownsAddress, address _signerAddress) {
         /// @dev set crowns is defined in Crowns.sol
         require(_crownsAddress != address(0x0), "invalid cws address");
         setCrowns(_crownsAddress);

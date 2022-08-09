@@ -67,7 +67,7 @@ contract Stake {
     event Withdraw(address indexed namespace, address indexed staker, uint indexed key, uint amount);
     event Reward(address indexed namespace, address indexed staker, uint indexed key, uint amount);
 
-    constructor () public {}
+    constructor () {}
 
     /// @notice a new staking period for the smartcontract.
     function newStakePeriod(

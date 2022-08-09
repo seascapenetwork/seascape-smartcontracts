@@ -70,7 +70,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
     /// @dev set fee reciever address and fee rate
     /// @param _feeReceiver fee receiving address
     /// @param _feeRate fee amount
-    constructor(address payable _feeReceiver, uint256 _feeRate) public {
+    constructor(address payable _feeReceiver, uint256 _feeRate) {
         require(_feeReceiver != address(0), "invalid fee receiver address");
         require(_feeRate <= 1000, "fee rate maximum value is 1000");
 

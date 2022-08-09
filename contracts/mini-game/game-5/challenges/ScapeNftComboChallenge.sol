@@ -137,7 +137,7 @@ pragma solidity 0.8.9;
 //         uint256 amount
 //     );
 
-//     constructor (address _zombieFarm, address _scape, address _pool) public {
+//     constructor (address _zombieFarm, address _scape, address _pool) {
 //         require(_zombieFarm != address(0), "invalid _zombieFarm address");
 //         require(_scape != address(0), "invalid _scape address");
 //         require(_pool != address(0), "invalid _pool address");

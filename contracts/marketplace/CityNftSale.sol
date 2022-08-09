@@ -60,7 +60,7 @@ contract CityNftSale is IERC721Receiver, Ownable {
 
     /// @dev initialize the contract
     /// @param _priceReceiver recipient of the price during nft buy
-    constructor(address _priceReceiver, address _verifier) public {
+    constructor(address _priceReceiver, address _verifier) {
         require(_priceReceiver != address(0), "Invalid price receiver address");
         priceReceiver = _priceReceiver;
         require(_verifier != address(0), "Invalid verifier address");

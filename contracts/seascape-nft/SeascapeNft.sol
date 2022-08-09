@@ -30,7 +30,7 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
      * Mints all tokens.
      * Transfers ownership to another account. So, the token creator will not be counted as an owner.
      */
-    constructor() public ERC721("Seascape NFT", "SCAPES") {
+    constructor() ERC721("Seascape NFT", "SCAPES") {
 	tokenId.increment();
     }
 

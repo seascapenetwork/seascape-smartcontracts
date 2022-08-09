@@ -62,7 +62,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface, Ownable {
         _;
     }
 
-    constructor (address _factory, address _zombieFarm, address _pool) public {
+    constructor (address _factory, address _zombieFarm, address _pool) {
         require(_factory    != address(0) && _zombieFarm != address(0) && _pool != address(0), "zero_address");
 
         factory     = _factory;

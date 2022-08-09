@@ -15,7 +15,7 @@ contract NftFactory is AccessControl {
 
     SeascapeNft private nft;
 
-    constructor(address _nft) public {
+    constructor(address _nft) {
 	nft = SeascapeNft(_nft);
 	_setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
