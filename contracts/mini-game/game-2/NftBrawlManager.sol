@@ -60,7 +60,7 @@ contract NftBrawlManager is Ownable, NftBrawlInterface {
     }
 
     function payout () public onlyOwner returns(bool res) {
-        msg.sender.transfer(address(this).balance);
+        payable(msg.sender).transfer(address(this).balance);
         return true;
     }
 

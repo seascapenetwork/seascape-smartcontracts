@@ -171,8 +171,8 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
             _tokenId,
             _nftAddress,
             _currency,
-            msg.sender,
-            address(0x0),
+            payable(msg.sender),
+            payable(0x0),
             block.timestamp,
             _price,
             0
@@ -239,7 +239,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
             require (msg.value >= price, "your price is too low");
             uint256 returnBack = msg.value.sub(price);
             if (returnBack > 0)
-                msg.sender.transfer(returnBack);
+                payable(msg.sender).transfer(returnBack);
             if (tipsFee > 0)
                 feeReceiver.transfer(tipsFee);
             obj.seller.transfer(purchase);
@@ -250,7 +250,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
 
         IERC721 nft = IERC721(obj.nft);
         nft.safeTransferFrom(address(this), msg.sender, obj.tokenId);
-        obj.buyer = msg.sender;
+        obj.buyer = payable(msg.sender);
 
         obj.status = 1;
         emit Buy(obj.id, obj.tokenId, msg.sender, price, tipsFee, obj.currency);

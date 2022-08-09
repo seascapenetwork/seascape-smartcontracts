@@ -177,7 +177,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
         offerObjects[lastOfferId].price = _price;
         offerObjects[lastOfferId].nftsAmount = _nftsAmount;
         offerObjects[lastOfferId].fee = feeRate;
-        offerObjects[lastOfferId].seller = msg.sender;
+        offerObjects[lastOfferId].seller = payable(msg.sender);
         offerObjects[lastOfferId].currency = _currencyAddress;
         for(uint i = 0; i < _nftsAmount; ++i){
             offerObjects[lastOfferId].offeredNfts[i].nftId = _nftIds[i];
@@ -216,7 +216,7 @@ contract BundleOffer is IERC721Receiver, ReentrancyGuard, Ownable {
             require(msg.value >= offer.price, "insufficient ether amount sent");
             if (msg.value.sub(offer.price) > 0){
                 uint refund = msg.value.sub(offer.price);
-                msg.sender.transfer(refund);
+                payable(msg.sender).transfer(refund);
             }
             if (tipsFee > 0)
                 feeReceiver.transfer(tipsFee);

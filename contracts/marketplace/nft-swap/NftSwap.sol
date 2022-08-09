@@ -213,7 +213,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
                     require (msg.value >= _bounty, "insufficient transfer amount");
                     uint256 returnBack = msg.value - _bounty;
                     if (returnBack > 0)
-                        msg.sender.transfer(returnBack);
+                        payable(msg.sender).transfer(returnBack);
                 } else {
                     IERC20 currency = IERC20(_bountyAddress);
                     require(currency.balanceOf(msg.sender) >= _bounty,
@@ -281,7 +281,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
         }
         offerObjects[lastOfferId].bounty = _bounty;
         offerObjects[lastOfferId].bountyAddress = _bountyAddress;
-        offerObjects[lastOfferId].seller = msg.sender;
+        offerObjects[lastOfferId].seller = payable(msg.sender);
         offerObjects[lastOfferId].fee = fee;
 
         /// emit events
@@ -352,7 +352,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
         crowns.spend(obj.fee);
         if(obj.bounty > 0) {
             if(obj.bountyAddress == address(0))
-                msg.sender.transfer(obj.bounty);
+                payable(msg.sender).transfer(obj.bounty);
             else
                 IERC20(obj.bountyAddress).safeTransfer(msg.sender, obj.bounty);
         }
@@ -397,7 +397,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
                 crowns.transfer(msg.sender, obj.fee + obj.bounty);
             } else {
                 if (obj.bountyAddress == address(0)) {
-                    msg.sender.transfer(obj.bounty);
+                    payable(msg.sender).transfer(obj.bounty);
                 } else {
                     IERC20(obj.bountyAddress).safeTransfer(msg.sender, obj.bounty);
                 }
