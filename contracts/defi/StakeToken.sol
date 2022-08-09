@@ -52,7 +52,7 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
         emit NewPeriod(msg.sender, key, stakeToken, rewardToken, startTime, endTime);
     }
 
-    /// @dev The ZombieFarm calls this function when the session is active only.
+    /// @notice Called by the game smartcontract
     function stake(uint256 key, address stakerAddr, uint256 amount)
         external
         nonReentrant
