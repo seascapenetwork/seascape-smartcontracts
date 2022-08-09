@@ -3,16 +3,16 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./NftTypes.sol";
-import "./SeascapeNft.sol";
+import "./ScapeNft.sol";
 
 contract NftFactory is AccessControl {
     bytes32 public constant STATIC_ROLE = keccak256("STATIC");
     bytes32 public constant GENERATOR_ROLE = keccak256("GENERATOR");
 
-    SeascapeNft private nft;
+    ScapeNft private nft;
 
     constructor(address _nft) {
-	nft = SeascapeNft(_nft);
+	nft = ScapeNft(_nft);
 	_setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -33,7 +33,7 @@ contract NftFactory is AccessControl {
     // Only owner
     //--------------------------------------------------
     function setNft(address _nft) public onlyAdmin {
-	nft = SeascapeNft(_nft);
+	nft = ScapeNft(_nft);
     }
 
     /// @dev Add an account to the admin role. Restricted to admins.

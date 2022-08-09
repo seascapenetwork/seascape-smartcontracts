@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../../seascape-nft/NftFactory.sol";
-import "./../../seascape-nft/SeascapeNft.sol";
+import "./../../scape-nft/NftFactory.sol";
+import "./../../scape-nft/ScapeNft.sol";
 
 /// @title Seascape NFT staking contract.
 /// @author Medet Ahmetson <admin@blocklords.io>
@@ -23,7 +23,7 @@ contract NewStakingSaloon is Ownable, IERC721Receiver {
 
     NftFactory nftFactory;//
 
-    SeascapeNft private nft;//
+    ScapeNft private nft;//
 
     Counters.Counter private sessionId;//
     address public verifier;//
@@ -88,7 +88,7 @@ contract NewStakingSaloon is Ownable, IERC721Receiver {
         require(_nft != address(0), "Nft can't be zero address");
         sessionId.increment(); 	// starts at value 1
         nftFactory = NftFactory(_nftFactory);
-        nft = SeascapeNft(_nft);
+        nft = ScapeNft(_nft);
     }
 
     //--------------------------------------------------

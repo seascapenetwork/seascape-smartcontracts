@@ -1,4 +1,4 @@
-// Seascape NFT
+// Scape NFT
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
@@ -8,13 +8,13 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 /// @author Medet Ahmetson
-contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
+contract ScapeNft is ERC721, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private tokenId;
 
     struct Params {
-	    uint256 quality;   // seascape points
+	    uint256 quality;   // Scape points
 	    uint8 generation;
     }
 
@@ -32,12 +32,12 @@ contract SeascapeNft is ERC721, ERC721Burnable, Ownable {
      * Mints all tokens.
      * Transfers ownership to another account. So, the token creator will not be counted as an owner.
      */
-    constructor() ERC721("Seascape NFT", "SCAPES") {
+    constructor() ERC721("Scape NFT", "SCAPES") {
 	tokenId.increment();
     }
 
     modifier onlyFactory() {
-	require(factory == _msgSender(), "Seascape NFT: Only NFT Factory can call the method");
+	require(factory == _msgSender(), "Scape NFT: Only NFT Factory can call the method");
 	_;
     }
 
