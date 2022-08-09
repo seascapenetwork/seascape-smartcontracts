@@ -158,7 +158,7 @@ contract Stake {
         StakeUser storage staker = stakeUsers[msg.sender][key][stakerAddr];
         require(staker.deposit > 0, "stake amount zero");
 
-        // before updating player's challenge parameters, we auto-claim earned tokens till now.
+        // before updating player's challenge parameters, we auto-claim earned tokens till block.timestamp.
         return _reward(key, stakerAddr);
     }
 
@@ -178,7 +178,7 @@ contract Stake {
         uint sessionCap                 = getPeriodTime(period.startTime, period.endTime);
 
         // I record that interestUnit is 0.1 CWS (unit/amount) in session.interestUnit
-        // I update the session.interestUpdate to now
+        // I update the session.interestUpdate to block.timestamp
         if (period.depositPool == 0) {
             period.rewardClaimableUnit = period.unit;
         } else {

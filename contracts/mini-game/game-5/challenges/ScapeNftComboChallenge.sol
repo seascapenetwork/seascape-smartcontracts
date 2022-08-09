@@ -254,7 +254,7 @@ pragma solidity 0.8.9;
 //             PlayerChallenge storage playerPrevChallenge =
 //                 playerParams[sessionId][sessionChallenge.prevChallengeId][staker];
 //             require(playerPrevChallenge.completed ||
-//                 isCompleted(sessionChallenge, playerPrevChallenge, now),
+//                 isCompleted(sessionChallenge, playerPrevChallenge, block.timestamp),
 //                 "last challenge not completed");
 //         }
 
@@ -285,7 +285,7 @@ pragma solidity 0.8.9;
 //             sessionChallenge.amount = sessionChallenge.amount.add(weight[i]);
 //         }
 
-//         // before updating player's challenge parameters, we auto-claim earned tokens till now.
+//         // before updating player's challenge parameters, we auto-claim earned tokens till block.timestamp.
 //         playerChallenge.claimedTime = block.timestamp;
 //
 //         if (playerChallenge.stakedTime == 0) {
@@ -342,7 +342,7 @@ pragma solidity 0.8.9;
 
 //         updateInterestPerToken(sessionChallenge);
 
-//         // before updating player's challenge parameters, we auto-claim earned tokens till now.
+//         // before updating player's challenge parameters, we auto-claim earned tokens till block.timestamp.
 //     	  _claim(sessionId, challengeId, staker);
 //         playerChallenge.claimedTime = block.timestamp;
 
@@ -510,12 +510,12 @@ pragma solidity 0.8.9;
 //         }
 
 //         // I calculate previous claimed rewards
-//         // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
+//         // (session.claimedPerToken += (block.timestamp - session.lastInterestUpdate) * session.interestPerToken)
 //         sessionChallenge.claimedPerToken = sessionChallenge.claimedPerToken + (
 //         (sessionCap - sessionChallenge.lastInterestUpdate) * sessionChallenge.interestPerToken);
 
 //         // I record that interestPerToken is 0.1 CWS (rewardUnit/amount) in session.interestPerToken
-//         // I update the session.lastInterestUpdate to now
+//         // I update the session.lastInterestUpdate to block.timestamp
 //         if (sessionChallenge.amount == 0) {
 //             sessionChallenge.interestPerToken = 0;
 //         } else {
@@ -576,7 +576,7 @@ pragma solidity 0.8.9;
 //         if (startTime == 0) {
 //             return false;
 //         }
-//         return (now >= startTime && now <= endTime);
+//         return (block.timestamp >= startTime && block.timestamp <= endTime);
 //     }
 
 //     function isCompleted(

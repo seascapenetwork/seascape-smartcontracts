@@ -127,7 +127,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         require(_nftAddress != address(0), "invalid nft address");
         require(_startPrice > 0, "start price can't be 0");
         require(_priceIncrease > 0, "price increase can't be 0");
-        require(_startTime > now, "session should start in future");
+        require(_startTime > block.timestamp, "session should start in future");
         require(_intervalDuration > 0, "interval duration can't be 0");
         require(_intervalsAmount > 0, "intervals amount can't be 0");
         require(_slotsAmount > 0, "slots amount can't be 0");
@@ -252,7 +252,7 @@ contract Riverboat is IERC721Receiver, Ownable {
         if(!isActive(_sessionId)) {
             return 0;
         } else {
-            return (now - sessions[_sessionId]
+            return (block.timestamp - sessions[_sessionId]
               .startTime) % sessions[_sessionId].intervalDuration;
         }
     }
@@ -266,7 +266,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @return current interval number
     function getCurrentInterval(uint256 _sessionId) public view returns(uint) {
         require(isActive(_sessionId), "session is not active");
-        uint256 _currentInterval = (now - sessions[_sessionId]
+        uint256 _currentInterval = (block.timestamp - sessions[_sessionId]
             .startTime) / sessions[_sessionId].intervalDuration;
         // @dev _currentInterval will start with 0 so last interval should be intervalsAmoun-1
         require(_currentInterval < sessions[_sessionId].intervalsAmount,
@@ -294,7 +294,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @return true/false depending on timestamp period of the sesson
     function isActive(uint256 _sessionId) internal view returns (bool){
         Session storage session = sessions[_sessionId];
-        if(now >= session.startTime && now < session
+        if(block.timestamp >= session.startTime && block.timestamp < session
             .startTime + session.intervalsAmount * session.intervalDuration){
             return true;
         }
@@ -306,7 +306,7 @@ contract Riverboat is IERC721Receiver, Ownable {
     /// @return true if session is finished
     function isFinished(uint256 _sessionId) internal view returns (bool){
         Session memory session = sessions[_sessionId];
-        if(now > session.startTime + session.intervalsAmount * session.intervalDuration)
+        if(block.timestamp > session.startTime + session.intervalsAmount * session.intervalDuration)
             return true;
         return false;
     }

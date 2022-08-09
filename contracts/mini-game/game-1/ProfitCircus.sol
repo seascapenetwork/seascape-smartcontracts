@@ -327,7 +327,7 @@ contract ProfitCircus is Ownable {
 		// otherwise reset it.
         if (_balance.amount >= _session.stakeAmount) {
 			if (_balance.stakeTime == 0) {
-				_balance.stakeTime = now;
+				_balance.stakeTime = block.timestamp;
 			}
         } else {
 			_balance.stakeTime = 0;
@@ -340,7 +340,7 @@ contract ProfitCircus is Ownable {
 		uint256 _endTime = sessions[_sessionId].startTime.add(sessions[_sessionId].period);
 
 		// _endTime will be 0 if session never started.
-		if (now < sessions[_sessionId].startTime || now > _endTime) {
+		if (block.timestamp < sessions[_sessionId].startTime || block.timestamp > _endTime) {
 	    	return false;
 		}
 
@@ -356,8 +356,8 @@ contract ProfitCircus is Ownable {
 		uint256 time = 0;
 
         if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
-            uint256 duration = now.sub(_balance.stakeTime);
             time = time.add(duration);
+            uint256 duration = block.timestamp - _balance.stakeTime;
         }
 
         return time >= _session.stakePeriod;
@@ -404,12 +404,12 @@ contract ProfitCircus is Ownable {
 		}
 
         // I calculate previous claimed rewards
-        // (session.claimedPerToken += (now - session.lastInterestUpdate) * session.interestPerToken)
-		_session.claimedPerToken = _session.claimedPerToken.add(
-			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerToken));
+        // (session.claimedPerToken += (block.timestamp - session.lastInterestUpdate) * session.interestPerToken)
+		_session.claimedPerToken = _session.claimedPerToken + (
+			(_sessionCap - _session.lastInterestUpdate) * _session.interestPerToken);
 
         // I record that interestPerToken is 0.1 Reward Token (rewardUnit/amount) in session.interestPerToken
-        // I update the session.lastInterestUpdate to now
+        // I update the session.lastInterestUpdate to block.timestamp
 		if (_session.amount == 0) {
 			_session.interestPerToken = 0;
 		} else {

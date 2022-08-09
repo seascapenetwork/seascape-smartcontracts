@@ -190,7 +190,7 @@ contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
         require(_quality >= 1 && _quality <= 5, "Quality value should range 1 - 5");
         require(isActive(_sessionId), "Session not active");
         require(_balance.mintedTime == 0 ||
-            (_balance.mintedTime.add(_session.interval) < block.timestamp),
+            (_balance.mintedTime + _session.interval) < block.timestamp,
             "Still in cooldown, try later");
         require(crowns.balanceOf(msg.sender) >= _session.fee, "Not enough CWS in your wallet");
 
@@ -306,7 +306,7 @@ contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
     /// @param _sessionId id of session to verify
     /// @return true if session is active
     function isActive(uint256 _sessionId) internal view returns(bool) {
-        if (now < sessions[_sessionId].startTime || now > sessions[_sessionId].startTime + sessions[_sessionId].period) {
+        if (block.timestamp < sessions[_sessionId].startTime || block.timestamp > sessions[_sessionId].startTime + sessions[_sessionId].period) {
             return false;
 	      }
         return true;

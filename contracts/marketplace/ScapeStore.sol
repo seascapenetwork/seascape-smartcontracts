@@ -176,7 +176,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
             _currency,
             msg.sender,
             address(0x0),
-            now,
+            block.timestamp,
             _price,
             0
         );
@@ -188,7 +188,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
             _currency,
             msg.sender,
             address(0x0),
-            now,
+            block.timestamp,
             _price
         );
 
@@ -228,7 +228,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     {
         SalesObject storage obj = salesObjects[_nftAddress][_tokenId];
         require(obj.status == 0, "status: sold or canceled");
-        require(obj.startTime <= now, "not yet for sale");
+        require(obj.startTime <= block.timestamp, "not yet for sale");
         require(salesEnabled, "sales are closed");
         require(msg.sender != obj.seller, "cant buy from yourself");
 

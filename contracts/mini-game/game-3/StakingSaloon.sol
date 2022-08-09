@@ -408,8 +408,8 @@ contract NftStaking is Ownable, IERC721Receiver {
 	        return false;
 	    }
 
-        bool notActive = (now < sessions[_sessionId].startTime || 
-                          now > sessions[_sessionId].startTime + sessions[_sessionId].period);
+        bool notActive = (block.timestamp < sessions[_sessionId].startTime || 
+                          block.timestamp > sessions[_sessionId].startTime + sessions[_sessionId].period);
 
         return !notActive;
     }
@@ -427,9 +427,9 @@ contract NftStaking is Ownable, IERC721Receiver {
 		}
 
         // I calculate previous claimed rewards
-        // (session.claimedPerPoint += (now - session.lastInterestUpdate) * session.interestPerToken)
-		_session.claimedPerPoint = _session.claimedPerPoint.add(
-			_sessionCap.sub(_session.lastInterestUpdate).mul(_session.interestPerPoint));
+        // (session.claimedPerPoint += (block.timestamp - session.lastInterestUpdate) * session.interestPerToken)
+		_session.claimedPerPoint = _session.claimedPerPoint + (
+			(_sessionCap - _session.lastInterestUpdate) * _session.interestPerPoint);
 
 		/// @notice we avoid sub. underflow, for calculating session.claimedPerPoint
         /// @dev interest per point is updated in other function, so this variable 
@@ -443,7 +443,7 @@ contract NftStaking is Ownable, IERC721Receiver {
 		Session storage _session = sessions[_sessionId];
         
         // I record that interestPerPoint is 0.1 CWS (rewardUnit/totalSp) in session.interestPerToken
-        // I update the session.lastInterestUpdate to now
+        // I update the session.lastInterestUpdate to block.timestamp
 		if (_session.totalSp == 0) {
 			_session.interestPerPoint = 0;
 		} else {

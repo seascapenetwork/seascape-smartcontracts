@@ -179,7 +179,7 @@ contract ZombieFarm is Ownable {
         //
         // Verifying the Session data
         // 
-        require(startTime > now, "session should start in future");
+        require(startTime > block.timestamp, "session should start in future");
         require(period > 0, "period should be above 0");
         require(speedUpFee > 0, "speed up fee should be above 0");
         require(repickFee > 0, "repick fee should be above 0");
@@ -494,7 +494,7 @@ contract ZombieFarm is Ownable {
         if (sessionId == 0) {
             return false;
         }
-        return (now >= sessions[sessionId].startTime && now <= sessions[sessionId]
+        return (block.timestamp >= sessions[sessionId].startTime && block.timestamp <= sessions[sessionId]
             .startTime + sessions[sessionId].period);
     }
 
@@ -505,6 +505,6 @@ contract ZombieFarm is Ownable {
         if (sessionId == 0) {
             return false;
         }
-        return (now <= sessions[sessionId].startTime + sessions[sessionId].period);
+        return (block.timestamp <= sessions[sessionId].startTime + sessions[sessionId].period);
     }
 }
