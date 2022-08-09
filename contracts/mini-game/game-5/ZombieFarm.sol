@@ -14,7 +14,6 @@ import "./interfaces/ZombieFarmChallengeInterface.sol";
  * RULE! One challenge and one reward token per session.
  */
 contract ZombieFarm is Ownable {
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game

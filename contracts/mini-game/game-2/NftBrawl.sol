@@ -16,7 +16,6 @@ import "./NftBrawlGameSession.sol";
 /// @author Medet Ahmetson
 contract NftBrawl is Ownable, GameSession, SetCrowns, Leaderboard {
     using Counters for Counters.Counter;
-    using NftTypes for NftTypes;
 
     /// @notice nft factory is a contract that mints nfts
     NftFactory nftFactory;

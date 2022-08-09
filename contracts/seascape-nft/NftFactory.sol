@@ -6,9 +6,6 @@ import "./NftTypes.sol";
 import "./SeascapeNft.sol";
 
 contract NftFactory is AccessControl {
-    using SafeMath for uint256;
-    using NftTypes for NftTypes;
-
     bytes32 public constant STATIC_ROLE = keccak256("STATIC");
     bytes32 public constant GENERATOR_ROLE = keccak256("GENERATOR");
 
