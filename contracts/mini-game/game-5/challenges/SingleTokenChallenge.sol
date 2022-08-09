@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
 contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler  {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20;
 
     address public zombieFarm;
     address payable public stakeHandler;
@@ -82,10 +82,10 @@ contract SingleTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, 
         require(_zombieFarm != address(0), "invalid _zombieFarm address");
 
         if (_stake != address(0)) {
-            require(IERC20(_stake).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(_stake).decimals() == 18, "DECIMAL_WEI");
         }
         if (_reward != address(0)) {
-            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(_reward).decimals() == 18, "DECIMAL_WEI");
         }
 
         zombieFarm          = _zombieFarm;

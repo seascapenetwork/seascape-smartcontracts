@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// Every smartcontract's staking is isolated from another smartcont stakings.
 /// For staking of smartcontract, smartcontract can initialize as many periods, as he wants.
 contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20;
 
     struct Period {
         address stakeToken;         // the nft address
@@ -41,7 +41,7 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
         external
     {
         if (rewardToken != address(0)) {
-            require(IERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
         }
         require(stakeToken != address(0), "STAKE_TOKEN: zero_address");
 
@@ -116,10 +116,10 @@ contract StakeNft is ReentrancyGuard, VaultHandler, Stake, IERC721Receiver {
             payable(stakerAddr).transfer(interest);
             return true;
         }
-        IERC20 _token = IERC20(rewardToken);
+        ERC20 _token = ERC20(rewardToken);
         uint contractBalance = _token.balanceOf(vault);
         require(contractBalance > interest, "Insufficient balance of reward");
-        IERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
+        ERC20(_token).safeTransferFrom(vault, stakerAddr, interest);
 
         return true;
     }

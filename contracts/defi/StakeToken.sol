@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// Every smartcontract's staking is isolated from another smartcont stakings.
 /// For staking of smartcontract, smartcontract can initialize as many periods, as he wants.
 contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20;
 
     struct Period {
         address stakeToken;
@@ -37,10 +37,10 @@ contract StakeToken is ReentrancyGuard, VaultHandler, Stake {
         external
     {
         if (stakeToken != address(0)) {
-            require(IERC20(stakeToken).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(stakeToken).decimals() == 18, "DECIMAL_WEI");
         }
         if (rewardToken != address(0)) {
-            require(IERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(rewardToken).decimals() == 18, "DECIMAL_WEI");
         }
         newStakePeriod(key, startTime, endTime, rewardPool);
 

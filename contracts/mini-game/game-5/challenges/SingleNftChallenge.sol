@@ -16,9 +16,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 /// It receives  id, signature.
 /// If user's  is in the game, then deposit is unavailable.
 contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20;
 
-    using SafeMath for uint;
     address payable public stakeHandler;
     address public zombieFarm;
 
@@ -83,7 +82,7 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         require(_nft != address(0), "invalid _scape address");
 
         if (_reward != address(0)) {
-            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(_reward).decimals() == 18, "DECIMAL_WEI");
         }
 
         zombieFarm = _zombieFarm;

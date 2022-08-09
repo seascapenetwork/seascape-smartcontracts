@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// It only supports tokens with 18 decimals.
 /// Otherwise you need to edit the `scaler`
 contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, VaultHandler, Ownable, IERC721Receiver  {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20;
 
     address public zombieFarm;
     address payable public stakeHandler;
@@ -93,10 +93,10 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         require(_nft      != address(0), "data.stake verification failed");
 
         if (_reward != address(0)) {
-            require(IERC20(_reward).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(_reward).decimals() == 18, "DECIMAL_WEI");
         }
         if (_stake != address(0)) {
-            require(IERC20(_stake).decimals() == 18, "DECIMAL_WEI");
+            require(ERC20(_stake).decimals() == 18, "DECIMAL_WEI");
         }
 
         zombieFarm          = _zombieFarm;

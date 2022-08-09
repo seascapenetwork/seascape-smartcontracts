@@ -161,7 +161,7 @@ contract CrownsToken is Context, IERC20, Ownable {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view override returns (uint8) {
+    function decimals() public pure returns (uint8) {
         return _decimals;
     }
 
