@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import "./../../openzeppelin/contracts/access/Ownable.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 /// @dev Nft Rush and Leaderboard contracts both requires Game Session data
 /// So, making Game Session separated.

@@ -5,9 +5,9 @@ import "./../../../defi/StakeToken.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../helpers/VaultHandler.sol";
-import "./../../../openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Stake one token, and earn another token.
 /// @dev WARNING! WARNING! WARNING

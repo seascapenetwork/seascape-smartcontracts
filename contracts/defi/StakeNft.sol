@@ -3,11 +3,10 @@ pragma solidity 0.8.9;
 
 import "./Stake.sol";
 import "./../mini-game/game-5/helpers/VaultHandler.sol";
-import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @dev The core functionality of the DeFi.
 /// This is Stake erc721/native, and earn another erc20/native currency.

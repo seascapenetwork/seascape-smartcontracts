@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title Multi send is a part of Seascape marketplace platform.
 /// It allows users to send a batch of nfts to desired address
 /// @author Nejc Schneider
 contract MultiSend {
+
     function sendNfts(
         uint amount,
         address receiver,

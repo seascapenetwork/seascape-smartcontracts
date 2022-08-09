@@ -4,8 +4,8 @@ pragma solidity 0.8.9;
 import "./../interfaces/ZombieFarmInterface.sol";
 import "./../interfaces/ZombieFarmRewardInterface.sol";
 import "./../../../seascape-nft/NftFactory.sol";
-import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../../openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 /// @notice Reward one Scape Nft and some ERC20 token

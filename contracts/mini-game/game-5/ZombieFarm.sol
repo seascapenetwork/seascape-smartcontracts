@@ -2,9 +2,8 @@
 pragma solidity 0.8.9;
 
 //declare imports
-import "./../../openzeppelin/contracts/access/Ownable.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "./../../interfaces/CrownsInterface.sol";
 
 import "./interfaces/ZombieFarmRewardInterface.sol";

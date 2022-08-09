@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import "./../openzeppelin/contracts/access/AccessControl.sol";
-import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./NftTypes.sol";
 import "./SeascapeNft.sol";
 
