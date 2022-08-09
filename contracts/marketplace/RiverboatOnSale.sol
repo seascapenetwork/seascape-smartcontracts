@@ -317,12 +317,8 @@ contract Riverboat is IERC721Receiver, Ownable {
 
     /// @dev retrieve executing chain id
     /// @return network identifier
-    function getChainId() public pure returns (uint256) {
-        uint256 id;
-        assembly {
-            id := chainid()
-        }
-        return id;
+    function getChainId() public view returns (uint256) {
+        return block.chainid;
     }
 
 }
