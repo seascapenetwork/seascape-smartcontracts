@@ -1,3 +1,0 @@
-[submodule "contracts/crowns"]
-	path = contracts/crowns
-	url = https://github.com/blocklords/crowns.git
