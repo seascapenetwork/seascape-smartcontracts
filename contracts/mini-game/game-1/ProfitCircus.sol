@@ -10,7 +10,7 @@ import "./../../defi/StakeToken.sol";
 
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
-/// @notice Contract is attached to Seascape Nft Factory
+/// @notice Contract is attached to Scape Nft Factory
 contract ProfitCircus is Ownable {
     using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
