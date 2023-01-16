@@ -1,13 +1,5 @@
 [
-"type": "address"
-},
-{
-"internalType": "uint256",
-"name": "_feeRate",
-"type": "uint256"
-}
-],
-"stateMutability": "nonpayable",
+{"stateMutability": "nonpayable",
 "type": "constructor"
 },
 {
