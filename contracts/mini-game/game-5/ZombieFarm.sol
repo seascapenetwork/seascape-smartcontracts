@@ -1,10 +1,10 @@
 pragma solidity 0.6.7;
 
 //declare imports
-import "./../../openzeppelin/contracts/access/Ownable.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/utils/Counters.sol";
-import "./../../interfaces/CrownsInterface.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../crowns/erc-20/contracts/CrownsToken/CrownsToken.sol";
 
 import "./interfaces/ZombieFarmRewardInterface.sol";
 import "./interfaces/ZombieFarmChallengeInterface.sol";
@@ -20,7 +20,7 @@ contract ZombieFarm is Ownable {
     uint8 public constant MAX_LEVEL = 5;                // Max levels in the game
 
     /// For collecting fee for Speed up and Re-pick
-    CrownsInterface crowns;
+    CrownsToken crowns;
 
     //
     // Session global variables and structures
@@ -36,6 +36,8 @@ contract ZombieFarm is Ownable {
         uint256 speedUpFee;
         uint256 repickFee;
     }
+    
+    mapping(address => uint256) public nonce;
 
     mapping(uint256 => Session) public sessions;
     
@@ -128,7 +130,7 @@ contract ZombieFarm is Ownable {
 
     constructor(address _crowns, address _verifier) public {
         require(_crowns != address(0),"invalid _crowns address!");
-        crowns = CrownsInterface(_crowns);
+        crowns = CrownsToken(_crowns);
         verifier = _verifier;
     }
 
@@ -406,7 +408,7 @@ contract ZombieFarm is Ownable {
         uint8 levelId = zombieChallenge.getLevel(sessionId);
 
         // make sure that the slot id is approved by the server.
-        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(sessionId, levelId, slotId, challenge, msg.sender));
+        bytes32 _messageNoPrefix = keccak256(abi.encodePacked(sessionId, levelId, slotId, challenge, nonce[msg.sender], msg.sender));
         bytes32 _message = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageNoPrefix));
         address _recover = ecrecover(_message, v, r, s);
         require(_recover == verifier,  "Verification failed");
@@ -415,6 +417,8 @@ contract ZombieFarm is Ownable {
 
         playerChallenges[sessionId][levelId][msg.sender][slotId] = challenge;
 
+        ++nonce[msg.sender];
+        
         emit PlayerChallenge(sessionId, levelId, slotId, challenge, msg.sender);
     }
 

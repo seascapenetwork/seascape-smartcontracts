@@ -1,17 +1,17 @@
 pragma solidity 0.6.7;
 
-import "./../../../defi/StakeToken.sol";
-import "./../../../openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./../../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./../../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../../defi/StakeToken.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./../../openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./../interfaces/ZombieFarmChallengeInterface.sol";
 import "./../interfaces/ZombieFarmInterface.sol";
-import "./../../../openzeppelin/contracts/access/Ownable.sol";
+import "./../../openzeppelin/contracts/access/Ownable.sol";
 import "./../helpers/VaultHandler.sol";
-import "./../../../openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./../../openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-/// @notice Stake one token and nft,
+/// @notice Stake one token and nft, 
 /// and earn another token.
 /// The staked token requires a certain nft.
 ///
@@ -27,7 +27,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
     uint public constant scaler = 10**18;
     uint public constant multiply = 1000000000; // The multiplier placement supports 0.00000001
 
-    address public nft;
+    address public nft;             
     address public stakeToken;
     address public rewardToken;
 
@@ -103,13 +103,13 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         nft                 = _nft;
         rewardToken         = _reward;
         stakeHandler        = _stakeHandler;
-
+        
         initReentrancyStatus();
     }
 
     function getStakeAmount(bytes calldata data) external override view returns (uint256) {
         /// Staking amount
-        (, , , , uint amount)
+        (, , , , uint amount) 
             = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
         require(amount > 0, "amount is 0");
 
@@ -118,7 +118,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
 
     function getUnstakeAmount(bytes calldata data) external override view returns (uint256) {
         /// Staking amount
-        (, , , , uint amount)
+        (, , , , uint amount) 
             = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
         require(amount > 0, "amount is 0");
 
@@ -139,7 +139,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         require(sessionChallenges[sessionId].levelId == 0, "already added to the session");
 
         (uint[4] memory uints, uint8 burn) = abi.decode(data, (uint[4], uint8));
-        for (uint8 i = 0; i < 4; i++) {
+        for (uint8 i = 0; i < 4; ++i) {
             require(uints[i] > 0, "zero_value");
         }
 
@@ -192,11 +192,11 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         // Amount holds only max session.stakeAmount
         // the remaining part goes to multiply
         if (playerChallenge.nftId == 0) {
-            playerChallenge.nftId = nftId;
+            playerChallenge.nftId = nftId;  
 
             IERC721 _nft = IERC721(nft);
             require(_nft.ownerOf(nftId) == staker, "not owned by user");
-            _nft.safeTransferFrom(staker, address(this), nftId);
+            _nft.safeTransferFrom(staker, address(this), nftId);  
         }
 
         // I add amount of deposits to session.amount
@@ -207,7 +207,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
             StakeToken handler = StakeToken(stakeHandler);
             handler.stake(sessionId, staker, sessionChallenge.stakeAmount);
 
-            if (total - sessionChallenge.stakeAmount > 0) {
+            if (total - sessionChallenge.stakeAmount > 0) { 
                 transferFromUserToVault(stakeToken, total - sessionChallenge.stakeAmount, staker);
             }
 
@@ -246,12 +246,18 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         (uint256 startTime,uint256 period,,,,) = zombie.sessions(sessionId);
 
         if (block.timestamp < (startTime + period)) {
-            require(timeCompleted, "NftTokenChallenge Withdraw after completion");
+            require(timeCompleted, "NftTokenChallenge withdraw before completion");
 
             if (!playerChallenge.completed) {
                 playerChallenge.completed = true;
             }
+        } else {
+            if(timeCompleted) {
+                playerChallenge.completed = true;
+            } 
         }
+
+
 
         handler.unstake(sessionId, staker, sessionChallenge.stakeAmount);
         playerChallenge.addedToPool = false;
@@ -342,7 +348,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         if (playerChallenge.amount < sessionChallenge.stakeAmount) {
             return false;
         }
-
+           
         uint256 endTime = getCompletedTime(sessionChallenge, playerChallenge);
 
         return (currentTime >= endTime);
@@ -398,7 +404,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         returns(uint, uint)
     {
         /// Staking amount
-        (uint8 v, bytes32 r, bytes32 s, uint nftId, uint amount)
+        (uint8 v, bytes32 r, bytes32 s, uint nftId, uint amount) 
             = abi.decode(data, (uint8, bytes32, bytes32, uint, uint));
         require(nftId > 0, "nft  null params");
         require(amount > 0, "amount is 0");

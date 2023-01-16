@@ -1,11 +1,11 @@
 pragma solidity 0.6.7;
 
-import "./../../openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./../../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./../../openzeppelin/contracts/access/Ownable.sol";
-import "./../../openzeppelin/contracts/math/SafeMath.sol";
-import "./../../openzeppelin/contracts/utils/Counters.sol";
-import "./../../seascape-nft/NftFactory.sol";
+import "./../openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./../openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./../openzeppelin/contracts/access/Ownable.sol";
+import "./../openzeppelin/contracts/math/SafeMath.sol";
+import "./../openzeppelin/contracts/utils/Counters.sol";
+import "./../seascape_nft/NftFactory.sol";
 
 /// @title A Liquidity pool mining
 /// @author Medet Ahmetson <admin@blocklords.io>
@@ -20,7 +20,7 @@ contract ProfitCircus is Ownable {
     NftFactory nftFactory;
   
     Counters.Counter private sessionId;
-
+    // uint8 quality;
     /// @notice game event struct. as event is a solidity keyword, we call them session instead.
     struct Session {
 		address rewardToken;		// The token that user is farming
@@ -52,15 +52,19 @@ contract ProfitCircus is Ownable {
 									// for every session, user can claim one nft only
 		uint256 claimedReward;
 		uint256 unpaidReward;       // Amount of reward token that contract should pay to user
-
+        uint256 staked;
+        // bool canMint;
 		// Track staking period in order to claim a free nft.
 		uint256 stakeTime;			// The time since the latest deposited enough token. It starts the countdown to stake
 	}
+    
 
+    mapping(uint256 => uint8) public quality;
     mapping(address => uint256) public lastSessionIds;
     mapping(uint256 => Session) public sessions;
     mapping(uint256 => mapping(address => Balance)) public balances;
     mapping(uint256 => mapping(address => uint)) public depositTimes;
+
 
     event SessionStarted(address indexed rewardToken, address indexed stakingToken, uint256 indexed sessionIdd, uint256 reward, uint256 startTime, uint256 endTime, uint256 generation);
     event Deposited(address indexed stakingToken, address indexed owner, uint256 sessionId, uint256 amount, uint256 startTime, uint256 totalStaked);
@@ -82,7 +86,7 @@ contract ProfitCircus is Ownable {
     /// time, starting from _startTime. The _totalReward of
     /// Reward tokens will be distributed in every second. It allows to claim a
     /// a _generation Seascape NFT.
-    function startSession(address _rewardToken, address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
+    function startSession(address _rewardToken, address _lpToken,  uint256 _totalReward, uint256 _period,  uint256 _startTime, uint256 _generation, uint8 _quality, uint256 _stakeAmount, uint256 _stakePeriod) external onlyOwner {
 		require(_lpToken != address(0), "Profit Circus: Staking token should not be equal to 0");
 		require(_startTime > block.timestamp, "Profit Circus: Seassion should start in the future");
 		require(_period > 0, "Profit Circus: Session duration should be greater than 0");
@@ -97,7 +101,7 @@ contract ProfitCircus is Ownable {
 
 		if (_rewardToken != address(0)) {
 			IERC20 _reward = IERC20(_rewardToken);
-
+        
 			// required reward balance of this contract
 			require(_reward.balanceOf(address(this)) >= _totalReward, "Profit Circus: Not enough balance of reward token");
 		} else {
@@ -112,6 +116,7 @@ contract ProfitCircus is Ownable {
 		sessions[_sessionId] = Session(_rewardToken, _lpToken, _totalReward, _period, _startTime, _generation, 0, 0, _rewardUnit,
 			0, 0, _startTime, _stakeAmount, _stakePeriod);
 
+        quality[_sessionId] = _quality;
 		//--------------------------------------------------------------------
         // updating rest of the session related data
 		//--------------------------------------------------------------------
@@ -180,7 +185,8 @@ contract ProfitCircus is Ownable {
 
 		// interest per token is updated. maybe need to withdraw out?
 		updateInterestPerToken(_sessionId);
-		
+		// _balance.staked = 0;
+		_balance.staked = _balance.staked.add(_amount);
 		_balance.amount = _amount.add(_balance.amount);
 		_balance.claimedTime = block.timestamp;
 
@@ -238,6 +244,17 @@ contract ProfitCircus is Ownable {
 		_balance.amount = _balance.amount.sub(_amount);
 		_session.amount = _session.amount.sub(_amount);
 
+        if (isActive(_sessionId) == false) {
+        	_balance.staked = _balance.staked;
+        } else {
+        	if (now - _balance.stakeTime  >= _session.stakePeriod && _balance.stakeTime != 0){
+        		_balance.staked = _balance.staked;
+        	}
+        	else {
+        		_balance.staked = _balance.amount;
+        	}
+        }
+
 		/// reward claims as in claim method
 		if (_interest > 0) {
 			_session.claimed     = _session.claimed.add(_interest);	
@@ -257,6 +274,7 @@ contract ProfitCircus is Ownable {
 		updateInterestPerToken(_sessionId);
 		updateBalanceInterestPerToken(_sessionId, msg.sender);
  		
+ 		
 		updateTimeProgress(_session, _balance);
 
 		emit Withdrawn(_session.stakingToken, msg.sender, _sessionId, _amount, block.timestamp, _session.amount);
@@ -268,9 +286,9 @@ contract ProfitCircus is Ownable {
 		Session storage _session = sessions[_sessionId];
 		Balance storage _balance = balances[_sessionId][msg.sender];
 		require(_balance.claimed.add(_balance.amount) > 0, "Profit Circus: Deposit first");
-		require(isMintable(_session, _balance), "Profit Circus: already claimed or time not passed");
-
-		uint256 _tokenId = nftFactory.mint(msg.sender, sessions[_sessionId].generation);
+		require(isMintable(_session, _balance, _sessionId), "Profit Circus: already claimed or time not passed");
+        
+		uint256 _tokenId = nftFactory.mintQuality(msg.sender, sessions[_sessionId].generation, quality[_sessionId]);
 		require(_tokenId > 0,                              "Profit Circus: failed to mint a token");
 		
 		balances[_sessionId][msg.sender].minted = true;
@@ -309,7 +327,7 @@ contract ProfitCircus is Ownable {
 		if (_session.startTime == 0) {
 			return false;
 		}
-		return isMintable(_session, _balance);
+		return isMintable(_session, _balance, _sessionId);
 	}
 
     //---------------------------------------------------
@@ -324,9 +342,12 @@ contract ProfitCircus is Ownable {
 		// If after withdraw or deposit remained more than minimum required tokens
 		// progress the timer.
 		// otherwise reset it.
-        if (_balance.amount >= _session.stakeAmount) {
+        if (_balance.staked >= _session.stakeAmount) {
 			if (_balance.stakeTime == 0) {
 				_balance.stakeTime = now;
+			}
+			else {
+				_balance.stakeTime = _balance.stakeTime;
 			}
         } else {
 			_balance.stakeTime = 0;
@@ -347,17 +368,26 @@ contract ProfitCircus is Ownable {
     }
 
 	/// @dev check whether the time progress passed or not
-	function isMintable(Session storage _session, Balance storage _balance) internal view returns(bool) {
+	function isMintable(Session storage _session, Balance storage _balance, uint256 _sessionId) internal view returns(bool) {
+		// Session storage _session = sessions[_sessionId];
+		// Balance storage _balance = balances[_sessionId][_owner];
 		if (_balance.minted) {
 			return false;
 		}
 
 		uint256 time = 0;
-
-        if (_balance.amount >= _session.stakeAmount && _balance.stakeTime > 0) {
+        if (isActive(_sessionId) == true){
+        	if (_balance.staked >= _session.stakeAmount && _balance.stakeTime > 0) {
             uint256 duration = now.sub(_balance.stakeTime);
             time = time.add(duration);
+            }
+        } else {
+        	if (_balance.staked >= _session.stakeAmount && _balance.stakeTime > 0) {
+        		uint256 duration = _session.startTime.add(_session.period).sub(_balance.stakeTime);
+        	    time = time.add(duration);
+        	}
         }
+        
 
         return time >= _session.stakePeriod;
 	}
@@ -391,7 +421,7 @@ contract ProfitCircus is Ownable {
     }
 
 	
-	/// @dev updateInterestPerToken set's up the amount of tokens earned since the beginning
+	/// @dev updateInterestPerToken  set's up the amount of tokens earned since the beginning
 	/// of the session to 1 token. It also updates the portion of it for the user.
 	/// @param _sessionId is a session id
 	function updateInterestPerToken(uint256 _sessionId) internal returns(bool) {
@@ -459,7 +489,7 @@ contract ProfitCircus is Ownable {
 			_balance.claimedTime = block.timestamp;
 		}
 		_session.claimed     = _session.claimed.add(_interest);
-		_balance.claimed     = _balance.claimed.add(_interest);
+		_balance.claimed     = _balance.claimed.add(_interest); 
 		
 		_safeTransfer(_session.rewardToken, msg.sender, _interest);
 			
@@ -492,5 +522,3 @@ contract ProfitCircus is Ownable {
         // React to receiving ether
     }
 }
-
-
