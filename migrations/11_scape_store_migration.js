@@ -1,60 +1,21 @@
-var NftMarket = artifacts.require("./NftMarket.sol");
+require('dotenv').config();
+var ScapeStore = artifacts.require("./NftMarket.sol");
+let sds = require("sds-cli")
 
-let seascape = require("seascape");
+module.exports = async (deployer, network) => {
+  let from = config.networks[network].from;
+  let group = "marketplace";
+  let name = "ScapeStore";
 
-async function getAccount(id) {
-    let accounts = await web3.eth.getAccounts();
-    return accounts[id];
+  let smartcontract = new sds.Smartcontract(group, name);
+
+  // constructor arguments
+  const tipsFeeRate = 10;	// 1 = 0.1%, 10 = 1%, 100 = 10%
+  const feeReceiver = "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9"
+
+  // Truffle code. Deploy the smart contract and then set up.
+  //let address = "0xd8ceF62B7c8C803b29A825515D0c58aA053D3f59";
+  //let txid = "0xbf79768c08d5cfbe6715253e7b73b135f9ef30495cbf974ff5c76ffd1e6fd3de";
+  // await smartcontract.registerInTruffle(address, txid, web3, from, ScapeStore).catch();
+  await smartcontract.deployInTruffle(deployer, ScapeStore, web3, from, [feeReceiver, tipsFeeRate]).catch();
 }
-
-const tipsFeeRate = 10;	// 1 = 0.1%, 10 = 1%, 100 = 10%
-
-async function feeReceiver(network) {
-  if (network == "ganache") {
-    return await getAccount(3);
-  } 
-  else if (network.indexOf("rinkeby") > -1 || network.indexOf("moonbase") > -1) {
-    return await getAccount(0);
-  } else if (network == 'bsc') {
-    return "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
-  } else if (network == 'moonriver') {
-    return "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
-  } else if (network == 'mainnet') {
-    return "0x02eb080e2b59744DF2Cb654e1fe41c608250bEC9";
-  }
-
-  throw `Unsupported network '${network}' for the feeReceiver`;
-}
-
-module.exports = async function(deployer, network) {
-  // Upload the smartcontract configuration
-  let empty = true;
-  let tempCdn = true;
-
-  let projectPath = new seascape.CdnUtil.ProjectPath('seascape', 'beta', empty, tempCdn);
-
-  let smartcontractPath = new seascape.CdnUtil.SmartcontractPath(await deployer.network_id, 'scape-store');
-
-  await deployer.deploy(NftMarket, await feeReceiver(network), tipsFeeRate).catch(console.error);
-
-  console.log("Scape store contract was deployed at address: "+NftMarket.address);
-
-  let smartcontract = new seascape.CdnUtil.SmartcontractParams(
-    'ScapeStore', 
-    NftMarket.abi,
-    NftMarket.address, 
-    NftMarket.transactionHash, 
-    await getAccount(0)
-  );
-
-  let cdnUpdated = await seascape.CdnWrite.setSmartcontract(projectPath, smartcontractPath, smartcontract);
-
-  if (cdnUpdated) {
-    console.log(`CDN was updated successfully`);
-  } else {
-    console.log(`CDN update failed. Please upload upload it manually!`);
-    console.log(projectPath, smartcontractPath, smartcontract);
-  }
-
-  console.log(`Now, set supported currencies by calling scripts/nft_market/init.js`);
-};
