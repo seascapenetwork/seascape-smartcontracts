@@ -24,6 +24,6 @@
     "command-line-args": "^5.2.0",
     "dotenv": "^8.6.0",
     "keytar": "^7.7.0",
-    "sds-cli": "^0.4.1"
+    "sds-cli": "^0.4.6"
   }
 }
