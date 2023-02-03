@@ -15,7 +15,7 @@ import "./../../utils/SetCrowns.sol";
 /// @title Nft Burning contract  mints a higher quality nft in exchange for
 /// five lower quality nfts + CWS fee
 /// @author Nejc Schneider
-contract NftBurning is SetCrowns, Ownable, IERC721Receiver{
+contract ScapeForum is SetCrowns, Ownable, IERC721Receiver{
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
