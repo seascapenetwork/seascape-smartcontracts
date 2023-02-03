@@ -165,9 +165,9 @@ contract ZombieFarm is Ownable {
         // Verifying the Grand reward
         //
         require(supportedRewards[grandReward], "unsupported reward");
-        ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(grandReward);
 
         // Check that Grand Reward is valid: the rewardData and reward id should be parsable.
+        // ZombieFarmRewardInterface reward = ZombieFarmRewardInterface(grandReward);
         // require(reward.isValidData(rewardData), "Invalid reward data");
 
         //
