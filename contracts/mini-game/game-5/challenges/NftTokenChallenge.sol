@@ -229,6 +229,7 @@ contract NftTokenChallenge is ZombieFarmChallengeInterface, ReentrancyGuard, Vau
         onlyZombieFarm
         nonReentrant
     {
+        require(data.length == 0, "nft token data should be empty");
         /// Session Parameters
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         require(sessionChallenge.levelId > 0, "session does not exist");

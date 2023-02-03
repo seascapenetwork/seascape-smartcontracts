@@ -23,6 +23,7 @@ contract LighthouseSwapParams {
         view 
         returns (bool)
     {
+        require(_encodedData.length == 0, "encode data should be empty");
         bytes32 hash = this.encodeParams(_offerId);
 
         address recover = ecrecover(hash, v, r, s);

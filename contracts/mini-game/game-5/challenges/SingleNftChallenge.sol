@@ -94,10 +94,12 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
     }
 
     function getStakeAmount(bytes calldata data) external override view returns (uint256) {
+        require(data.length == 0, "data should be empty");
         return 0;
     }
 
     function getUnstakeAmount(bytes calldata data) external override view returns (uint256) {
+        require(data.length == 0, "data should be empty");
         return 0;
     }
 
@@ -181,6 +183,8 @@ contract SingleNftChallenge is ZombieFarmChallengeInterface, Ownable, Reentrancy
         onlyZombieFarm
         nonReentrant
     {
+        require(data.length == 0, "data should be empty");
+
         SessionChallenge storage sessionChallenge = sessionChallenges[sessionId];
         require(sessionChallenge.levelId > 0, "session does not exist");
 
