@@ -421,6 +421,7 @@ contract NftSwap is SetCrowns, Ownable, ReentrancyGuard, IERC721Receiver {
     }
 
     /// @dev encrypt token data
+    /// @return encrypted data
     function onERC721Received(
         address operator,
         address from,

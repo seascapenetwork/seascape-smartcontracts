@@ -196,6 +196,7 @@ contract NftMarket is IERC721Receiver, ReentrancyGuard, Ownable {
     }
 
     /// @dev encrypt token data
+    /// @return encrypted data
     function onERC721Received(
         address operator,
         address from,

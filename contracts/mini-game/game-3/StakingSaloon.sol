@@ -82,17 +82,9 @@ contract OldStakingSaloon is Ownable, IERC721Receiver {
     //--------------------------------------------------
 
     /// @dev encrypt token data
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    )
-        external
-        override
-        returns (bytes4)
-    {
-      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    /// @return encrypted data
+    function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     /// @notice Starts a staking session for a finite _period of

@@ -229,19 +229,11 @@ contract Riverboat is IERC721Receiver, Ownable {
         );
     }
 
+    
     /// @dev encrypt token data
     /// @return encrypted data
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    )
-        external
-        override
-        returns (bytes4)
-    {
-        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     /// @notice get remaining time in current interval
