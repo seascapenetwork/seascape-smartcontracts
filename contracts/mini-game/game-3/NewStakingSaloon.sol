@@ -536,7 +536,7 @@ contract StakingSaloon is Ownable, IERC721Receiver {
     }
 
     //check data
-    function isValidData(bytes memory data) public view returns (bool) {
+    function isValidData(bytes memory data) public pure returns (bool) {
         uint256 imgId;
         uint256 generation;
         uint8 quality;

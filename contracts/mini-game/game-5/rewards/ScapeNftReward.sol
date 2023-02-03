@@ -92,7 +92,7 @@ contract ScapeNftReward is ZombieFarmRewardInterface, Ownable {
     }
 
     function decode(bytes calldata data)
-        external view returns(uint256, uint256, uint8, address, uint256)
+        external pure returns(uint256, uint256, uint8, address, uint256)
     {
         (
             uint256 i, 

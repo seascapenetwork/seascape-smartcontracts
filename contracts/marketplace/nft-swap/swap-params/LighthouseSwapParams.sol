@@ -20,19 +20,20 @@ contract LighthouseSwapParams {
         bytes32 s
     )
         public
-        view returns (bool)
+        view 
+        returns (bool)
     {
         bytes32 hash = this.encodeParams(_offerId);
 
         address recover = ecrecover(hash, v, r, s);
         require(recover == swapSigner.getSigner(),  "Verification failed");
 
-    	  return true;
+    	return true;
     }
 
     function encodeParams(uint256 _offerId)
         public
-        view
+        pure
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";

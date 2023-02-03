@@ -30,7 +30,7 @@ contract WichitaSwapParams {
         uint8 _quality
     )
         public
-        view
+        pure
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -43,7 +43,7 @@ contract WichitaSwapParams {
 
     function decodeParams (bytes memory _encodedData)
         public
-        view
+        pure
         returns (
             uint8
         )

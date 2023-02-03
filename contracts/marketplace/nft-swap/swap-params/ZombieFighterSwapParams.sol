@@ -32,7 +32,7 @@ contract ZombieFighterSwapParams {
         uint8 _quality
     )
         public
-        view
+        pure
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -45,7 +45,7 @@ contract ZombieFighterSwapParams {
 
     function decodeParams (bytes memory _encodedData)
         public
-        view
+        pure
         returns (
             bytes32,
             uint8

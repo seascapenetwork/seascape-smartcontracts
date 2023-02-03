@@ -33,7 +33,7 @@ contract ScapeSwapParams {
         uint8 _quality
     )
         public
-        view
+        pure
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -46,7 +46,7 @@ contract ScapeSwapParams {
 
     function decodeParams (bytes memory _encodedData)
         public
-        view
+        pure
         returns (
             uint256 ,
             uint256,

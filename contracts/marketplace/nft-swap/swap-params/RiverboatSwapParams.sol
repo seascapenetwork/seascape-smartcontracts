@@ -31,7 +31,7 @@ contract RiverboatSwapParams {
         uint8 _category
     )
         public
-        view
+        pure
         returns (bytes32 message)
     {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -44,7 +44,7 @@ contract RiverboatSwapParams {
 
     function decodeParams (bytes memory _encodedData)
         public
-        view
+        pure
         returns (
             uint256,
             uint8
