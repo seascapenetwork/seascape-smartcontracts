@@ -1,4 +1,5 @@
 var ProfitCircus = artifacts.require("./ProfitCircus.sol");
+let seascape = require("seascape");
 
 module.exports = async function(deployer, network) {
 	// const factory 	= "0x77478212aa57A7A9Cc5b611156Fce7c0697578fb"; // moonriver
@@ -10,9 +11,6 @@ module.exports = async function(deployer, network) {
 
 	// const factory = "0x4b692990607c5CbF7c12a8aa309FDb9042D94475";	// moonbeam alpha
 
-	deployer.deploy(ProfitCircus, factory)
-	.then(() => {
-		console.log("Profit Circus smartcontract was deployed at address: "+ProfitCircus.address);
-		console.log("Now call, scripts/profit_circus/init.js with uncommenting nftFactory.addStaticUser(profitCircus.address)");
-	});
+	let profitCircus = new seascape.Smartcontract({name: 'profit-circus', group: 'game', artifact: ProfitCircus});
+	profitCircus.deploy(deployer, factory);
 };
