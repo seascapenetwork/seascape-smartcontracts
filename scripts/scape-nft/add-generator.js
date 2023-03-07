@@ -6,7 +6,10 @@ let Nft = artifacts.require("SeascapeNft");
 // let gasPrice = 136000000000;
 
 // bsc mainnet
-let factoryAddress = '0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d';
+// let factoryAddress = '0xa304D289f6d0a30aEB33e9243f47Efa3a9ad437d';
+
+// moonriver
+let factoryAddress = '0x77478212aa57A7A9Cc5b611156Fce7c0697578fb';
 
 module.exports = async function(callback) {
     const networkId = await web3.eth.net.getId();
@@ -29,11 +32,16 @@ let init = async function() {
 
     let factory = await Factory.at(factoryAddress);
 
-    // Change the ownership:
-    let newAdmin = "0xc6593E8BF5e517704fbd220EcB638118Da5E3bE5";
+    let minter1 = "0x3e8093605B53520641257F5881E6E6C73965Ca9B";
+    let minter2 = "0x0912F1cac7BEEEe0eA1Ff717Bd435B3d81E5fa7A";
+    let minter3 = "0xfa88907811321BacC79B0533100fF25AdE11B673";
 
     // make him as minter and static user
     // Uncomment if you want to grant a permission.
-    await grantPermission(factory, newAdmin);
-    console.log("Got a permission to mint nfts");
+    await grantPermission(factory, minter1);
+    console.log("Got a permission to mint nfts 1");
+    await grantPermission(factory, minter2);
+    console.log("Got a permission to mint nfts 2");
+    await grantPermission(factory, minter3);
+    console.log("Got a permission to mint nfts 3");
 };
