@@ -35,6 +35,7 @@ contract CrownsToken is Context, IERC20, Ownable {
 
     uint256 private constant MIN_SPEND = 10 ** 6;
     uint256 private constant SCALER = 10 ** 18;
+    uint256 private constant TEN_MILLION = SCALER * 1e7;
 
 
     /// @notice Total amount of tokens that have yet to be transferred to token holders as part of the PayWave.
@@ -47,6 +48,20 @@ contract CrownsToken is Context, IERC20, Ownable {
     /// @dev Total paywaved tokens amount that is always increasing.
     uint256 public totalPayWave = 0;
 
+    /// @notice Maximum possible supply of this token.
+    uint256 public limitSupply = 0;
+
+    /// @notice Set to false to stop mint/burn of token. Set to true to allow minting.
+    bool public bridgeAllowed = false;
+
+    /// @notice the list of bridge addresses allowed to mint tokens.
+    mapping(address => bool) public bridges;
+
+    // Mint and Burn
+    modifier onlyBridge {
+        require(bridgeAllowed && bridges[msg.sender]);
+        _;
+    }
 
     /**
      * @dev Emitted when `spent` tokens are moved
@@ -57,42 +72,85 @@ contract CrownsToken is Context, IERC20, Ownable {
         uint256 totalPayWave
     );
 
-    /**
-     * @dev Sets the {name} and {symbol} of token.
-     * Initializes {decimals} with a default value of 18.
-     * Mints all tokens.
-     * Transfers ownership to another account. So, the token creator will not be counted as an owner.
-     */
+    event AddBridge(address indexed bridge);
+    event RemoveBridge(address indexed bridge);
+
     constructor () public {
-        address gameIncentivesHolder = 0x94E169Be9037561aC37D8bb3471c7e35B81708A7;
-        address liquidityHolder      = 0xf409fDF4069c825656ba3e1f931FCde8525F1bEE;
-        address teamHolder           = 0x2Ff42929f444e496D7e856591764E00ee13b7077;
-        address investHolder         = 0x2cfca4ccd9ef6d9420ae1ff26306d179DABAEdC2;
-        address communityHolder      = 0x2C25ba4DB75D43e655647F24fB0cB2e896116dbD;
-	    address newOwner             = 0xbfdadB9a06C90B6625aF3C6DAc0Bb7f56a852886;
-
-
-	    // 5 million tokens
-        uint256 gameIncentives       = 5e6 * SCALER;
-        // 1,5 million tokens
-        uint256 reserve              = 15e5 * SCALER; // reserve for the next 5 years.
-	    // 1 million tokens
-	    uint256 community            = 1e6 * SCALER;
-        uint256 team                 = 1e6 * SCALER;
-        uint256 investment           = 1e6 * SCALER;
-        // 500,000 tokens
-        uint256 liquidity            = 5e5 * SCALER;
-
-        _mint(gameIncentivesHolder,  gameIncentives);
-        _mint(liquidityHolder,       liquidity);
-        _mint(teamHolder,            team);
-        _mint(investHolder,          investment);
-        _mint(communityHolder,       community);
-        _mint(newOwner,              reserve);
-
-        transferOwnership(newOwner);
+        bridgeAllowed = true;
+        limitSupply = 5e5 * SCALER;     // Initially it allows 500k tokens to mint
    }
 
+   function addBridge(address _bridge) external onlyOwner returns(bool) {
+       require(_bridge != address(0), "Crowns: zero address");
+       require(bridges[_bridge] == false, "Crowns: already added bridge");
+
+       bridges[_bridge] = true;
+
+       emit AddBridge(_bridge);
+   }
+
+    function removeBridge(address _bridge) external onlyOwner returns(bool) {
+       require(_bridge != address(0), "Crowns: zero address");
+       require(bridges[_bridge], "Crowns: not added bridge");
+
+       bridges[_bridge] = false;
+
+       emit RemoveBridge(_bridge);
+   }
+
+   function setLimitSupply(uint256 _newLimit) external onlyOwner returns(bool) {
+       require(_newLimit > 0 && _newLimit <= TEN_MILLION, "Crowns: invalid supply limit");
+
+       limitSupply = _newLimit;
+   }
+
+   /**
+     * @dev Creates `amount` new tokens for `to`.
+     *
+     * See {ERC20-_mint}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `MINTER_ROLE`.
+     */
+    function mint(address to, uint256 amount) external onlyBridge {
+        require(_totalSupply.add(amount) <= limitSupply, "Crowns: exceeds mint limit");
+        _mint(to, amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     *
+     * Included just to follow the standard of OpenZeppelin.
+     */
+    function burn(uint256 amount) public onlyBridge {
+        require(false, "Only burnFrom is allowed");
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, deducting from the caller's
+     * allowance.
+     *
+     * See {ERC20-_burn} and {ERC20-allowance}.
+     *
+     * Requirements:
+     *
+     * - the caller must have allowance for ``accounts``'s tokens of at least
+     * `amount`.
+     */
+    function burnFrom(address account, uint256 amount) public onlyBridge {
+        uint256 currentAllowance = allowance(account, _msgSender());
+        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
+
+        _approve(account, _msgSender(), currentAllowance.sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _burn(account, amount);
+    }
+
+    function toggleBridgeAllowance() external onlyOwner {
+        bridgeAllowed = !bridgeAllowed;
+    }
 
     /**
      * @notice Return amount of tokens that {account} gets during the PayWave
@@ -111,7 +169,7 @@ contract CrownsToken is Context, IERC20, Ownable {
 
         // PayWave owed proportional to current balance of the account.
         // The decimal factor is used to avoid floating issue.
-        uint256 payWave = proportion.div(supply);
+        uint256 payWave = proportion.mul(SCALER).div(supply).div(SCALER);
 
         return payWave;
     }
@@ -163,7 +221,7 @@ contract CrownsToken is Context, IERC20, Ownable {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() override external view returns (uint8) {
+    function decimals() public override view returns (uint8) {
         return _decimals;
     }
 
@@ -322,17 +380,30 @@ contract CrownsToken is Context, IERC20, Ownable {
     }
 
     /**
-     * @dev Moves `amount` tokens from `account` to {unconfirmedPayWave} without reducing the
-     * total supply. Will be paywaved among token holders.
+     * @dev Destroys `amount` tokens from `account`, reducing the
+     * total supply.
      *
      * Emits a {Transfer} event with `to` set to the zero address.
      *
-     * Requirements
+     * Requirements:
      *
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
     function _burn(address account, uint256 amount) internal updateAccount(account) virtual {
+        require(account != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(account, address(0), amount);
+
+        uint256 accountBalance = _accounts[account].balance;
+        require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
+        _accounts[account].balance = accountBalance.sub(amount);
+        _totalSupply = _totalSupply.sub(amount);
+
+        emit Transfer(account, address(0), amount);
+    }
+
+    function _spend(address account, uint256 amount) internal updateAccount(account) {
         require(account != address(0), "ERC20: burn from the zero address");
         require(_getBalance(account) >= amount, "ERC20: Not enough token to burn");
 
@@ -391,19 +462,19 @@ contract CrownsToken is Context, IERC20, Ownable {
         require(amount > MIN_SPEND, "Crowns: trying to spend less than expected");
         require(_getBalance(msg.sender) >= amount, "Crowns: Not enough balance");
 
-        _burn(msg.sender, amount);
+        _spend(msg.sender, amount);
 
 	return true;
     }
 
     function spendFrom(address sender, uint256 amount) public returns(bool) {
-	require(amount > MIN_SPEND, "Crowns: trying to spend less than expected");
-	require(_getBalance(sender) >= amount, "Crowns: not enough balance");
+        require(amount > MIN_SPEND, "Crowns: trying to spend less than expected");
+        require(_getBalance(sender) >= amount, "Crowns: not enough balance");
 
-	_burn(sender, amount);
-	_approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _spend(sender, amount);
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
 
-	return true;
+        return true;
     }
 
     /**
@@ -438,8 +509,8 @@ contract CrownsToken is Context, IERC20, Ownable {
     function payWave() public onlyOwner() returns (bool) {
     	totalPayWave = totalPayWave.add(unconfirmedPayWave);
     	unclaimedPayWave = unclaimedPayWave.add(unconfirmedPayWave);
-	uint256 payWaved = unconfirmedPayWave;
-	unconfirmedPayWave = 0;
+        uint256 payWaved = unconfirmedPayWave;
+        unconfirmedPayWave = 0;
 
         emit PayWave (
             payWaved,
