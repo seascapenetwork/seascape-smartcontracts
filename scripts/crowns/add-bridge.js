@@ -1,7 +1,7 @@
 let Crowns = artifacts.require("CrownsToken");
 let crowns;
 
-    let ether = 1000000000000000000;
+let ether = 1000000000000000000;
 
 module.exports = async function(callback) {
     let res = await init();

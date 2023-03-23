@@ -1,4 +1,4 @@
-let Crowns = artifacts.require("CrownsToken");
+let ContractWithBridge = artifacts.require("CrownsToken");
 
 module.exports = async function(callback) {
     let res = await init();
@@ -7,11 +7,11 @@ module.exports = async function(callback) {
 };
 
 let init = async function() {
-    let crowns = await Crowns.at("0x6fc9651f45B262AE6338a701D563Ab118B1eC0Ce");
-    let bridge    = "0x48A6fd66512D45006FC0426576c264D03Dfda304";
+    let contract = await ContractWithBridge.at("0x27d72484f1910F5d0226aFA4E03742c9cd2B297a");
+    let bridge    = "0x5945241BBB68B4454bB67Bd2B069e74C09AC3D51";
 
-    let bridgeAllowed = await crowns.bridgeAllowed().catch(console.error);
-    let bridged = await crowns.bridges(bridge).catch(console.error);
+    let bridgeAllowed = await contract.bridgeAllowed().catch(console.error);
+    let bridged = await contract.bridges(bridge).catch(console.error);
     
     console.log(`Was the bridge has permission to bridge? ${bridged}, ${bridgeAllowed}`);
 };
