@@ -33,7 +33,7 @@ contract HeroNftSale is IERC721Receiver, ReentrancyGuard, Ownable {
         uint256 nftId;                     // the id of a nft for sale
         uint256 salePrice;                 // nft price in the initial interval
         uint256 startTime;                 // this slot slot start timestamp
-        // uint256 period;                    // period 
+        // uint256 period;                 // period 
         bool isSold;                       // If it is bought, it becomes true
     }
 
@@ -111,14 +111,14 @@ contract HeroNftSale is IERC721Receiver, ReentrancyGuard, Ownable {
 
     function addNftToSlot(uint256 _sessionId, bytes calldata data) external onlyOwner{
         require(_sessionId > 0, "Session has not started yet");
-        // Session storage _session = sessions[_sessionId];
+        Session storage _session = sessions[_sessionId];
 
         (uint256[10] memory _nfts, uint256[10] memory _price, uint256[10] memory _startTime) = abi.decode(data, (uint256[10], uint256[10], uint256[10]));
         
         for (uint8 _index = 0; _index < 10; ++_index) {
 
             if(_nfts[_index] > 0) {
-
+                require(IERC721(_session.nftAddress).ownerOf(_nfts[_index]) == nftSender, "Not nft owner");
                 slot[_sessionId][_index] = Slot(_nfts[_index], _price[_index], _startTime[_index], false);
             }         
         }
@@ -197,10 +197,10 @@ contract HeroNftSale is IERC721Receiver, ReentrancyGuard, Ownable {
     function isSold(uint256 _sessionId, uint256 _index) private view returns (bool){
         Slot storage _slot = slot[_sessionId][_index];
 
-        if (now < _slot.startTime || _slot.isSold) {
-            return false;
+        if (now > _slot.startTime && !_slot.isSold) {
+            return true;
         }
-        return true;
+        return false;
     }
 
     //--------------------------------------------------------------------
