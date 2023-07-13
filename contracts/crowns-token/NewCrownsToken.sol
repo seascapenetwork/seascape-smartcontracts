@@ -312,29 +312,6 @@ contract CrownsToken is Context, IERC20, Ownable {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 
     /**
-     * @notice Spend some token from caller's balance in the game.
-     * @param amount Amount of token used to spend
-     */
-    function spend(uint256 amount) public returns(bool) {
-        require(amount > MIN_SPEND, "Crowns: trying to spend less than expected");
-        require(_getBalance(msg.sender) >= amount, "Crowns: Not enough balance");
-
-        _burn(msg.sender, amount);
-
-    return true;
-    }
-
-    function spendFrom(address sender, uint256 amount) public returns(bool) {
-        require(amount > MIN_SPEND, "Crowns: trying to spend less than expected");
-        require(_getBalance(sender) >= amount, "Crowns: not enough balance");
-
-        _burn(sender, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
-
-        return true;
-    }
-
-    /**
      * @dev Returns actual balance of account as a sum of owned divends and current balance.
      * @param account Address of Token holder.
      * @return Token amount
