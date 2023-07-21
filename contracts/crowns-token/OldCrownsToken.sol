@@ -15,7 +15,7 @@ import "./../openzeppelin/contracts/utils/Address.sol";
 /// In order to appear in balance, the paywaved tokens need
 /// to be claimed by users by triggering any transaction in the ERC-20 contract.
 /// @dev Implementation of the {IERC20} interface.
-contract OldCrownsToken is Context, IERC20, Ownable {
+contract CrownsToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
